@@ -10,6 +10,8 @@ on:
 
 jobs:
   analyze:
+    # TODO: remove when making repo public
+    if: false
     name: Analyze
     runs-on: ubuntu-latest
     permissions:
