@@ -21,7 +21,7 @@ importers:
         specifier: latest
         version: 1.5.2(vitest@1.5.2(@types/node@20.12.7))
       bumpp:
-        specifier: ^9.4.0
+        specifier: 9.4.0
         version: 9.4.0
       eslint:
         specifier: latest
