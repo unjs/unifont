@@ -32,7 +32,7 @@
     "@antfu/eslint-config": "latest",
     "@types/node": "20.12.12",
     "@vitest/coverage-v8": "latest",
-    "bumpp": "9.4.0",
+    "bumpp": "9.4.1",
     "eslint": "latest",
     "lint-staged": "latest",
     "simple-git-hooks": "latest",
