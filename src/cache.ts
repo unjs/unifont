@@ -1,8 +1,11 @@
+import { version } from '../package.json'
+
 type Awaitable<T> = T | Promise<T>
 
+type StorageValue = string | Record<string, unknown>
 export interface Storage {
   getItem: (key: string) => Awaitable<any | null>
-  setItem: (key: string, value: unknown) => Awaitable<void>
+  setItem: <T extends StorageValue = StorageValue>(key: string, value: T) => Awaitable<void>
 }
 
 export function memoryStorage() {
@@ -11,19 +14,31 @@ export function memoryStorage() {
     getItem(key: string) {
       return cache.get(key)
     },
-    setItem(key: string, value: unknown) {
+    setItem(key: string, value: StorageValue) {
       cache.set(key, value)
     },
   } satisfies Storage
 }
 
+const ONE_WEEK = 1000 * 60 * 60 * 24 * 7
+
 export function createAsyncStorage(storage: Storage) {
   return {
     async getItem<T = unknown>(key: string, init?: () => Promise<T>) {
-      return await storage.getItem(key) ?? (init ? await init() : null)
+      const now = Date.now()
+      const res = await storage.getItem(key)
+      if (res && res.expires > now && res.version === version) {
+        return res.data
+      }
+      if (!init) {
+        return null
+      }
+      const data = await init()
+      await storage.setItem(key, { expires: now + ONE_WEEK, version, data })
+      return data
     },
-    async setItem(key: string, value: unknown) {
-      await storage.setItem(key, value)
+    async setItem(key: string, data: unknown) {
+      await storage.setItem(key, { expires: Date.now() + ONE_WEEK, version, data })
     },
   }
 }

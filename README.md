@@ -14,14 +14,42 @@ Install package:
 ```sh
 # npm
 npm install unifont
-
-# pnpm
-pnpm install unifont
 ```
 
 ```js
-import {} from 'unifont'
+import { createUnifont, providers } from 'unifont'
+
+const unifont = await createUnifont([
+  providers.google(),
+])
+
+const fonts = await unifont.resolveFontFace('Poppins')
+
+console.log(fonts)
 ```
+
+In most environments, you will want to cache the results of font APIs to avoid unnecessary hits to them. By default `unifont` caches font data in memory.
+
+For full control, `unifont` exposes a storage API which is compatible with `unstorage`. It simply needs to expose a `getItem` and `setItem` method.
+
+```ts
+import { createUnifont, providers } from 'unifont'
+
+import { createStorage } from 'unstorage'
+import fsDriver from 'unstorage/drivers/fs-lite'
+
+const storage = createStorage({
+  driver: fsDriver({ base: 'node_modules/.cache/unifont' }),
+})
+
+const cachedUnifont = await createUnifont([providers.google()], { storage })
+
+console.log(await cachedUnifont.resolveFontFace('Poppins'))
+
+// cached data is stored in `node_modules/.cache/unifont`
+```
+
+For more about the storage drivers exposed from `unstorage`, check out https://unstorage.unjs.io.
 
 ## 💻 Development
 

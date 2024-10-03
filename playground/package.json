@@ -6,5 +6,8 @@
   },
   "dependencies": {
     "unifont": "latest"
+  },
+  "devDependencies": {
+    "unstorage": "^1.12.0"
   }
 }
