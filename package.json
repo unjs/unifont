@@ -2,7 +2,7 @@
   "name": "unifont",
   "type": "module",
   "version": "0.0.0",
-  "packageManager": "pnpm@9.11.0",
+  "packageManager": "pnpm@9.12.0",
   "description": "Framework agnostic tools for accessing data from font CDNs and providers",
   "license": "MIT",
   "repository": "danielroe/unifont",
@@ -28,8 +28,16 @@
     "test:unit": "vitest",
     "test:types": "tsc --noEmit"
   },
+  "dependencies": {
+    "css-tree": "^3.0.0",
+    "defu": "^6.1.4",
+    "node-fetch-native": "^1.6.4",
+    "ohash": "^1.1.4",
+    "ufo": "^1.5.4"
+  },
   "devDependencies": {
     "@antfu/eslint-config": "latest",
+    "@types/css-tree": "^2.3.8",
     "@types/node": "20.16.10",
     "@vitest/coverage-v8": "latest",
     "bumpp": "9.6.1",

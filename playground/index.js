@@ -1,7 +1,11 @@
-import assert from 'node:assert'
-import * as pkg from 'unifont'
+// @ts-check
 
-// eslint-disable-next-line no-console
-console.log(pkg.welcome())
+import { createUnifont, providers } from 'unifont'
 
-assert.strictEqual(pkg.welcome(), 'hello world')
+const unifont = await createUnifont([
+  providers.google(),
+])
+
+const fonts = await unifont.resolveFontFace('Poppins')
+
+console.log(fonts)
