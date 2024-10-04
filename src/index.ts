@@ -8,7 +8,7 @@ export interface UnifontOptions {
   storage?: Storage
 }
 
-export type { ResolveFontOptions } from './types'
+export type { FontStyles, ResolveFontOptions } from './types'
 export interface Unifont {
   resolveFont: (fontFamily: string, options?: ResolveFontOptions, providers?: string[]) => Promise<{
     provider?: string
