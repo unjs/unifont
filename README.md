@@ -69,7 +69,7 @@ Published under [MIT License](./LICENCE).
 [npm-version-src]: https://img.shields.io/npm/v/unifont?style=flat-square
 [npm-version-href]: https://npmjs.com/package/unifont
 [npm-downloads-src]: https://img.shields.io/npm/dm/unifont?style=flat-square
-[npm-downloads-href]: https://npmjs.com/package/unifont
+[npm-downloads-href]: https://npm.chart.dev/unifont
 [github-actions-src]: https://img.shields.io/github/workflow/status/danielroe/unifont/ci/main?style=flat-square
 [github-actions-href]: https://github.com/danielroe/unifont/actions?query=workflow%3Aci
 [codecov-src]: https://img.shields.io/codecov/c/gh/danielroe/unifont/main?style=flat-square
