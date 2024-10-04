@@ -33,7 +33,14 @@ export async function createUnifont(providers: Provider[], options?: UnifontOpti
     storage: createAsyncStorage(options?.storage ?? memoryStorage()),
   }
 
+  // preserve provider order
   for (const provider of providers) {
+    // @ts-expect-error we will remove undefined keys later
+    stack[provider._name] = undefined
+  }
+
+  // initialize all providers in parallel
+  await Promise.all(providers.map(async (provider) => {
     try {
       const initializedProvider = await provider(unifontContext)
       if (initializedProvider)
@@ -42,7 +49,10 @@ export async function createUnifont(providers: Provider[], options?: UnifontOpti
     catch (err) {
       console.error(`Could not initialize provider \`${provider._name}\`. \`unifont\` will not be able to process fonts provided by this provider.`, err)
     }
-  }
+    if (!stack[provider._name]) {
+      delete stack[provider._name]
+    }
+  }))
 
   const allProviders = Object.keys(stack)
 
