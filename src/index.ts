@@ -10,7 +10,10 @@ export interface UnifontOptions {
 
 export type { ResolveFontOptions } from './types'
 export interface Unifont {
-  resolveFont: (fontFamily: string, options?: ResolveFontOptions, providers?: string[]) => Promise<{ fonts: FontFaceData[] }>
+  resolveFont: (fontFamily: string, options?: ResolveFontOptions, providers?: string[]) => Promise<{
+    provider?: string
+    fonts: FontFaceData[]
+  }>
 }
 
 export const defaultResolveOptions: ResolveFontOptions = {
@@ -64,8 +67,12 @@ export async function createUnifont(providers: Provider[], options?: UnifontOpti
 
       try {
         const result = await provider.resolveFont(fontFamily, options)
-        if (result)
-          return result
+        if (result) {
+          return {
+            provider: id,
+            ...result,
+          }
+        }
       }
       catch (err) {
         console.error(`Could not resolve font face for \`${fontFamily}\` from \`${id}\` provider.`, err)
