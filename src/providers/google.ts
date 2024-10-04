@@ -2,7 +2,7 @@ import { hash } from 'ohash'
 
 import { extractFontFaceData } from '../css/parse'
 import { $fetch } from '../fetch'
-import { defineFontProvider, type ResolveFontFacesOptions } from '../types'
+import { defineFontProvider, type ResolveFontOptions } from '../types'
 
 export default defineFontProvider('google', async (_options, ctx) => {
   const googleFonts = await ctx.storage.getItem('google:meta.json', () => $fetch<{ familyMetadataList: FontIndexMeta[] }>('https://fonts.google.com/metadata/fonts', { responseType: 'json' }).then(r => r.familyMetadataList))
@@ -21,7 +21,7 @@ export default defineFontProvider('google', async (_options, ctx) => {
   // svg: 'Mozilla/4.0 (iPad; CPU OS 4_0_1 like Mac OS X) AppleWebKit/534.46 (KHTML, like Gecko) Version/4.1 Mobile/9A405 Safari/7534.48.3',
   }
 
-  async function getFontDetails(family: string, options: ResolveFontFacesOptions) {
+  async function getFontDetails(family: string, options: ResolveFontOptions) {
     const font = googleFonts.find(font => font.family === family)!
     const styles = [...new Set(options.styles.map(i => styleMap[i]))].sort()
 
@@ -52,7 +52,7 @@ export default defineFontProvider('google', async (_options, ctx) => {
   }
 
   return {
-    async resolveFontFaces(fontFamily, options) {
+    async resolveFont(fontFamily, options) {
       if (!googleFonts.some(font => font.family === fontFamily)) {
         return
       }

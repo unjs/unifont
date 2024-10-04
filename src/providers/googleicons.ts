@@ -60,7 +60,7 @@ export default defineFontProvider('googleicons', async (_options, ctx) => {
   }
 
   return {
-    async resolveFontFaces(fontFamily, defaults) {
+    async resolveFont(fontFamily, defaults) {
       if (!googleIcons.includes(fontFamily)) {
         return
       }

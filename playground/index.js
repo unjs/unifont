@@ -6,6 +6,6 @@ const unifont = await createUnifont([
   providers.google(),
 ])
 
-const fonts = await unifont.resolveFontFace('Poppins')
+const fonts = await unifont.resolveFont('Poppins')
 
 console.log(fonts)

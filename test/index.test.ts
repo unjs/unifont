@@ -4,7 +4,7 @@ import { createUnifont, providers } from '../src'
 describe('unifont', () => {
   it('works with no providers', async () => {
     const unifont = await createUnifont([])
-    const { fonts } = await unifont.resolveFontFace('Poppins')
+    const { fonts } = await unifont.resolveFont('Poppins')
     expect(fonts).toMatchInlineSnapshot(`[]`)
   })
 
@@ -21,7 +21,7 @@ describe('unifont', () => {
       providers.google(),
     ])
 
-    const { fonts } = await unifont.resolveFontFace('Poppins')
+    const { fonts } = await unifont.resolveFont('Poppins')
 
     expect(fonts).toHaveLength(6)
   })

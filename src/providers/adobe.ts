@@ -2,7 +2,7 @@ import { hash } from 'ohash'
 
 import { extractFontFaceData } from '../css/parse'
 import { $fetch } from '../fetch'
-import { defineFontProvider, type ResolveFontFacesOptions } from '../types'
+import { defineFontProvider, type ResolveFontOptions } from '../types'
 
 interface ProviderOption {
   id: string[] | string
@@ -39,7 +39,7 @@ export default defineFontProvider<ProviderOption>('adobe', async (options, ctx) 
     }
   }))
 
-  async function getFontDetails(family: string, options: ResolveFontFacesOptions) {
+  async function getFontDetails(family: string, options: ResolveFontOptions) {
     options.weights = options.weights.map(String)
 
     for (const kit of fonts.kits) {
@@ -73,7 +73,7 @@ export default defineFontProvider<ProviderOption>('adobe', async (options, ctx) 
   }
 
   return {
-    async resolveFontFaces(family, options) {
+    async resolveFont(family, options) {
       if (!familyMap.has(family)) {
         return
       }

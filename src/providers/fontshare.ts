@@ -2,7 +2,7 @@ import { hash } from 'ohash'
 
 import { extractFontFaceData } from '../css/parse'
 import { $fetch } from '../fetch'
-import { defineFontProvider, type ResolveFontFacesOptions } from '../types'
+import { defineFontProvider, type ResolveFontOptions } from '../types'
 
 const fontAPI = $fetch.create({ baseURL: 'https://api.fontshare.com/v2' })
 export default defineFontProvider('fontshare', async (_options, ctx) => {
@@ -30,7 +30,7 @@ export default defineFontProvider('fontshare', async (_options, ctx) => {
     fontshareFamilies.add(font.name)
   }
 
-  async function getFontDetails(family: string, options: ResolveFontFacesOptions) {
+  async function getFontDetails(family: string, options: ResolveFontOptions) {
   // https://api.fontshare.com/v2/css?f[]=alpino@300
     const font = fonts.find(f => f.name === family)!
     const numbers: number[] = []
@@ -54,7 +54,7 @@ export default defineFontProvider('fontshare', async (_options, ctx) => {
   }
 
   return {
-    async resolveFontFaces(fontFamily, defaults) {
+    async resolveFont(fontFamily, defaults) {
       if (!fontshareFamilies.has(fontFamily)) {
         return
       }

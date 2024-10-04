@@ -10,7 +10,7 @@ interface ProviderContext {
   }
 }
 
-export interface ResolveFontFacesOptions {
+export interface ResolveFontOptions {
   weights: string[]
   styles: Array<'normal' | 'italic' | 'oblique'>
   // TODO: improve support and support unicode range
@@ -51,7 +51,7 @@ export interface FontFaceData {
 }
 
 export interface InitializedProvider {
-  resolveFontFaces: (family: string, options: ResolveFontFacesOptions) => Awaitable<undefined | {
+  resolveFont: (family: string, options: ResolveFontOptions) => Awaitable<undefined | {
   /**
    * Return data used to generate @font-face declarations.
    * @see https://developer.mozilla.org/en-US/docs/Web/CSS/@font-face

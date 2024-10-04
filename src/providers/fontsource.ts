@@ -1,7 +1,7 @@
 import { hash } from 'ohash'
 
 import { $fetch } from '../fetch'
-import { defineFontProvider, type FontFaceData, type ResolveFontFacesOptions } from '../types'
+import { defineFontProvider, type FontFaceData, type ResolveFontOptions } from '../types'
 
 const fontAPI = $fetch.create({ baseURL: 'https://api.fontsource.org/v1' })
 
@@ -13,7 +13,7 @@ export default defineFontProvider('fontsource', async (_options, ctx) => {
     familyMap.set(meta.family, meta)
   }
 
-  async function getFontDetails(family: string, options: ResolveFontFacesOptions) {
+  async function getFontDetails(family: string, options: ResolveFontOptions) {
     const font = familyMap.get(family)!
     const weights = options.weights.filter(weight => font.weights.includes(Number(weight)))
     const styles = options.styles.filter(style => font.styles.includes(style))
@@ -60,7 +60,7 @@ export default defineFontProvider('fontsource', async (_options, ctx) => {
   }
 
   return {
-    async resolveFontFaces(fontFamily, options) {
+    async resolveFont(fontFamily, options) {
       if (!familyMap.has(fontFamily)) {
         return
       }

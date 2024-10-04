@@ -10,6 +10,6 @@ const storage = createStorage({
   driver: fsDriver({ base: 'node_modules/.cache/unifont' }),
 })
 
-const cachedUnifont = await createUnifont([providers.google()], { storage })
+const unifont = await createUnifont([providers.google()], { storage })
 
-console.log(await cachedUnifont.resolveFontFace('Poppins'))
+console.log(await unifont.resolveFont('Poppins'))

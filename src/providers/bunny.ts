@@ -2,7 +2,7 @@ import { hash } from 'ohash'
 
 import { extractFontFaceData } from '../css/parse'
 import { $fetch } from '../fetch'
-import { defineFontProvider, type ResolveFontFacesOptions } from '../types'
+import { defineFontProvider, type ResolveFontOptions } from '../types'
 
 const fontAPI = $fetch.create({ baseURL: 'https://fonts.bunny.net' })
 
@@ -14,7 +14,7 @@ export default defineFontProvider('bunny', async (_options, ctx) => {
     familyMap.set(family.familyName, id)
   }
 
-  async function getFontDetails(family: string, options: ResolveFontFacesOptions) {
+  async function getFontDetails(family: string, options: ResolveFontOptions) {
     const id = familyMap.get(family) as keyof typeof fonts
     const font = fonts[id]!
     const weights = options.weights.filter(weight => font.weights.includes(Number(weight)))
@@ -40,7 +40,7 @@ export default defineFontProvider('bunny', async (_options, ctx) => {
   }
 
   return {
-    async resolveFontFaces(fontFamily, defaults) {
+    async resolveFont(fontFamily, defaults) {
       if (!familyMap.has(fontFamily)) {
         return
       }
