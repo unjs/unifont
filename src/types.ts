@@ -22,7 +22,9 @@ export interface ResolveFontOptions {
   subsets: string[]
   fallbacks?: string[]
   // Variable axis
-  variableAxis?: { [key: VariableAxis]: string[] }
+  experimental?: {
+    variableAxis?: { [key: VariableAxis]: string[] }
+  }
 }
 
 export interface RemoteFontSource {

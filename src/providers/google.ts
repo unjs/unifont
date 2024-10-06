@@ -37,11 +37,11 @@ export default defineFontProvider('google', async (_options, ctx) => {
     const resolvedAxes = []
     let resolvedVariants: string[] = []
 
-    for (const axis of ['wght', 'ital', ...Object.keys(options.variableAxis ?? {})].sort(googleFlavoredSorting)) {
+    for (const axis of ['wght', 'ital', ...Object.keys(options.experimental?.variableAxis ?? {})].sort(googleFlavoredSorting)) {
       const axisValue = ({
         wght: weights,
         ital: styles,
-      })[axis] ?? options.variableAxis![axis]!
+      })[axis] ?? options.experimental!.variableAxis![axis]!
 
       if (resolvedVariants.length === 0) {
         resolvedVariants = axisValue
