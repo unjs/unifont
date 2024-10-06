@@ -10,12 +10,14 @@ export interface ProviderContext {
   }
 }
 
+export type FontStyles = 'normal' | 'italic' | 'oblique'
+
 // Only registered axis tags are listed.
-type VariableAxis = 'ital' | 'opsz' | 'slnt' | 'wdth' | 'wght' | string
+type VariableAxis = 'opsz' | 'slnt' | 'wdth' | string
 
 export interface ResolveFontOptions {
   weights: string[]
-  styles: Array<'normal' | 'italic' | 'oblique'>
+  styles: FontStyles[]
   // TODO: improve support and support unicode range
   subsets: string[]
   fallbacks?: string[]

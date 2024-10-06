@@ -67,7 +67,14 @@ export default defineFontProvider<ProviderOption>('adobe', async (options, ctx) 
       // TODO: Not sure whether this css_names array always has a single element. Still need to investigate.
       const cssName = font.css_names[0] ?? family.toLowerCase().split(' ').join('-')
 
-      return extractFontFaceData(css, cssName)
+      return extractFontFaceData(css, cssName).filter((font) => {
+        const [lowerWeight, upperWeight] = Array.isArray(font.weight) ? font.weight : [0, 0]
+
+        return (
+          (!options.styles || !font.style || options.styles.includes(font.style as 'normal'))
+          && (!options.weights || !font.weight || Array.isArray(font.weight) ? options.weights.some(weight => Number(weight) <= upperWeight || Number(weight) >= lowerWeight) : options.weights.includes(String(font.weight)))
+        )
+      })
     }
 
     return []
