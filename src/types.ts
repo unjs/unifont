@@ -10,12 +10,17 @@ export interface ProviderContext {
   }
 }
 
+// Only registered axis tags are listed.
+type VariableAxis = 'ital' | 'opsz' | 'slnt' | 'wdth' | 'wght' | string
+
 export interface ResolveFontOptions {
   weights: string[]
   styles: Array<'normal' | 'italic' | 'oblique'>
   // TODO: improve support and support unicode range
   subsets: string[]
   fallbacks?: string[]
+  // Variable axis
+  variableAxis?: { [key: VariableAxis]: string[] }
 }
 
 export interface RemoteFontSource {

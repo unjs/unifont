@@ -34,7 +34,23 @@ export default defineFontProvider('google', async (_options, ctx) => {
     if (weights.length === 0 || styles.length === 0)
       return []
 
-    const resolvedVariants = weights.flatMap(w => [...styles].map(s => `${s},${w}`)).sort()
+    const resolvedAxes = []
+    let resolvedVariants: string[] = []
+
+    for (const axis of ['wght', 'ital', ...Object.keys(options.variableAxis ?? {})].sort(googleFlavoredSorting)) {
+      const axisValue = ({
+        wght: weights,
+        ital: styles,
+      })[axis] ?? options.variableAxis![axis]!
+
+      if (resolvedVariants.length === 0) {
+        resolvedVariants = axisValue
+      }
+      else {
+        resolvedVariants = resolvedVariants.flatMap(v => [...axisValue].map(o => [v, o].join(','))).sort()
+      }
+      resolvedAxes.push(axis)
+    }
 
     let css = ''
 
@@ -43,7 +59,7 @@ export default defineFontProvider('google', async (_options, ctx) => {
         baseURL: 'https://fonts.googleapis.com',
         headers: { 'user-agent': userAgents[extension as keyof typeof userAgents] },
         query: {
-          family: `${family}:` + `ital,wght@${resolvedVariants.join(';')}`,
+          family: `${family}:${resolvedAxes.join(',')}@${resolvedVariants.join(';')}`,
         },
       })
     }
@@ -64,6 +80,8 @@ export default defineFontProvider('google', async (_options, ctx) => {
   }
 })
 
+/** internal */
+
 interface FontIndexMeta {
   family: string
   subsets: string[]
@@ -79,4 +97,17 @@ interface FontIndexMeta {
     max: number
     defaultValue: number
   }>
+}
+
+// Google wants lowercase letters to be in front of uppercase letters.
+function googleFlavoredSorting(a: string, b: string) {
+  const isALowercase = a.charAt(0) === a.charAt(0).toLowerCase()
+  const isBLowercase = b.charAt(0) === b.charAt(0).toLowerCase()
+
+  if (isALowercase !== isBLowercase) {
+    return Number(isBLowercase) - Number(isALowercase)
+  }
+  else {
+    return a.localeCompare(b)
+  }
 }
