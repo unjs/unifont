@@ -46,6 +46,7 @@
     "simple-git-hooks": "latest",
     "typescript": "latest",
     "unbuild": "latest",
+    "unstorage": "^1.12.0",
     "vite": "latest",
     "vitest": "latest"
   },
