@@ -10,9 +10,11 @@ export interface ProviderContext {
   }
 }
 
+export type FontStyles = 'normal' | 'italic' | 'oblique'
+
 export interface ResolveFontOptions {
   weights: string[]
-  styles: Array<'normal' | 'italic' | 'oblique'>
+  styles: FontStyles[]
   // TODO: improve support and support unicode range
   subsets: string[]
   fallbacks?: string[]
