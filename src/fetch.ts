@@ -4,7 +4,7 @@ import { joinURL, withQuery } from 'ufo'
 
 interface Mini$FetchOptions extends RequestInit {
   baseURL?: string
-  responseType?: 'json' | 'arrayBuffer'
+  responseType?: 'json' | 'text'
   query?: Record<string, any>
 }
 
@@ -16,7 +16,7 @@ function mini$fetch<T = unknown>(url: string, options?: Mini$FetchOptions) {
     url = withQuery(url, options.query)
   }
   return fetch(url, options)
-    .then(r => options?.responseType === 'json' ? r.json() : options?.responseType === 'arrayBuffer' ? r.arrayBuffer() : r.text()) as Promise<T>
+    .then(r => options?.responseType === 'json' ? r.json() : r.text()) as Promise<T>
 }
 
 export const $fetch = Object.assign(mini$fetch, {
