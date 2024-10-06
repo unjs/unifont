@@ -62,14 +62,15 @@ export async function createUnifont(providers: Provider[], options?: UnifontOpti
 
   const allProviders = Object.keys(stack)
 
-  async function resolveFont(fontFamily: string, options = defaultResolveOptions, providers = allProviders) {
+  async function resolveFont(fontFamily: string, options?: Partial<ResolveFontOptions>, providers = allProviders) {
+    const mergedOptions = { ...defaultResolveOptions, ...options }
     for (const id of providers) {
       const provider = stack[id]
       if (!provider?.resolveFont)
         continue
 
       try {
-        const result = await provider.resolveFont(fontFamily, options)
+        const result = await provider.resolveFont(fontFamily, mergedOptions)
         if (result) {
           return {
             provider: id,
