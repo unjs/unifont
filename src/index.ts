@@ -14,6 +14,11 @@ export interface Unifont {
     provider?: string
     fonts: FontFaceData[]
   }>
+  /** @deprecated use `resolveFont` */
+  resolveFontFace: (fontFamily: string, options?: ResolveFontOptions, providers?: string[]) => Promise<{
+    provider?: string
+    fonts: FontFaceData[]
+  }>
 }
 
 export const defaultResolveOptions: ResolveFontOptions = {
@@ -83,5 +88,7 @@ export async function createUnifont(providers: Provider[], options?: UnifontOpti
 
   return {
     resolveFont,
+    // TODO: remove before v1
+    resolveFontFace: resolveFont,
   }
 }
