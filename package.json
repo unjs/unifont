@@ -7,7 +7,7 @@
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/danielroe/unifont.git"
+    "url": "git+https://github.com/unjs/unifont.git"
   },
   "sideEffects": false,
   "exports": {
