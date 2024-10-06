@@ -1,23 +1,21 @@
-import type { FontFaceData, InitializedProvider, Provider, ResolveFontOptions } from './types'
+import type { InitializedProvider, Provider, ResolveFontOptions, ResolveFontResult } from './types'
 import { createAsyncStorage, memoryStorage, type Storage } from './cache'
 
 export * as providers from './providers'
-export { defineFontProvider } from './types'
+export type { FontFaceData, LocalFontSource, Provider, ProviderContext, ProviderDefinition, ProviderFactory, RemoteFontSource, ResolveFontOptions } from './types'
+export { defineFontProvider } from './utils'
 
 export interface UnifontOptions {
   storage?: Storage
 }
 
-export type { ResolveFontOptions } from './types'
 export interface Unifont {
-  resolveFont: (fontFamily: string, options?: ResolveFontOptions, providers?: string[]) => Promise<{
+  resolveFont: (fontFamily: string, options?: ResolveFontOptions, providers?: string[]) => Promise<ResolveFontResult & {
     provider?: string
-    fonts: FontFaceData[]
   }>
   /** @deprecated use `resolveFont` */
-  resolveFontFace: (fontFamily: string, options?: ResolveFontOptions, providers?: string[]) => Promise<{
+  resolveFontFace: (fontFamily: string, options?: ResolveFontOptions, providers?: string[]) => Promise<ResolveFontResult & {
     provider?: string
-    fonts: FontFaceData[]
   }>
 }
 

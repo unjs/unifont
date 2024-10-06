@@ -1,7 +1,8 @@
-import { hash } from 'ohash'
+import type { FontFaceData, ResolveFontOptions } from '../types'
 
+import { hash } from 'ohash'
 import { $fetch } from '../fetch'
-import { defineFontProvider, type FontFaceData, type ResolveFontOptions } from '../types'
+import { defineFontProvider } from '../utils'
 
 const fontAPI = $fetch.create({ baseURL: 'https://api.fontsource.org/v1' })
 

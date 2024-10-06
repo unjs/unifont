@@ -1,6 +1,6 @@
 type Awaitable<T> = T | Promise<T>
 
-interface ProviderContext {
+export interface ProviderContext {
   storage: {
     getItem: {
       <T = unknown>(key: string): Promise<T | null>
@@ -29,6 +29,7 @@ export interface LocalFontSource {
   name: string
 }
 
+// TODO: name
 export interface FontFaceData {
   src: Array<LocalFontSource | RemoteFontSource>
   /**
@@ -50,18 +51,20 @@ export interface FontFaceData {
   variationSettings?: string
 }
 
-export interface InitializedProvider {
-  resolveFont: (family: string, options: ResolveFontOptions) => Awaitable<undefined | {
+export interface ResolveFontResult {
   /**
    * Return data used to generate @font-face declarations.
    * @see https://developer.mozilla.org/en-US/docs/Web/CSS/@font-face
    */
-    fonts: FontFaceData[]
-    fallbacks?: string[]
-  }>
+  fonts: FontFaceData[]
+  fallbacks?: string[]
 }
 
-interface ProviderDefinition<T = unknown> {
+export interface InitializedProvider {
+  resolveFont: (family: string, options: ResolveFontOptions) => Awaitable<ResolveFontResult | undefined>
+}
+
+export interface ProviderDefinition<T = unknown> {
   (options: T, ctx: ProviderContext): Awaitable<InitializedProvider | undefined>
 }
 
@@ -70,13 +73,9 @@ export interface Provider {
   (ctx: ProviderContext): Awaitable<InitializedProvider | undefined>
 }
 
-type ProviderFactory<T = unknown> =
+export type ProviderFactory<T = unknown> =
   unknown extends T
     ? () => Provider
     : Partial<T> extends T
       ? (options?: T) => Provider
       : (options: T) => Provider
-
-export function defineFontProvider<T = unknown>(name: string, provider: ProviderDefinition<T>): ProviderFactory<T> {
-  return ((options: T) => Object.assign(provider.bind(null, options || {} as T), { _name: name })) as ProviderFactory<T>
-}
