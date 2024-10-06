@@ -2,7 +2,7 @@ import { hash } from 'ohash'
 
 import { extractFontFaceData } from '../css/parse'
 import { $fetch } from '../fetch'
-import { defineFontProvider } from '../types'
+import { defineFontProvider } from '../utils'
 
 export default defineFontProvider('googleicons', async (_options, ctx) => {
   const googleIcons = await ctx.storage.getItem('googleicons:meta.json', async () => {

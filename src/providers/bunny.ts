@@ -1,8 +1,9 @@
-import { hash } from 'ohash'
+import type { ResolveFontOptions } from '../types'
 
+import { hash } from 'ohash'
 import { extractFontFaceData } from '../css/parse'
 import { $fetch } from '../fetch'
-import { defineFontProvider, type ResolveFontOptions } from '../types'
+import { defineFontProvider } from '../utils'
 
 const fontAPI = $fetch.create({ baseURL: 'https://fonts.bunny.net' })
 

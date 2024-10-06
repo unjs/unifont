@@ -1,8 +1,9 @@
-import { hash } from 'ohash'
+import type { ResolveFontOptions } from '../types'
 
+import { hash } from 'ohash'
 import { extractFontFaceData } from '../css/parse'
 import { $fetch } from '../fetch'
-import { defineFontProvider, type ResolveFontOptions } from '../types'
+import { defineFontProvider } from '../utils'
 
 export default defineFontProvider('google', async (_options, ctx) => {
   const googleFonts = await ctx.storage.getItem('google:meta.json', () => $fetch<{ familyMetadataList: FontIndexMeta[] }>('https://fonts.google.com/metadata/fonts', { responseType: 'json' }).then(r => r.familyMetadataList))
