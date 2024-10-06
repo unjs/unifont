@@ -5,7 +5,10 @@
   "packageManager": "pnpm@9.12.0",
   "description": "Framework agnostic tools for accessing data from font CDNs and providers",
   "license": "MIT",
-  "repository": "danielroe/unifont",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/danielroe/unifont.git"
+  },
   "sideEffects": false,
   "exports": {
     ".": "./dist/index.js"
