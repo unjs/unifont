@@ -2,6 +2,7 @@ import { createStorage } from 'unstorage'
 import { describe, expect, it, vi } from 'vitest'
 
 import { createAsyncStorage, memoryStorage } from '../src/cache'
+import { createUnifont, defineFontProvider } from '../src/index'
 
 describe('cache storage', () => {
   it('memory storage`', async () => {
@@ -26,5 +27,27 @@ describe('cache storage', () => {
     expect(setter).toHaveBeenCalledTimes(1)
 
     expect(await asyncStorage.getItem('unset')).toBe(null)
+  })
+
+  it('unifont works with custom storage', async () => {
+    const customStorage = {
+      getItem: vi.fn(() => 'value'),
+      setItem: vi.fn(),
+    }
+    const provider = defineFontProvider('custom-storage', async (_options, ctx) => {
+      await ctx.storage.setItem('key', 'value')
+      return {
+        async resolveFont() {
+          await ctx.storage.setItem('another-key', 'value')
+          await ctx.storage.getItem('key')
+          return { fonts: [] }
+        },
+      }
+    })
+    const unifont = await createUnifont([provider()], { storage: customStorage })
+    await unifont.resolveFont('Poppins')
+    expect(customStorage.getItem).toHaveBeenCalledWith('key')
+    expect(customStorage.setItem).toHaveBeenCalledWith('key', expect.objectContaining({ data: 'value' }))
+    expect(customStorage.setItem).toHaveBeenCalledWith('another-key', expect.objectContaining({ data: 'value' }))
   })
 })
