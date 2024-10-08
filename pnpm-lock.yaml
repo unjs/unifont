@@ -14,18 +14,9 @@ importers:
       css-tree:
         specifier: ^3.0.0
         version: 3.0.0
-      defu:
-        specifier: ^6.1.4
-        version: 6.1.4
-      node-fetch-native:
-        specifier: ^1.6.4
-        version: 1.6.4
       ohash:
         specifier: ^1.1.4
         version: 1.1.4
-      ufo:
-        specifier: ^1.5.4
-        version: 1.5.4
     devDependencies:
       '@antfu/eslint-config':
         specifier: latest

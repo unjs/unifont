@@ -33,10 +33,7 @@
   },
   "dependencies": {
     "css-tree": "^3.0.0",
-    "defu": "^6.1.4",
-    "node-fetch-native": "^1.6.4",
-    "ohash": "^1.1.4",
-    "ufo": "^1.5.4"
+    "ohash": "^1.1.4"
   },
   "devDependencies": {
     "@antfu/eslint-config": "latest",

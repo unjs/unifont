@@ -62,7 +62,7 @@ export default defineFontProvider<ProviderOption>('adobe', async (options, ctx) 
       if (styles.length === 0) {
         continue
       }
-      const css = await fontCSSAPI<string>(`${kit.id}.css`)
+      const css = await fontCSSAPI<string>(`/${kit.id}.css`)
 
       // TODO: Not sure whether this css_names array always has a single element. Still need to investigate.
       const cssName = font.css_names[0] ?? family.toLowerCase().split(' ').join('-')
