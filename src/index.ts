@@ -55,7 +55,7 @@ export async function createUnifont(providers: Provider[], options?: UnifontOpti
     catch (err) {
       console.error(`Could not initialize provider \`${provider._name}\`. \`unifont\` will not be able to process fonts provided by this provider.`, err)
     }
-    if (!stack[provider._name]) {
+    if (!stack[provider._name]?.resolveFont) {
       delete stack[provider._name]
     }
   }))
