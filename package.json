@@ -2,7 +2,7 @@
   "name": "unifont",
   "type": "module",
   "version": "0.1.0",
-  "packageManager": "pnpm@9.12.0",
+  "packageManager": "pnpm@9.12.1",
   "description": "Framework agnostic tools for accessing data from font CDNs and providers",
   "license": "MIT",
   "repository": {
@@ -36,19 +36,19 @@
     "ohash": "^1.1.4"
   },
   "devDependencies": {
-    "@antfu/eslint-config": "latest",
-    "@types/css-tree": "^2.3.8",
-    "@types/node": "20.16.10",
-    "@vitest/coverage-v8": "latest",
+    "@antfu/eslint-config": "3.7.3",
+    "@types/css-tree": "2.3.8",
+    "@types/node": "20.16.11",
+    "@vitest/coverage-v8": "2.1.2",
     "bumpp": "9.6.1",
-    "eslint": "latest",
-    "lint-staged": "latest",
-    "simple-git-hooks": "latest",
-    "typescript": "latest",
-    "unbuild": "latest",
-    "unstorage": "^1.12.0",
-    "vite": "latest",
-    "vitest": "latest"
+    "eslint": "9.12.0",
+    "lint-staged": "15.2.10",
+    "simple-git-hooks": "2.11.1",
+    "typescript": "5.6.2",
+    "unbuild": "2.0.0",
+    "unstorage": "1.12.0",
+    "vite": "5.4.8",
+    "vitest": "2.1.2"
   },
   "resolutions": {
     "unifont": "link:."
@@ -58,7 +58,7 @@
   },
   "lint-staged": {
     "*.{js,ts,mjs,cjs,json,.*rc}": [
-      "pnpm eslint --fix"
+      "npx eslint --fix"
     ]
   }
 }
