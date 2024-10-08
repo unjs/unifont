@@ -10,11 +10,11 @@ export interface UnifontOptions {
 }
 
 export interface Unifont {
-  resolveFont: (fontFamily: string, options?: ResolveFontOptions, providers?: string[]) => Promise<ResolveFontResult & {
+  resolveFont: (fontFamily: string, options?: Partial<ResolveFontOptions>, providers?: string[]) => Promise<ResolveFontResult & {
     provider?: string
   }>
   /** @deprecated use `resolveFont` */
-  resolveFontFace: (fontFamily: string, options?: ResolveFontOptions, providers?: string[]) => Promise<ResolveFontResult & {
+  resolveFontFace: (fontFamily: string, options?: Partial<ResolveFontOptions>, providers?: string[]) => Promise<ResolveFontResult & {
     provider?: string
   }>
 }
