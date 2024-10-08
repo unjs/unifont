@@ -11,6 +11,7 @@ describe('google', () => {
 
   it('works', async () => {
     const unifont = await createUnifont([providers.google()])
+    expect(await unifont.resolveFont('NonExistent Font').then(r => r.fonts)).toMatchInlineSnapshot(`[]`)
 
     const { fonts } = await unifont.resolveFont('Poppins')
 

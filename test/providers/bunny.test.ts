@@ -4,6 +4,8 @@ import { createUnifont, providers } from '../../src'
 describe('bunny', () => {
   it('works', async () => {
     const unifont = await createUnifont([providers.bunny()])
+    expect(await unifont.resolveFont('NonExistent Font').then(r => r.fonts)).toMatchInlineSnapshot(`[]`)
+    expect(await unifont.resolveFont('Abel', { weights: ['1100'] }).then(r => r.fonts)).toMatchInlineSnapshot(`[]`)
     const { fonts } = await unifont.resolveFont('Abel')
     expect(fonts).toMatchInlineSnapshot(`
       [

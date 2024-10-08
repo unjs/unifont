@@ -27,7 +27,7 @@ export function extractFontFaceData(css: string, family?: string): FontFaceData[
   const fontFaces: FontFaceData[] = []
 
   for (const node of findAll(parse(css), node => node.type === 'Atrule' && node.name === 'font-face')) {
-    /* istanbul ignore block */
+    /* v8 ignore next 3 */
     if (node.type !== 'Atrule' || node.name !== 'font-face') {
       continue
     }

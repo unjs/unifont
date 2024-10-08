@@ -9,11 +9,10 @@ interface ProviderOption {
   id: string[] | string
 }
 
-const fontAPI = $fetch.create({ baseURL: 'https://typekit.com' })
 const fontCSSAPI = $fetch.create({ baseURL: 'https://use.typekit.net' })
 
 async function getAdobeFontMeta(id: string): Promise<AdobeFontKit> {
-  const { kit } = await fontAPI<{ kit: AdobeFontKit }>(`/api/v1/json/kits/${id}/published`, { responseType: 'json' })
+  const { kit } = await $fetch<{ kit: AdobeFontKit }>(`https://typekit.com/api/v1/json/kits/${id}/published`, { responseType: 'json' })
   return kit
 }
 

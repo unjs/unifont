@@ -19,3 +19,18 @@ export function sanitizeFontSource(data: FontFaceData[]) {
     })),
   }))
 }
+
+export function mockFetchReturn(condition: RegExp, value: () => unknown) {
+  const originalFetch = globalThis.fetch
+
+  globalThis.fetch = (...args) => {
+    if (condition.test(args[0] as string)) {
+      return value() as any
+    }
+    return originalFetch(...args)
+  }
+
+  return () => {
+    globalThis.fetch = originalFetch
+  }
+}

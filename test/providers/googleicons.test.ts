@@ -5,6 +5,7 @@ import { sanitizeFontSource } from '../utils'
 describe('googleicons', () => {
   it('works', async () => {
     const unifont = await createUnifont([providers.googleicons()])
+    expect(await unifont.resolveFont('Poppins').then(r => r.fonts)).toMatchInlineSnapshot(`[]`)
     const { fonts } = await unifont.resolveFont('Material Symbols Outlined')
     const { fonts: legacy } = await unifont.resolveFont('Material Icons Outlined')
     expect(sanitizeFontSource(fonts)).toMatchInlineSnapshot(`

@@ -1,9 +1,12 @@
-import { describe, expect, it } from 'vitest'
+import { describe, expect, it, vi } from 'vitest'
 import { createUnifont, providers } from '../../src'
+import { mockFetchReturn } from '../utils'
 
 describe('fontsource', () => {
   it('works', async () => {
     const unifont = await createUnifont([providers.fontsource()])
+    expect(await unifont.resolveFont('NonExistent Font').then(r => r.fonts)).toMatchInlineSnapshot(`[]`)
+    expect(await unifont.resolveFont('Roboto Mono', { weights: ['1100'] }).then(r => r.fonts)).toMatchInlineSnapshot(`[]`)
     const { fonts } = await unifont.resolveFont('Roboto Mono')
 
     expect(fonts).toMatchInlineSnapshot(`
@@ -678,5 +681,179 @@ describe('fontsource', () => {
         },
       ]
     `)
+  })
+
+  it('handles default subsets', async () => {
+    const unifont = await createUnifont([providers.fontsource()])
+    const { fonts } = await unifont.resolveFont('Roboto Mono', { subsets: undefined })
+    expect(fonts).toMatchInlineSnapshot(`
+      [
+        {
+          "src": [
+            {
+              "format": "woff2",
+              "url": "https://cdn.jsdelivr.net/fontsource/fonts/roboto-mono:vf@latest/latin-wght-normal.woff2",
+            },
+          ],
+          "style": "normal",
+          "unicodeRange": [
+            "U+0000-00FF",
+            "U+0131",
+            "U+0152-0153",
+            "U+02BB-02BC",
+            "U+02C6",
+            "U+02DA",
+            "U+02DC",
+            "U+0304",
+            "U+0308",
+            "U+0329",
+            "U+2000-206F",
+            "U+2074",
+            "U+20AC",
+            "U+2122",
+            "U+2191",
+            "U+2193",
+            "U+2212",
+            "U+2215",
+            "U+FEFF",
+            "U+FFFD",
+          ],
+          "weight": [
+            100,
+            700,
+          ],
+        },
+        {
+          "src": [
+            {
+              "format": "woff2",
+              "url": "https://cdn.jsdelivr.net/fontsource/fonts/roboto-mono@latest/latin-400-normal.woff2",
+            },
+            {
+              "format": "woff",
+              "url": "https://cdn.jsdelivr.net/fontsource/fonts/roboto-mono@latest/latin-400-normal.woff",
+            },
+            {
+              "format": "ttf",
+              "url": "https://cdn.jsdelivr.net/fontsource/fonts/roboto-mono@latest/latin-400-normal.ttf",
+            },
+          ],
+          "style": "normal",
+          "unicodeRange": [
+            "U+0000-00FF",
+            "U+0131",
+            "U+0152-0153",
+            "U+02BB-02BC",
+            "U+02C6",
+            "U+02DA",
+            "U+02DC",
+            "U+0304",
+            "U+0308",
+            "U+0329",
+            "U+2000-206F",
+            "U+2074",
+            "U+20AC",
+            "U+2122",
+            "U+2191",
+            "U+2193",
+            "U+2212",
+            "U+2215",
+            "U+FEFF",
+            "U+FFFD",
+          ],
+          "weight": "400",
+        },
+        {
+          "src": [
+            {
+              "format": "woff2",
+              "url": "https://cdn.jsdelivr.net/fontsource/fonts/roboto-mono:vf@latest/latin-wght-italic.woff2",
+            },
+          ],
+          "style": "italic",
+          "unicodeRange": [
+            "U+0000-00FF",
+            "U+0131",
+            "U+0152-0153",
+            "U+02BB-02BC",
+            "U+02C6",
+            "U+02DA",
+            "U+02DC",
+            "U+0304",
+            "U+0308",
+            "U+0329",
+            "U+2000-206F",
+            "U+2074",
+            "U+20AC",
+            "U+2122",
+            "U+2191",
+            "U+2193",
+            "U+2212",
+            "U+2215",
+            "U+FEFF",
+            "U+FFFD",
+          ],
+          "weight": [
+            100,
+            700,
+          ],
+        },
+        {
+          "src": [
+            {
+              "format": "woff2",
+              "url": "https://cdn.jsdelivr.net/fontsource/fonts/roboto-mono@latest/latin-400-italic.woff2",
+            },
+            {
+              "format": "woff",
+              "url": "https://cdn.jsdelivr.net/fontsource/fonts/roboto-mono@latest/latin-400-italic.woff",
+            },
+            {
+              "format": "ttf",
+              "url": "https://cdn.jsdelivr.net/fontsource/fonts/roboto-mono@latest/latin-400-italic.ttf",
+            },
+          ],
+          "style": "italic",
+          "unicodeRange": [
+            "U+0000-00FF",
+            "U+0131",
+            "U+0152-0153",
+            "U+02BB-02BC",
+            "U+02C6",
+            "U+02DA",
+            "U+02DC",
+            "U+0304",
+            "U+0308",
+            "U+0329",
+            "U+2000-206F",
+            "U+2074",
+            "U+20AC",
+            "U+2122",
+            "U+2191",
+            "U+2193",
+            "U+2212",
+            "U+2215",
+            "U+FEFF",
+            "U+FFFD",
+          ],
+          "weight": "400",
+        },
+      ]
+    `)
+  })
+
+  it('should handle failure to fetch', async () => {
+    const error = vi.spyOn(console, 'error').mockImplementation(() => {})
+    const restoreFetch = mockFetchReturn(/variable/, () => {
+      throw new Error('Failed to fetch')
+    })
+
+    const unifont = await createUnifont([providers.fontsource()])
+    await unifont.resolveFont('Roboto Mono')
+
+    expect(error).toHaveBeenCalledWith('Could not download variable axes metadata for `Roboto Mono` from `fontsource`. `unifont` will not be able to inject variable axes for Roboto Mono.')
+
+    error.mockRestore()
+    restoreFetch()
   })
 })
