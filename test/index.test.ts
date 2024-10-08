@@ -3,9 +3,13 @@ import { createUnifont, defineFontProvider } from '../src'
 
 describe('unifont', () => {
   it('works with no providers', async () => {
+    const error = vi.spyOn(console, 'error').mockImplementation(() => {})
     const unifont = await createUnifont([])
     const { fonts } = await unifont.resolveFont('Poppins')
     expect(fonts).toMatchInlineSnapshot(`[]`)
+    await unifont.resolveFont('Poppins', {}, ['non-existent'])
+    expect(console.error).not.toHaveBeenCalled()
+    error.mockRestore()
   })
 
   it('sanitizes providers that do not return a valid provider', async () => {

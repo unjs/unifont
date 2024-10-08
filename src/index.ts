@@ -68,7 +68,7 @@ export async function createUnifont(providers: Provider[], options?: UnifontOpti
       const provider = stack[id]
 
       try {
-        const result = await provider!.resolveFont(fontFamily, mergedOptions)
+        const result = await provider?.resolveFont(fontFamily, mergedOptions)
         if (result) {
           return {
             provider: id,
