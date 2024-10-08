@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { createUnifont, providers } from '../../src'
-import { pickUniqueBy } from '../utils'
+import { pickUniqueBy, sanitizeFontSource } from '../utils'
 
 describe('adobe', () => {
   it('correctly types options for adobe provider', async () => {
@@ -15,27 +15,23 @@ describe('adobe', () => {
     const unifont = await createUnifont([providers.adobe({ id: ['sij5ufr', 'grx7wdj'] })])
 
     const { fonts: aleo } = await unifont.resolveFont('Aleo')
-    const normalised = aleo.map(f => ({
-      ...f,
-      src: f.src.map(s => ({ ...s, url: 'url' in s ? s.url.replace(/https:\/\/use\.typekit\.net\/.*$/, '<some-font-url>') : undefined })),
-    }))
 
-    expect(normalised).toMatchInlineSnapshot(`
+    expect(sanitizeFontSource(aleo)).toMatchInlineSnapshot(`
       [
         {
           "display": "auto",
           "src": [
             {
               "format": "woff2",
-              "url": "<some-font-url>",
+              "url": "https://use.typekit.net/font",
             },
             {
               "format": "woff",
-              "url": "<some-font-url>",
+              "url": "https://use.typekit.net/font",
             },
             {
               "format": "opentype",
-              "url": "<some-font-url>",
+              "url": "https://use.typekit.net/font",
             },
           ],
           "style": "italic",
@@ -46,15 +42,15 @@ describe('adobe', () => {
           "src": [
             {
               "format": "woff2",
-              "url": "<some-font-url>",
+              "url": "https://use.typekit.net/font",
             },
             {
               "format": "woff",
-              "url": "<some-font-url>",
+              "url": "https://use.typekit.net/font",
             },
             {
               "format": "opentype",
-              "url": "<some-font-url>",
+              "url": "https://use.typekit.net/font",
             },
           ],
           "style": "normal",
