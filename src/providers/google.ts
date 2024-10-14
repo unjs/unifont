@@ -5,7 +5,7 @@ import { extractFontFaceData } from '../css/parse'
 import { $fetch } from '../fetch'
 import { defineFontProvider } from '../utils'
 
-type VariableAxis = 'opsz' | 'slnt' | 'wdth' | string
+type VariableAxis = 'opsz' | 'slnt' | 'wdth' | (string & {})
 
 interface ProviderOption {
   experimental?: {
@@ -13,7 +13,7 @@ interface ProviderOption {
      * Experimental: Setting variable axis configuration on a per-font basis.
      */
     variableAxis?: {
-      [key: string]: { [key: VariableAxis]: string[] }
+      [key: string]: Partial<Record<VariableAxis, string[]>>
     }
   }
 }
