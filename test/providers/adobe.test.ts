@@ -1,6 +1,6 @@
-import { describe, expect, it } from 'vitest'
+import { describe, expect, it, vi } from 'vitest'
 import { createUnifont, providers } from '../../src'
-import { pickUniqueBy } from '../utils'
+import { mockFetchReturn, pickUniqueBy, sanitizeFontSource } from '../utils'
 
 describe('adobe', () => {
   it('correctly types options for adobe provider', async () => {
@@ -11,31 +11,62 @@ describe('adobe', () => {
     expect(true).toBe(true)
   })
 
+  it('handles empty id', async () => {
+    // @ts-expect-error id is required
+    await createUnifont([providers.adobe({})])
+  })
+
+  it('handles string id', async () => {
+    const unifont = await createUnifont([providers.adobe({ id: 'sij5ufr' })])
+    const { fonts } = await unifont.resolveFont('Aleo')
+    expect(fonts.length).toBeGreaterThan(0)
+  })
+
+  it('handles invalid JSON from adobe api', async () => {
+    const error = vi.spyOn(console, 'error').mockImplementation(() => {})
+
+    const unifont = await createUnifont([providers.adobe({ id: ['bob'] })])
+
+    const restoreFetch = mockFetchReturn(/^https:\/\/typekit.com\/api\//, () => {
+      return { json: () => Promise.resolve({ kit: '' }) }
+    })
+    expect(await unifont.resolveFont('Aleo').then(r => r.fonts)).toMatchInlineSnapshot(`[]`)
+
+    expect(error).toHaveBeenCalledWith(
+      'Could not initialize provider `adobe`. `unifont` will not be able to process fonts provided by this provider.',
+      expect.objectContaining({}),
+    )
+
+    restoreFetch()
+  })
+
   it('works', async () => {
     const unifont = await createUnifont([providers.adobe({ id: ['sij5ufr', 'grx7wdj'] })])
+    expect(await unifont.resolveFont('NonExistent Font').then(r => r.fonts)).toMatchInlineSnapshot(`[]`)
+    expect(await unifont.resolveFont('Aleo', {
+      weights: ['1100'],
+      // @ts-expect-error invalid style
+      styles: ['foo'],
+    }).then(r => r.fonts)).toMatchInlineSnapshot(`[]`)
 
     const { fonts: aleo } = await unifont.resolveFont('Aleo')
-    const normalised = aleo.map(f => ({
-      ...f,
-      src: f.src.map(s => ({ ...s, url: 'url' in s ? s.url.replace(/https:\/\/use\.typekit\.net\/.*$/, '<some-font-url>') : undefined })),
-    }))
 
-    expect(normalised).toMatchInlineSnapshot(`
+    expect(sanitizeFontSource(aleo)).toMatchInlineSnapshot(`
       [
         {
           "display": "auto",
           "src": [
             {
               "format": "woff2",
-              "url": "<some-font-url>",
+              "url": "https://use.typekit.net/font",
             },
             {
               "format": "woff",
-              "url": "<some-font-url>",
+              "url": "https://use.typekit.net/font",
             },
             {
               "format": "opentype",
-              "url": "<some-font-url>",
+              "url": "https://use.typekit.net/font",
             },
           ],
           "style": "italic",
@@ -46,15 +77,15 @@ describe('adobe', () => {
           "src": [
             {
               "format": "woff2",
-              "url": "<some-font-url>",
+              "url": "https://use.typekit.net/font",
             },
             {
               "format": "woff",
-              "url": "<some-font-url>",
+              "url": "https://use.typekit.net/font",
             },
             {
               "format": "opentype",
-              "url": "<some-font-url>",
+              "url": "https://use.typekit.net/font",
             },
           ],
           "style": "normal",

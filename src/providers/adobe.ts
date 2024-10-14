@@ -9,11 +9,10 @@ interface ProviderOption {
   id: string[] | string
 }
 
-const fontAPI = $fetch.create({ baseURL: 'https://typekit.com' })
 const fontCSSAPI = $fetch.create({ baseURL: 'https://use.typekit.net' })
 
 async function getAdobeFontMeta(id: string): Promise<AdobeFontKit> {
-  const { kit } = await fontAPI<{ kit: AdobeFontKit }>(`/api/v1/json/kits/${id}/published`, { responseType: 'json' })
+  const { kit } = await $fetch<{ kit: AdobeFontKit }>(`https://typekit.com/api/v1/json/kits/${id}/published`, { responseType: 'json' })
   return kit
 }
 
@@ -62,7 +61,7 @@ export default defineFontProvider<ProviderOption>('adobe', async (options, ctx) 
       if (styles.length === 0) {
         continue
       }
-      const css = await fontCSSAPI<string>(`${kit.id}.css`)
+      const css = await fontCSSAPI<string>(`/${kit.id}.css`)
 
       // TODO: Not sure whether this css_names array always has a single element. Still need to investigate.
       const cssName = font.css_names[0] ?? family.toLowerCase().split(' ').join('-')

@@ -27,6 +27,7 @@ export function extractFontFaceData(css: string, family?: string): FontFaceData[
   const fontFaces: FontFaceData[] = []
 
   for (const node of findAll(parse(css), node => node.type === 'Atrule' && node.name === 'font-face')) {
+    /* v8 ignore next 3 */
     if (node.type !== 'Atrule' || node.name !== 'font-face') {
       continue
     }
@@ -61,6 +62,9 @@ export function extractFontFaceData(css: string, family?: string): FontFaceData[
         data[extractableKeyMap[child.property]!] = child.property === 'src' && !Array.isArray(value) ? [value] : value
       }
     }
+    if (!data.src) {
+      continue
+    }
     fontFaces.push(data as FontFaceData)
   }
 
@@ -83,11 +87,21 @@ function extractCSSValue(node: Declaration) {
       if (child.name === 'local' && child.children.first?.type === 'String') {
         values.push({ name: child.children.first.value })
       }
-      if (child.name === 'format' && child.children.first?.type === 'String') {
-        (values.at(-1) as RemoteFontSource).format = child.children.first.value
+      if (child.name === 'format') {
+        if (child.children.first?.type === 'String') {
+          (values.at(-1) as RemoteFontSource).format = child.children.first.value
+        }
+        else if (child.children.first?.type === 'Identifier') {
+          (values.at(-1) as RemoteFontSource).format = child.children.first.name
+        }
       }
-      if (child.name === 'tech' && child.children.first?.type === 'String') {
-        (values.at(-1) as RemoteFontSource).tech = child.children.first.value
+      if (child.name === 'tech') {
+        if (child.children.first?.type === 'String') {
+          (values.at(-1) as RemoteFontSource).tech = child.children.first.value
+        }
+        else if (child.children.first?.type === 'Identifier') {
+          (values.at(-1) as RemoteFontSource).tech = child.children.first.name
+        }
       }
     }
     if (child.type === 'Url') {
@@ -128,7 +142,12 @@ function mergeFontSources(data: FontFaceData[]) {
     const keys = Object.keys(face).filter(k => k !== 'src') as Array<keyof typeof face>
     const existing = mergedData.find(f => (Object.keys(f).length === keys.length + 1) && keys.every(key => f[key]?.toString() === face[key]?.toString()))
     if (existing) {
-      existing.src.push(...face.src)
+      for (const s of face.src) {
+        // don't add duplicate sources
+        if (existing.src.every(src => 'url' in src ? !('url' in s) || s.url !== src.url : !('name' in s) || s.name !== src.name)) {
+          existing.src.push(s)
+        }
+      }
     }
     else {
       mergedData.push(face)
