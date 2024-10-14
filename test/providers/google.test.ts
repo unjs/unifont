@@ -56,7 +56,7 @@ describe('google', () => {
     const resolvedStyles = pickUniqueBy(fonts, fnt => fnt.style)
     const resolvedWeights = pickUniqueBy(fonts, fnt => String(fnt.weight))
 
-    const styles = ['oblique 0deg 15deg', 'normal'] as ResolveFontOptions['styles']
+    const styles = ['oblique', 'normal'] as ResolveFontOptions['styles']
 
     // Variable wght and separate weights from 300 to 1000
     const weights = ['300,1000', ...([...Array.from({ length: 7 }).keys()].map(i => String(i * 100 + 300)))]
