@@ -36,4 +36,33 @@ describe('google', () => {
     expect(resolvedStyles).toMatchObject(styles)
     expect(resolvedWeights).toMatchObject(weights)
   })
+
+  it('supports variable axes', async () => {
+    const unifont = await createUnifont([providers.google({
+      experimental: {
+        variableAxis: {
+          Recursive: {
+            slnt: ['-15..0'],
+            CASL: ['0..1'],
+            CRSV: ['0..1'],
+            MONO: ['0..1'],
+          },
+        },
+      },
+    })])
+
+    const { fonts } = await unifont.resolveFont('Recursive')
+
+    const resolvedStyles = pickUniqueBy(fonts, fnt => fnt.style)
+    const resolvedWeights = pickUniqueBy(fonts, fnt => String(fnt.weight))
+
+    const styles = ['oblique', 'normal'] as ResolveFontOptions['styles']
+
+    // Variable wght and separate weights from 300 to 1000
+    const weights = ['300,1000', ...([...Array.from({ length: 7 }).keys()].map(i => String(i * 100 + 300)))]
+
+    expect(fonts).toHaveLength(11)
+    expect(resolvedStyles).toMatchObject(styles)
+    expect(resolvedWeights).toMatchObject(weights)
+  })
 })
