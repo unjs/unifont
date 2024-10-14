@@ -113,6 +113,10 @@ function extractCSSValue(node: Declaration) {
     if (child.type === 'String') {
       values.push(child.value)
     }
+    if (child.type === 'Dimension') {
+      const dimensionValue = child.value + child.unit
+      buffer = buffer ? `${buffer} ${dimensionValue}` : dimensionValue
+    }
     if (child.type === 'Operator' && child.value === ',' && buffer) {
       values.push(buffer)
       buffer = ''
