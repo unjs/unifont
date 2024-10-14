@@ -5,7 +5,20 @@ import { extractFontFaceData } from '../css/parse'
 import { $fetch } from '../fetch'
 import { defineFontProvider } from '../utils'
 
-export default defineFontProvider('google', async (_options, ctx) => {
+type VariableAxis = 'opsz' | 'slnt' | 'wdth' | string
+
+interface ProviderOption {
+  experimental?: {
+    /**
+     * Experimental: Setting variable axis configuration on a per-font basis.
+     */
+    variableAxis?: {
+      [key: string]: { [key: VariableAxis]: string[] }
+    }
+  }
+}
+
+export default defineFontProvider<ProviderOption>('google', async (_options = {}, ctx) => {
   const googleFonts = await ctx.storage.getItem('google:meta.json', () => $fetch<{ familyMetadataList: FontIndexMeta[] }>('https://fonts.google.com/metadata/fonts', { responseType: 'json' }).then(r => r.familyMetadataList))
 
   const styleMap = {
@@ -37,11 +50,11 @@ export default defineFontProvider('google', async (_options, ctx) => {
     const resolvedAxes = []
     let resolvedVariants: string[] = []
 
-    for (const axis of ['wght', 'ital', ...Object.keys(options.experimental?.variableAxis ?? {})].sort(googleFlavoredSorting)) {
+    for (const axis of ['wght', 'ital', ...Object.keys(_options?.experimental?.variableAxis?.[family] ?? {})].sort(googleFlavoredSorting)) {
       const axisValue = ({
         wght: weights,
         ital: styles,
-      })[axis] ?? options.experimental!.variableAxis![axis]!
+      })[axis] ?? _options!.experimental!.variableAxis![family]![axis]!
 
       if (resolvedVariants.length === 0) {
         resolvedVariants = axisValue
