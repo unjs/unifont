@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest'
 import { extractFontFaceData } from '../src/css/parse'
 
 describe('extract font face from CSS', () => {
-  it('should add declarations for `font-family`', async () => {
+  it('should add declarations for `font-family`', () => {
     expect(extractFontFaceData(`
     @font-face {
       font-family: 'Open Sans';
@@ -61,7 +61,7 @@ describe('extract font face from CSS', () => {
       `)
   })
 
-  it('should skip non-@font-face declarations', async () => {
+  it('should skip non-@font-face declarations', () => {
     expect(extractFontFaceData(`
     @media (min-width: 768px) {
       font-family: Arial;
@@ -72,7 +72,7 @@ describe('extract font face from CSS', () => {
     @font-face {}`)).toMatchInlineSnapshot(`[]`)
   })
 
-  it('should correctly merge duplicate font faces and duplicate font sources', async () => {
+  it('should correctly merge duplicate font faces and duplicate font sources', () => {
     expect(extractFontFaceData(`
       @font-face {
         font-family: 'Open Sans';
@@ -97,5 +97,26 @@ describe('extract font face from CSS', () => {
             },
           ]
         `)
+  })
+
+  it('should handle multi-value font-style', () => {
+    expect(extractFontFaceData(`
+@font-face {
+  font-style: oblique 0deg 15deg;
+  src: url(https://myfont.com/font.woff2) format('woff2');
+}
+    `)).toMatchInlineSnapshot(`
+      [
+        {
+          "src": [
+            {
+              "format": "woff2",
+              "url": "https://myfont.com/font.woff2",
+            },
+          ],
+          "style": "oblique 0deg 15deg",
+        },
+      ]
+    `)
   })
 })
