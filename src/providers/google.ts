@@ -13,7 +13,7 @@ interface ProviderOption {
      * Experimental: Setting variable axis configuration on a per-font basis.
      */
     variableAxis?: {
-      [key: string]: Partial<Record<VariableAxis, string[]>>
+      [key: string]: Partial<Record<VariableAxis, ([string, string] | string)[] >>
     }
   }
 }
@@ -54,7 +54,7 @@ export default defineFontProvider<ProviderOption>('google', async (_options = {}
       const axisValue = ({
         wght: weights,
         ital: styles,
-      })[axis] ?? _options!.experimental!.variableAxis![family]![axis]!
+      })[axis] ?? _options!.experimental!.variableAxis![family]![axis]!.map(v => Array.isArray(v) ? `${v[0]}..${v[1]}` : v)
 
       if (resolvedVariants.length === 0) {
         resolvedVariants = axisValue

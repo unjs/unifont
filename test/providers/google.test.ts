@@ -42,10 +42,10 @@ describe('google', () => {
       experimental: {
         variableAxis: {
           Recursive: {
-            slnt: ['-15..0'],
-            CASL: ['0..1'],
-            CRSV: ['0..1'],
-            MONO: ['0..1'],
+            slnt: [['-15', '0']],
+            CASL: [['0', '1']],
+            CRSV: ['1'],
+            MONO: [['0', '1']],
           },
         },
       },
