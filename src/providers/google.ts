@@ -5,7 +5,20 @@ import { extractFontFaceData } from '../css/parse'
 import { $fetch } from '../fetch'
 import { defineFontProvider } from '../utils'
 
-export default defineFontProvider('google', async (_options, ctx) => {
+type VariableAxis = 'opsz' | 'slnt' | 'wdth' | (string & {})
+
+interface ProviderOption {
+  experimental?: {
+    /**
+     * Experimental: Setting variable axis configuration on a per-font basis.
+     */
+    variableAxis?: {
+      [key: string]: Partial<Record<VariableAxis, ([string, string] | string)[] >>
+    }
+  }
+}
+
+export default defineFontProvider<ProviderOption>('google', async (_options = {}, ctx) => {
   const googleFonts = await ctx.storage.getItem('google:meta.json', () => $fetch<{ familyMetadataList: FontIndexMeta[] }>('https://fonts.google.com/metadata/fonts', { responseType: 'json' }).then(r => r.familyMetadataList))
 
   const styleMap = {
@@ -34,7 +47,23 @@ export default defineFontProvider('google', async (_options, ctx) => {
     if (weights.length === 0 || styles.length === 0)
       return []
 
-    const resolvedVariants = weights.flatMap(w => [...styles].map(s => `${s},${w}`)).sort()
+    const resolvedAxes = []
+    let resolvedVariants: string[] = []
+
+    for (const axis of ['wght', 'ital', ...Object.keys(_options?.experimental?.variableAxis?.[family] ?? {})].sort(googleFlavoredSorting)) {
+      const axisValue = ({
+        wght: weights,
+        ital: styles,
+      })[axis] ?? _options!.experimental!.variableAxis![family]![axis]!.map(v => Array.isArray(v) ? `${v[0]}..${v[1]}` : v)
+
+      if (resolvedVariants.length === 0) {
+        resolvedVariants = axisValue
+      }
+      else {
+        resolvedVariants = resolvedVariants.flatMap(v => [...axisValue].map(o => [v, o].join(','))).sort()
+      }
+      resolvedAxes.push(axis)
+    }
 
     let css = ''
 
@@ -43,7 +72,7 @@ export default defineFontProvider('google', async (_options, ctx) => {
         baseURL: 'https://fonts.googleapis.com',
         headers: { 'user-agent': userAgents[extension as keyof typeof userAgents] },
         query: {
-          family: `${family}:` + `ital,wght@${resolvedVariants.join(';')}`,
+          family: `${family}:${resolvedAxes.join(',')}@${resolvedVariants.join(';')}`,
         },
       })
     }
@@ -64,6 +93,8 @@ export default defineFontProvider('google', async (_options, ctx) => {
   }
 })
 
+/** internal */
+
 interface FontIndexMeta {
   family: string
   subsets: string[]
@@ -79,4 +110,17 @@ interface FontIndexMeta {
     max: number
     defaultValue: number
   }>
+}
+
+// Google wants lowercase letters to be in front of uppercase letters.
+function googleFlavoredSorting(a: string, b: string) {
+  const isALowercase = a.charAt(0) === a.charAt(0).toLowerCase()
+  const isBLowercase = b.charAt(0) === b.charAt(0).toLowerCase()
+
+  if (isALowercase !== isBLowercase) {
+    return Number(isBLowercase) - Number(isALowercase)
+  }
+  else {
+    return a.localeCompare(b)
+  }
 }
