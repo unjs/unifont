@@ -36,4 +36,34 @@ describe('fontshare', () => {
       ]
     `)
   })
+
+  it('handles italic styles', async () => {
+    const unifont = await createUnifont([providers.fontshare()])
+    const { fonts } = await unifont.resolveFont('Ranade', {
+      styles: ['italic'],
+    })
+    expect(sanitizeFontSource(fonts)).toMatchInlineSnapshot(`
+      [
+        {
+          "display": "swap",
+          "src": [
+            {
+              "format": "woff2",
+              "url": "//cdn.fontshare.com/font",
+            },
+            {
+              "format": "woff",
+              "url": "//cdn.fontshare.com/font",
+            },
+            {
+              "format": "truetype",
+              "url": "//cdn.fontshare.com/font",
+            },
+          ],
+          "style": "italic",
+          "weight": 400,
+        },
+      ]
+    `)
+  })
 })

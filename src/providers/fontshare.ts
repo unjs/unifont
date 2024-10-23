@@ -39,7 +39,10 @@ export default defineFontProvider('fontshare', async (_options, ctx) => {
       if (style.is_italic && !options.styles.includes('italic')) {
         continue
       }
-      if (!options.weights.includes(String(style.weight.number))) {
+      if (!style.is_italic && !options.styles.includes('normal')) {
+        continue
+      }
+      if (!options.weights.includes(String(style.weight.weight))) {
         continue
       }
       numbers.push(style.weight.number)
