@@ -22,8 +22,8 @@ importers:
         specifier: 3.8.0
         version: 3.8.0(@typescript-eslint/utils@8.13.0(eslint@9.14.0(jiti@2.4.0))(typescript@5.6.3))(@vue/compiler-sfc@3.5.12)(eslint@9.14.0(jiti@2.4.0))(typescript@5.6.3)(vitest@2.1.4(@types/node@22.9.0))
       '@types/css-tree':
-        specifier: 2.3.8
-        version: 2.3.8
+        specifier: 2.3.9
+        version: 2.3.9
       '@types/node':
         specifier: 22.9.0
         version: 22.9.0
@@ -997,8 +997,8 @@ packages:
     resolution: {integrity: sha512-L7z9BgrNEcYyUYtF+HaEfiS5ebkh9jXqbszz7pC0hRBPaatV0XjSD3+eHrpqFemQfgwiFF0QPIarnIihIDn7OA==}
     engines: {node: '>=10.13.0'}
 
-  '@types/css-tree@2.3.8':
-    resolution: {integrity: sha512-zABG3nI2UENsx7AQv63tI5/ptoAG/7kQR1H0OvG+WTWYHOR5pfAT3cGgC8SdyCrgX/TTxJBZNmx82IjCXs1juQ==}
+  '@types/css-tree@2.3.9':
+    resolution: {integrity: sha512-g1FE6xkPDP4tsccmTd6jIugjKZdxIDqAf9h2pc+4LsGgYbOyfa9phNjBHYbm6FtwIlNfT1NBx3f2zSeqO7aRAw==}
 
   '@types/debug@4.1.12':
     resolution: {integrity: sha512-vIChWdVG3LG1SMxEvI/AK+FWJthlrqlTu7fbrlywTkkaONwk/UAGaULXRlf8vkzFBLVm0zkMdCquhL5aOjhXPQ==}
@@ -4026,7 +4026,7 @@ snapshots:
 
   '@trysound/sax@0.2.0': {}
 
-  '@types/css-tree@2.3.8': {}
+  '@types/css-tree@2.3.9': {}
 
   '@types/debug@4.1.12':
     dependencies:
