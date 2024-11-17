@@ -58,7 +58,7 @@ describe('unifont', () => {
     const unifont = await createUnifont([
       providers.google(),
     ])
-    const { fonts } = await unifont.resolveFont('Inter')
+    const { fonts } = await unifont.resolveFont('Poppins')
     expect(fonts).toMatchInlineSnapshot(`[]`)
     expect(console.warn).toHaveBeenCalledTimes(3)
     expect(console.warn).toHaveBeenNthCalledWith(1, 'Could not fetch from `https://fonts.google.com/metadata/fonts`. Will retry in `1000ms`. `3` retries left.')
