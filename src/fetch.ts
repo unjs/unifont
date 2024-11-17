@@ -24,7 +24,7 @@ function mini$fetch<T = unknown>(url: string, options?: Mini$FetchOptions): Prom
       if (retries <= 0) {
         throw err
       }
-      console.warn(`Could not fetch from \`${url}\'. Will retry in \`${retryDelay}ms\`. \`${retries}\` retries left.`)
+      console.warn(`Could not fetch from \`${url}\`. Will retry in \`${retryDelay}ms\`. \`${retries}\` retries left.`)
       return new Promise(resolve => setTimeout(resolve, retryDelay))
         .then(() => mini$fetch(url, { ...options, retries: retries - 1 }))
     }) as Promise<T>
