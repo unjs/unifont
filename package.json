@@ -38,7 +38,7 @@
   "devDependencies": {
     "@antfu/eslint-config": "3.9.2",
     "@types/css-tree": "2.3.9",
-    "@types/node": "22.9.1",
+    "@types/node": "22.9.3",
     "@vitest/coverage-v8": "2.1.5",
     "bumpp": "9.8.1",
     "eslint": "9.15.0",
