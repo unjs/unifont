@@ -47,7 +47,7 @@
     "typescript": "5.7.2",
     "unbuild": "2.0.0",
     "unstorage": "1.13.1",
-    "vite": "5.4.11",
+    "vite": "6.0.0",
     "vitest": "2.1.5"
   },
   "resolutions": {
