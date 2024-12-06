@@ -2,7 +2,7 @@
   "name": "unifont",
   "type": "module",
   "version": "0.1.6",
-  "packageManager": "pnpm@9.14.4",
+  "packageManager": "pnpm@9.15.0",
   "description": "Framework agnostic tools for accessing data from font CDNs and providers",
   "license": "MIT",
   "repository": {
