@@ -6,7 +6,8 @@ interface Mini$FetchOptions extends RequestInit {
   retryDelay?: number
 }
 
-function mini$fetch<T = unknown>(url: string, options?: Mini$FetchOptions): Promise<T> {
+function mini$fetch<T = unknown>(_url: string, options?: Mini$FetchOptions): Promise<T> {
+  let url = _url
   if (options?.baseURL) {
     url = options.baseURL + url
   }
@@ -26,7 +27,7 @@ function mini$fetch<T = unknown>(url: string, options?: Mini$FetchOptions): Prom
       }
       console.warn(`Could not fetch from \`${url}\`. Will retry in \`${retryDelay}ms\`. \`${retries}\` retries left.`)
       return new Promise(resolve => setTimeout(resolve, retryDelay))
-        .then(() => mini$fetch(url, { ...options, retries: retries - 1 }))
+        .then(() => mini$fetch(_url, { ...options, retries: retries - 1 }))
     }) as Promise<T>
 }
 
