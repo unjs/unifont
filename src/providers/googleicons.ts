@@ -1,5 +1,6 @@
-import { hash } from 'ohash'
+import type { ResolveFontOptions } from '../types'
 
+import { hash } from 'ohash'
 import { extractFontFaceData } from '../css/parse'
 import { $fetch } from '../fetch'
 import { defineFontProvider } from '../utils'
@@ -21,7 +22,10 @@ export default defineFontProvider('googleicons', async (_options, ctx) => {
   // svg: 'Mozilla/4.0 (iPad; CPU OS 4_0_1 like Mac OS X) AppleWebKit/534.46 (KHTML, like Gecko) Version/4.1 Mobile/9A405 Safari/7534.48.3',
   }
 
-  async function getFontDetails(family: string) {
+  async function getFontDetails(family: string, options: ResolveFontOptions) {
+    // Google Icons require sorted icon names, or we will see a 400 error
+    const iconNames = options.glyphs?.sort().join(',')
+
     let css = ''
 
     if (family.includes('Icons')) {
@@ -51,6 +55,7 @@ export default defineFontProvider('googleicons', async (_options, ctx) => {
           headers: { 'user-agent': userAgents[extension as keyof typeof userAgents] },
           query: {
             family: `${family}:` + `opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200`,
+            ...(iconNames && { icon_names: iconNames }),
           },
         })
       }
@@ -60,12 +65,12 @@ export default defineFontProvider('googleicons', async (_options, ctx) => {
   }
 
   return {
-    async resolveFont(fontFamily, defaults) {
+    async resolveFont(fontFamily, options) {
       if (!googleIcons.includes(fontFamily)) {
         return
       }
 
-      const fonts = await ctx.storage.getItem(`googleicons:${fontFamily}-${hash(defaults)}-data.json`, () => getFontDetails(fontFamily))
+      const fonts = await ctx.storage.getItem(`googleicons:${fontFamily}-${hash(options)}-data.json`, () => getFontDetails(fontFamily, options))
       return { fonts }
     },
   }
