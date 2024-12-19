@@ -46,7 +46,7 @@
     "simple-git-hooks": "2.11.1",
     "typescript": "5.7.2",
     "unbuild": "3.0.1",
-    "unstorage": "1.13.1",
+    "unstorage": "1.14.0",
     "vite": "6.0.3",
     "vitest": "2.1.8"
   },
