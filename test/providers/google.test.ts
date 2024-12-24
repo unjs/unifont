@@ -65,4 +65,35 @@ describe('google', () => {
     expect(resolvedStyles).toMatchObject(styles)
     expect(resolvedWeights).toMatchObject(weights)
   })
+
+  it('respects glyphs option and resolves optimized font', async () => {
+    const unifont = await createUnifont([providers.google()])
+
+    const { fonts } = await unifont.resolveFont('Poppins', {
+      glyphs: ['Hello', 'World'],
+      styles: ['normal'],
+      weights: ['400'],
+      subsets: [],
+    })
+
+    // Do not use sanitizeFontSource here, as we must test the url parameters
+    expect(fonts).toMatchInlineSnapshot(`
+      [
+        {
+          "src": [
+            {
+              "format": "woff2",
+              "url": "https://fonts.gstatic.com/l/font?kit=pxiEyp8kv8JHgFVrFJXUdVNFIvDDHy0hxgHa&skey=87759fb096548f6d&v=v22",
+            },
+            {
+              "format": "woff",
+              "url": "https://fonts.gstatic.com/l/font?kit=pxiEyp8kv8JHgFVrFJPMcBMSdJLnJzs&skey=87759fb096548f6d&v=v22",
+            },
+          ],
+          "style": "normal",
+          "weight": 400,
+        },
+      ]
+    `)
+  })
 })
