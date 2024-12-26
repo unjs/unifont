@@ -49,8 +49,8 @@ importers:
         specifier: 3.0.1
         version: 3.0.1(typescript@5.7.2)
       unstorage:
-        specifier: 1.14.2
-        version: 1.14.2
+        specifier: 1.14.3
+        version: 1.14.3
       vite:
         specifier: 6.0.6
         version: 6.0.6(@types/node@22.10.2)(jiti@2.4.2)(yaml@2.6.1)
@@ -65,8 +65,8 @@ importers:
         version: link:..
     devDependencies:
       unstorage:
-        specifier: 1.14.2
-        version: 1.14.2
+        specifier: 1.14.3
+        version: 1.14.3
 
 packages:
 
@@ -2808,8 +2808,8 @@ packages:
   unist-util-visit@5.0.0:
     resolution: {integrity: sha512-MR04uvD+07cwl/yhVuVWAtw+3GOR/knlL55Nd/wAdblk27GCVt3lqpTivy/tkJcZoNPzTwS1Y+KMojlLDhoTzg==}
 
-  unstorage@1.14.2:
-    resolution: {integrity: sha512-hVSuOOFmB4734AqdTop5/96KJ+oLI0flwjxuq6GAdNDxgfoh3nj3pLIgMMzKIv1oKhWzy2eOrsjYxsuEbpJIPA==}
+  unstorage@1.14.3:
+    resolution: {integrity: sha512-nj1rtc2XWCck2fDB39sboAajqooj9LmxZ9/eBM1XR+iUQAFctKvLl0FcPP5f4vzRgU1dmJ03SZhqZMLc9RDXIA==}
     peerDependencies:
       '@azure/app-configuration': ^1.8.0
       '@azure/cosmos': ^4.2.0
@@ -6012,7 +6012,7 @@ snapshots:
       unist-util-is: 6.0.0
       unist-util-visit-parents: 6.0.1
 
-  unstorage@1.14.2:
+  unstorage@1.14.3:
     dependencies:
       anymatch: 3.1.3
       chokidar: 3.6.0
