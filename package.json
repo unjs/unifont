@@ -42,10 +42,10 @@
     "@vitest/coverage-v8": "2.1.8",
     "bumpp": "9.9.2",
     "eslint": "9.17.0",
-    "lint-staged": "15.2.11",
+    "lint-staged": "15.3.0",
     "simple-git-hooks": "2.11.1",
     "typescript": "5.7.2",
-    "unbuild": "3.0.1",
+    "unbuild": "3.1.0",
     "unstorage": "1.14.4",
     "vite": "6.0.6",
     "vitest": "2.1.8"
