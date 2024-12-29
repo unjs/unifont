@@ -37,7 +37,7 @@
   },
   "devDependencies": {
     "@antfu/eslint-config": "3.12.1",
-    "@types/css-tree": "2.3.9",
+    "@types/css-tree": "2.3.10",
     "@types/node": "22.10.2",
     "@vitest/coverage-v8": "2.1.8",
     "bumpp": "9.9.2",
@@ -45,7 +45,7 @@
     "lint-staged": "15.3.0",
     "simple-git-hooks": "2.11.1",
     "typescript": "5.7.2",
-    "unbuild": "3.1.0",
+    "unbuild": "3.2.0",
     "unstorage": "1.14.4",
     "vite": "6.0.6",
     "vitest": "2.1.8"
