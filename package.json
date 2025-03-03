@@ -33,7 +33,7 @@
   },
   "dependencies": {
     "css-tree": "^3.0.0",
-    "ohash": "^1.1.4"
+    "ohash": "^2.0.0"
   },
   "devDependencies": {
     "@antfu/eslint-config": "4.4.0",
