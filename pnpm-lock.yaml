@@ -15,8 +15,8 @@ importers:
         specifier: ^3.0.0
         version: 3.1.0
       ohash:
-        specifier: ^1.1.4
-        version: 1.1.5
+        specifier: ^2.0.0
+        version: 2.0.9
     devDependencies:
       '@antfu/eslint-config':
         specifier: 4.4.0
@@ -2216,6 +2216,9 @@ packages:
 
   ohash@1.1.5:
     resolution: {integrity: sha512-AtXrG/lMFjPBWj3uhWYFwYVZQqutPYRsv6nnPLTipnC+gJuMFc+WFzf/jx+94Ebray1vxfQfEFDtpIpppOe4xQ==}
+
+  ohash@2.0.9:
+    resolution: {integrity: sha512-ljz2sybhXrRpBW9LleuJPP9uxbMKW8qxFz9lLOHW2QEel78rJ1sUgaX2cBNDt49w+JleNSkhYkVOCx6RgkKn0Q==}
 
   onetime@6.0.0:
     resolution: {integrity: sha512-1FlR+gjXK7X+AsAHso35MnyN5KqGwJRi/31ft6x0M194ht7S+rWAvd7PHss9xSKMzE0asv1pyIHaJYq+BbacAQ==}
@@ -5358,6 +5361,8 @@ snapshots:
       ufo: 1.5.4
 
   ohash@1.1.5: {}
+
+  ohash@2.0.9: {}
 
   onetime@6.0.0:
     dependencies:
