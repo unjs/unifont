@@ -51,6 +51,11 @@ export interface FontFaceData {
   featureSettings?: string
   /** Allows low-level control over OpenType or TrueType font variations, by specifying the four letter axis names of the features to vary, along with their variation values. */
   variationSettings?: string
+  /** Metadata for the font face used by unifont */
+  meta?: {
+    /** The priority of the font face, usually used to indicate fallbacks. Smaller is more prioritized. */
+    priority?: number
+  }
 }
 
 export interface ResolveFontResult {
