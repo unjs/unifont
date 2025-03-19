@@ -55,14 +55,18 @@ describe('google', () => {
 
     const resolvedStyles = pickUniqueBy(fonts, fnt => fnt.style)
     const resolvedWeights = pickUniqueBy(fonts, fnt => String(fnt.weight))
+    const resolvedPriorities = pickUniqueBy(fonts, fnt => fnt.meta?.priority)
 
     const styles = ['oblique 0deg 15deg', 'normal'] as ResolveFontOptions['styles']
 
     // Variable wght and separate weights from 300 to 1000
     const weights = ['300,1000', ...([...Array.from({ length: 7 }).keys()].map(i => String(i * 100 + 300)))]
 
+    const priorities = [0, 1]
+
     expect(fonts).toHaveLength(11)
     expect(resolvedStyles).toMatchObject(styles)
     expect(resolvedWeights).toMatchObject(weights)
+    expect(resolvedPriorities).toMatchObject(priorities)
   })
 })
