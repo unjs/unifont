@@ -18,6 +18,13 @@ export interface ResolveFontOptions {
   // TODO: improve support and support unicode range
   subsets: string[]
   fallbacks?: string[]
+  /**
+   * Specifies the specific characters / icons to download.
+   * This can reduce the size of the font file.
+   *
+   * Currently only supported by Google Fonts / Google Icons (Only available specifying the new 'Material Symbols' icons).
+   */
+  glyphs?: string[]
 }
 
 export interface RemoteFontSource {
