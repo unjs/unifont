@@ -38,6 +38,7 @@ export default defineFontProvider<ProviderOption>('google', async (_options = {}
   async function getFontDetails(family: string, options: ResolveFontOptions) {
     const font = googleFonts.find(font => font.family === family)!
     const styles = [...new Set(options.styles.map(i => styleMap[i]))].sort()
+    const glyphs = options.glyphs?.join('')
 
     const variableWeight = font.axes.find(a => a.tag === 'wght')
     const weights = variableWeight
@@ -73,6 +74,7 @@ export default defineFontProvider<ProviderOption>('google', async (_options = {}
         headers: { 'user-agent': userAgents[extension as keyof typeof userAgents] },
         query: {
           family: `${family}:${resolvedAxes.join(',')}@${resolvedVariants.join(';')}`,
+          ...(glyphs && { text: glyphs }),
         },
       })
     }
