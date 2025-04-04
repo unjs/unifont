@@ -1,4 +1,4 @@
-import type { ResolveFontOptions } from '../types'
+import type { FontFaceData, ResolveFontOptions } from '../types'
 
 import { hash } from 'ohash'
 import { extractFontFaceData } from '../css/parse'
@@ -65,20 +65,28 @@ export default defineFontProvider<ProviderOption>('google', async (_options = {}
       resolvedAxes.push(axis)
     }
 
-    let css = ''
+    let priority = 0
+    const resolvedFontFaceData: FontFaceData[] = []
 
     for (const extension in userAgents) {
-      css += await $fetch<string>('/css2', {
+      const data = extractFontFaceData(await $fetch<string>('/css2', {
         baseURL: 'https://fonts.googleapis.com',
         headers: { 'user-agent': userAgents[extension as keyof typeof userAgents] },
         query: {
           family: `${family}:${resolvedAxes.join(',')}@${resolvedVariants.join(';')}`,
         },
+      }))
+      data.map((f) => {
+        f.meta ??= {}
+        f.meta.priority = priority
+        return f
       })
+      resolvedFontFaceData.push(...data)
+      priority++
     }
 
     // TODO: support subsets
-    return extractFontFaceData(css)
+    return resolvedFontFaceData
   }
 
   return {
