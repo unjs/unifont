@@ -84,11 +84,23 @@ describe('google', () => {
     expect(fonts).toMatchInlineSnapshot(`
       [
         {
+          "meta": {
+            "priority": 0,
+          },
           "src": [
             {
               "format": "woff2",
               "url": "https://fonts.gstatic.com/l/font?kit=pxiEyp8kv8JHgFVrFJXUdVNFIvDDHy0hxgHa&skey=87759fb096548f6d&v=v22",
             },
+          ],
+          "style": "normal",
+          "weight": 400,
+        },
+        {
+          "meta": {
+            "priority": 1,
+          },
+          "src": [
             {
               "format": "woff",
               "url": "https://fonts.gstatic.com/l/font?kit=pxiEyp8kv8JHgFVrFJPMcBMSdJLnJzs&skey=87759fb096548f6d&v=v22",
