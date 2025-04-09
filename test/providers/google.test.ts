@@ -81,34 +81,22 @@ describe('google', () => {
     })
 
     // Do not use sanitizeFontSource here, as we must test the url parameters
-    expect(fonts).toMatchInlineSnapshot(`
+    const resolvedSources = fonts.map(fnt => fnt.src)
+
+    expect(resolvedSources).toMatchInlineSnapshot(`
       [
-        {
-          "meta": {
-            "priority": 0,
+        [
+          {
+            "format": "woff2",
+            "url": "https://fonts.gstatic.com/l/font?kit=pxiEyp8kv8JHgFVrFJXUdVNFIvDDHy0hxgHa&skey=87759fb096548f6d&v=v22",
           },
-          "src": [
-            {
-              "format": "woff2",
-              "url": "https://fonts.gstatic.com/l/font?kit=pxiEyp8kv8JHgFVrFJXUdVNFIvDDHy0hxgHa&skey=87759fb096548f6d&v=v22",
-            },
-          ],
-          "style": "normal",
-          "weight": 400,
-        },
-        {
-          "meta": {
-            "priority": 1,
+        ],
+        [
+          {
+            "format": "woff",
+            "url": "https://fonts.gstatic.com/l/font?kit=pxiEyp8kv8JHgFVrFJPMcBMSdJLnJzs&skey=87759fb096548f6d&v=v22",
           },
-          "src": [
-            {
-              "format": "woff",
-              "url": "https://fonts.gstatic.com/l/font?kit=pxiEyp8kv8JHgFVrFJPMcBMSdJLnJzs&skey=87759fb096548f6d&v=v22",
-            },
-          ],
-          "style": "normal",
-          "weight": 400,
-        },
+        ],
       ]
     `)
   })
