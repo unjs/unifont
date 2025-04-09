@@ -16,7 +16,7 @@ export default defineFontProvider('fontsource', async (_options, ctx) => {
 
   async function getFontDetails(family: string, options: ResolveFontOptions) {
     const font = familyMap.get(family)!
-    const weights = options.weights.filter(weight => font.weights.includes(Number(weight)))
+    const weights = options.weights.flatMap(weight => weight.includes('') ? weight.split(' ') : [weight]).filter(weight => font.weights.includes(Number(weight)))
     const styles = options.styles.filter(style => font.styles.includes(style))
     const subsets = options.subsets ? options.subsets.filter(subset => font.subsets.includes(subset)) : [font.defSubset]
     if (weights.length === 0 || styles.length === 0)
@@ -27,7 +27,7 @@ export default defineFontProvider('fontsource', async (_options, ctx) => {
 
     for (const subset of subsets) {
       for (const style of styles) {
-        if (font.variable) {
+        if (options.weights.some(weight => weight.includes(' ')) && font.variable) {
           try {
             const variableAxes = await ctx.storage.getItem(`fontsource:${font.family}-axes.json`, () => fontAPI<FontsourceVariableFontDetail>(`/variable/${font.id}`, { responseType: 'json' }))
             if (variableAxes && variableAxes.axes.wght) {

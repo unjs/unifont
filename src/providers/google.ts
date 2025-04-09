@@ -39,7 +39,7 @@ export default defineFontProvider<ProviderOption>('google', async (_options = {}
     const font = googleFonts.find(font => font.family === family)!
     const styles = [...new Set(options.styles.map(i => styleMap[i]))].sort()
 
-    const variableWeight = font.axes.find(a => a.tag === 'wght')
+    const variableWeight = options.weights.some(weight => weight.includes(' ')) && font.axes.find(a => a.tag === 'wght')
     const weights = variableWeight
       ? [`${variableWeight.min}..${variableWeight.max}`]
       : options.weights.filter(weight => weight in font.fonts)
