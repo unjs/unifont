@@ -72,7 +72,7 @@ describe('google', () => {
   })
 
   it('respects glyphs option and resolves optimized font', async () => {
-    const unifont = await createUnifont([providers.google({ experimental: { glyphs: ['Hello', 'World'] } })])
+    const unifont = await createUnifont([providers.google({ experimental: { glyphs: { Poppins: ['Hello', 'World'] } } })])
 
     const { fonts } = await unifont.resolveFont('Poppins', {
       styles: ['normal'],

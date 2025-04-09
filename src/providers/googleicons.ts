@@ -6,12 +6,14 @@ import { defineFontProvider } from '../utils'
 interface ProviderOption {
   experimental?: {
     /**
-     * Experimental: Specifies the specific characters to download.
+     * Experimental: Specifying a list of icons to be included in the font for each font family.
      * This can reduce the size of the font file.
      *
      * **Only available when resolving the new `Material Symbols` icons.**
      */
-    glyphs?: string[]
+    glyphs?: {
+      [fontFamily: string]: string[]
+    }
   }
 }
 
@@ -34,7 +36,7 @@ export default defineFontProvider<ProviderOption>('googleicons', async (_options
 
   async function getFontDetails(family: string) {
     // Google Icons require sorted icon names, or we will see a 400 error
-    const iconNames = _options.experimental?.glyphs?.sort().join(',')
+    const iconNames = _options.experimental?.glyphs?.[family]?.sort().join(',')
 
     let css = ''
 
