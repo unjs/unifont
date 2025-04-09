@@ -1,5 +1,6 @@
+import type { Storage } from './cache'
 import type { InitializedProvider, Provider, ResolveFontOptions, ResolveFontResult } from './types'
-import { createAsyncStorage, memoryStorage, type Storage } from './cache'
+import { createAsyncStorage, memoryStorage } from './cache'
 
 export * as providers from './providers'
 export type { FontFaceData, FontStyles, LocalFontSource, Provider, ProviderContext, ProviderDefinition, ProviderFactory, RemoteFontSource, ResolveFontOptions } from './types'

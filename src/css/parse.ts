@@ -1,6 +1,7 @@
-import type { FontFaceData, LocalFontSource, RemoteFontSource } from '../types'
+import type { Declaration } from 'css-tree'
 
-import { type Declaration, findAll, parse } from 'css-tree'
+import type { FontFaceData, LocalFontSource, RemoteFontSource } from '../types'
+import { findAll, parse } from 'css-tree'
 
 const extractableKeyMap: Record<string, keyof FontFaceData> = {
   'src': 'src',

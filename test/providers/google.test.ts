@@ -1,5 +1,6 @@
+import type { ResolveFontOptions } from '../../src'
 import { describe, expect, it } from 'vitest'
-import { createUnifont, providers, type ResolveFontOptions } from '../../src'
+import { createUnifont, providers } from '../../src'
 import { pickUniqueBy } from '../utils'
 
 describe('google', () => {

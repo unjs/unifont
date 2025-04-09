@@ -13,7 +13,7 @@ interface ProviderOption {
      * Experimental: Setting variable axis configuration on a per-font basis.
      */
     variableAxis?: {
-      [key: string]: Partial<Record<VariableAxis, ([string, string] | string)[] >>
+      [key: string]: Partial<Record<VariableAxis, ([string, string] | string)[]>>
     }
   }
 }

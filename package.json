@@ -22,7 +22,7 @@
   "scripts": {
     "build": "unbuild",
     "dev": "vitest dev",
-    "lint": "eslint . --fix",
+    "lint": "eslint .",
     "prepare": "simple-git-hooks",
     "prepack": "pnpm build",
     "prepublishOnly": "pnpm lint && pnpm test",
