@@ -387,6 +387,12 @@ describe('fontsource', () => {
     `)
   })
 
+  it('supports variable fonts', async () => {
+    const unifont = await createUnifont([providers.fontsource()])
+    const { fonts } = await unifont.resolveFont('Roboto Mono', { weights: ['400 700'] })
+    expect(fonts.some(fnt => Array.isArray(fnt.weight))).toBe(true)
+  })
+
   it('handles default subsets', async () => {
     const unifont = await createUnifont([providers.fontsource()])
     const { fonts } = await unifont.resolveFont('Roboto Mono', { subsets: undefined })
