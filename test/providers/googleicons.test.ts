@@ -365,10 +365,11 @@ describe('googleicons', () => {
   })
 
   it('respects glyphs option and resolves optimized Material Symbols', async () => {
-    const unifont = await createUnifont([providers.googleicons()])
+    const unifont = await createUnifont([providers.googleicons({
+      experimental: { glyphs: ['arrow_right', 'favorite', 'arraw_drop_down'] },
+    })])
 
     const { fonts } = await unifont.resolveFont('Material Symbols Outlined', {
-      glyphs: ['arrow_right', 'favorite', 'arraw_drop_down'],
       styles: ['normal'],
       weights: ['400'],
       subsets: [],

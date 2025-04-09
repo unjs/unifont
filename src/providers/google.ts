@@ -15,6 +15,11 @@ interface ProviderOption {
     variableAxis?: {
       [key: string]: Partial<Record<VariableAxis, ([string, string] | string)[]>>
     }
+    /**
+     * Experimental: Specifies the specific characters to download.
+     * This can reduce the size of the font file.
+     */
+    glyphs?: string[]
   }
 }
 
@@ -38,7 +43,7 @@ export default defineFontProvider<ProviderOption>('google', async (_options = {}
   async function getFontDetails(family: string, options: ResolveFontOptions) {
     const font = googleFonts.find(font => font.family === family)!
     const styles = [...new Set(options.styles.map(i => styleMap[i]))].sort()
-    const glyphs = options.glyphs?.join('')
+    const glyphs = _options.experimental?.glyphs?.join('')
 
     const variableWeight = font.axes.find(a => a.tag === 'wght')
     const weights = variableWeight
