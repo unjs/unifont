@@ -55,6 +55,12 @@ export interface FontFaceData {
   meta?: {
     /** The priority of the font face, usually used to indicate fallbacks. Smaller is more prioritized. */
     priority?: number
+    /**
+     * A `RequestInit` object that should be used when fetching this font. This can be useful for
+     * adding authorization headers and other metadata required for a font request.
+     * @see https://developer.mozilla.org/en-US/docs/Web/API/RequestInit
+     */
+    init?: RequestInit
   }
 }
 
