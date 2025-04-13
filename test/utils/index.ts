@@ -10,6 +10,16 @@ export function pickUniqueBy<T, K>(arr: T[], by: (arg: T) => K): K[] {
   }, new Set<K>())]
 }
 
+export function groupBy<T, K extends PropertyKey>(arr: T[], by: (arg: T) => K): Record<K, T[]> {
+  return arr.reduce((acc, fnt) => {
+    const prop = by(fnt)
+    if (!acc[prop])
+      acc[prop] = []
+    acc[prop].push(fnt)
+    return acc
+  }, {} as Record<K, T[]>)
+}
+
 export function sanitizeFontSource(data: FontFaceData[]) {
   return data.map(d => ({
     ...d,
@@ -18,6 +28,23 @@ export function sanitizeFontSource(data: FontFaceData[]) {
       url: 'url' in s ? s.url.replace(/^((https?:)?\/\/[^/]+)\/.*(\.[^.]+)?$/, '$1/font$3') : undefined,
     })),
   }))
+}
+
+type RemoteProviders = keyof typeof import('../../src/providers')
+type ProvidersWithOptimizer = Extract<RemoteProviders, 'google' | 'googleicons'>
+
+export function getOptimizerIdentityFromUrl(provider: ProvidersWithOptimizer, url: string) {
+  if (provider === 'google' || provider === 'googleicons') {
+    const params = new URL(url).searchParams
+
+    // Google Fonts provides 3 params: kit, skey, v.
+    // V changes frequently, but other 2 params are stable and suitable for identification.
+    return {
+      kit: params.get('kit') ?? '',
+      skey: params.get('skey') ?? '',
+    }
+  }
+  // TODO: add other providers when they support optimizing
 }
 
 export function mockFetchReturn(condition: RegExp, value: () => unknown) {
