@@ -31,9 +31,9 @@ export function sanitizeFontSource(data: FontFaceData[]) {
 }
 
 type RemoteProviders = keyof typeof import('../../src/providers')
-type ProvidersWithOptimizer = Extract<RemoteProviders, 'google' | 'googleicons'>
+type OptimizationSupportedProviders = Extract<RemoteProviders, 'google' | 'googleicons'>
 
-export function getOptimizerIdentityFromUrl(provider: ProvidersWithOptimizer, url: string) {
+export function getOptimizerIdentityFromUrl(provider: OptimizationSupportedProviders, url: string) {
   if (provider === 'google' || provider === 'googleicons') {
     const params = new URL(url).searchParams
 
