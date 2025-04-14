@@ -52,7 +52,7 @@ describe('google', () => {
       },
     })])
 
-    const { fonts } = await unifont.resolveFont('Recursive')
+    const { fonts } = await unifont.resolveFont('Recursive', { weights: ['300 1000'] })
 
     const resolvedStyles = pickUniqueBy(fonts, fnt => fnt.style)
     const resolvedWeights = pickUniqueBy(fonts, fnt => String(fnt.weight))
@@ -69,5 +69,13 @@ describe('google', () => {
     expect(resolvedStyles).toMatchObject(styles)
     expect(resolvedWeights).toMatchObject(weights)
     expect(resolvedPriorities).toMatchObject(priorities)
+  })
+
+  it('does not download variable fonts if a weight range is not specified', async () => {
+    const unifont = await createUnifont([providers.google()])
+
+    const { fonts } = await unifont.resolveFont('Roboto')
+
+    expect(fonts.map(fnt => Number(fnt.weight)).every(Boolean)).toBeTruthy()
   })
 })
