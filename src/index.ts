@@ -3,7 +3,7 @@ import type { InitializedProvider, Provider, ResolveFontOptions, ResolveFontResu
 import { createAsyncStorage, memoryStorage } from './cache'
 
 export * as providers from './providers'
-export type { FontFaceData, FontStyles, LocalFontSource, Provider, ProviderContext, ProviderDefinition, ProviderFactory, RemoteFontSource, ResolveFontOptions } from './types'
+export type { FontFaceData, FontFaceMeta, FontStyles, LocalFontSource, Provider, ProviderContext, ProviderDefinition, ProviderFactory, RemoteFontSource, ResolveFontOptions } from './types'
 export { defineFontProvider } from './utils'
 
 export interface UnifontOptions {
