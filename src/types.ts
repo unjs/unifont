@@ -31,6 +31,17 @@ export interface LocalFontSource {
   name: string
 }
 
+export interface FontFaceMeta {
+  /** The priority of the font face, usually used to indicate fallbacks. Smaller is more prioritized. */
+  priority?: number
+  /**
+   * A `RequestInit` object that should be used when fetching this font. This can be useful for
+   * adding authorization headers and other metadata required for a font request.
+   * @see https://developer.mozilla.org/en-US/docs/Web/API/RequestInit
+   */
+  init?: RequestInit
+}
+
 // TODO: name
 export interface FontFaceData {
   src: Array<LocalFontSource | RemoteFontSource>
@@ -52,10 +63,7 @@ export interface FontFaceData {
   /** Allows low-level control over OpenType or TrueType font variations, by specifying the four letter axis names of the features to vary, along with their variation values. */
   variationSettings?: string
   /** Metadata for the font face used by unifont */
-  meta?: {
-    /** The priority of the font face, usually used to indicate fallbacks. Smaller is more prioritized. */
-    priority?: number
-  }
+  meta?: FontFaceMeta
 }
 
 export interface ResolveFontResult {
