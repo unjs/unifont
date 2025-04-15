@@ -363,4 +363,10 @@ describe('googleicons', () => {
       ]
     `)
   })
+
+  it('handles listNames correctly', async () => {
+    const unifont = await createUnifont([providers.googleicons()])
+    const names = await unifont.listNames()
+    expect(names!.length > 0).toEqual(true)
+  })
 })

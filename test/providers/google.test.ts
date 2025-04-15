@@ -70,4 +70,10 @@ describe('google', () => {
     expect(resolvedWeights).toMatchObject(weights)
     expect(resolvedPriorities).toMatchObject(priorities)
   })
+
+  it('handles listNames correctly', async () => {
+    const unifont = await createUnifont([providers.google()])
+    const names = await unifont.listNames()
+    expect(names!.length > 0).toEqual(true)
+  })
 })

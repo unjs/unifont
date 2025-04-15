@@ -47,4 +47,10 @@ describe('bunny', () => {
       ]
     `)
   })
+
+  it('handles listNames correctly', async () => {
+    const unifont = await createUnifont([providers.bunny()])
+    const names = await unifont.listNames()
+    expect(names!.length > 0).toEqual(true)
+  })
 })
