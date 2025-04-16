@@ -26,6 +26,10 @@ const unifont = await createUnifont([
 const fonts = await unifont.resolveFont('Poppins')
 
 console.log(fonts)
+
+const availableNames = await unifont.listNames()
+
+console.log(availableNames)
 ```
 
 In most environments, you will want to cache the results of font APIs to avoid unnecessary hits to them. By default `unifont` caches font data in memory.
