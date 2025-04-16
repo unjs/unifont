@@ -58,6 +58,9 @@ export default defineFontProvider('fontshare', async (_options, ctx) => {
   }
 
   return {
+    listNames() {
+      return [...fontshareFamilies]
+    },
     async resolveFont(fontFamily, defaults) {
       if (!fontshareFamilies.has(fontFamily)) {
         return

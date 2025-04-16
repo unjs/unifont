@@ -868,4 +868,10 @@ describe('fontsource', () => {
     error.mockRestore()
     restoreFetch()
   })
+
+  it('handles listNames correctly', async () => {
+    const unifont = await createUnifont([providers.fontsource()])
+    const names = await unifont.listNames()
+    expect(names!.length > 0).toEqual(true)
+  })
 })

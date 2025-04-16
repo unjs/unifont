@@ -18,6 +18,7 @@ export interface Unifont {
   resolveFontFace: (fontFamily: string, options?: Partial<ResolveFontOptions>, providers?: string[]) => Promise<ResolveFontResult & {
     provider?: string
   }>
+  listNames: (providers?: string[]) => Promise<string[] | undefined>
 }
 
 export const defaultResolveOptions: ResolveFontOptions = {
@@ -84,9 +85,29 @@ export async function createUnifont(providers: Provider[], options?: UnifontOpti
     return { fonts: [] }
   }
 
+  async function listNames(providers = allProviders): Promise<string[] | undefined> {
+    let names: string[] | undefined
+    for (const id of providers) {
+      const provider = stack[id]
+
+      try {
+        const result = await provider?.listNames?.()
+        if (result) {
+          names ??= []
+          names.push(...result)
+        }
+      }
+      catch (err) {
+        console.error(`Could not list names from \`${id}\` provider.`, err)
+      }
+    }
+    return names
+  }
+
   return {
     resolveFont,
     // TODO: remove before v1
     resolveFontFace: resolveFont,
+    listNames,
   }
 }
