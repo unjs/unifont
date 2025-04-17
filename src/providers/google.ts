@@ -15,6 +15,13 @@ interface ProviderOption {
     variableAxis?: {
       [key: string]: Partial<Record<VariableAxis, ([string, string] | string)[]>>
     }
+    /**
+     * Experimental: Specifying a list of glyphs to be included in the font for each font family.
+     * This can reduce the size of the font file.
+     */
+    glyphs?: {
+      [fontFamily: string]: string[]
+    }
   }
 }
 
@@ -38,6 +45,7 @@ export default defineFontProvider<ProviderOption>('google', async (_options = {}
   async function getFontDetails(family: string, options: ResolveFontOptions) {
     const font = googleFonts.find(font => font.family === family)!
     const styles = [...new Set(options.styles.map(i => styleMap[i]))].sort()
+    const glyphs = _options.experimental?.glyphs?.[family]?.join('')
 
     const variableWeight = font.axes.find(a => a.tag === 'wght')
     const weights = variableWeight
@@ -74,6 +82,7 @@ export default defineFontProvider<ProviderOption>('google', async (_options = {}
         headers: { 'user-agent': userAgents[extension as keyof typeof userAgents] },
         query: {
           family: `${family}:${resolvedAxes.join(',')}@${resolvedVariants.join(';')}`,
+          ...(glyphs && { text: glyphs }),
         },
       }))
       data.map((f) => {
