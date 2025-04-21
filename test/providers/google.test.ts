@@ -1,7 +1,7 @@
 import type { ResolveFontOptions } from '../../src'
 import { describe, expect, it } from 'vitest'
 import { createUnifont, providers } from '../../src'
-import { pickUniqueBy } from '../utils'
+import { getOptimizerIdentityFromUrl, groupBy, pickUniqueBy } from '../utils'
 
 describe('google', () => {
   it('correctly types options', async () => {
@@ -75,5 +75,47 @@ describe('google', () => {
     const unifont = await createUnifont([providers.google()])
     const names = await unifont.listNames()
     expect(names!.length > 0).toEqual(true)
+  })
+
+  it('respects glyphs option and resolves optimized font', async () => {
+    const unifont = await createUnifont([providers.google({ experimental: { glyphs: { Poppins: ['Hello', 'World'] } } })])
+
+    const { fonts } = await unifont.resolveFont('Poppins', {
+      styles: ['normal'],
+      weights: ['400'],
+      subsets: [],
+    })
+
+    // Do not use sanitizeFontSource here, as we must test the optimizer identity in url params
+    const remoteFontSources = fonts.flatMap(fnt => fnt.src.flatMap(src => 'url' in src ? src : []))
+    const identities = remoteFontSources.map(src => ({
+      format: src.format,
+      identifier: getOptimizerIdentityFromUrl('google', src.url),
+    }),
+    )
+    const identifiersByFormat = groupBy(identities, src => src.format ?? 'unknown')
+
+    expect(identifiersByFormat).toMatchInlineSnapshot(`
+      {
+        "woff": [
+          {
+            "format": "woff",
+            "identifier": {
+              "kit": "pxiEyp8kv8JHgFVrFJPMcBMSdJLnJzs",
+              "skey": "87759fb096548f6d",
+            },
+          },
+        ],
+        "woff2": [
+          {
+            "format": "woff2",
+            "identifier": {
+              "kit": "pxiEyp8kv8JHgFVrFJXUdVNFIvDDHy0hxgHa",
+              "skey": "87759fb096548f6d",
+            },
+          },
+        ],
+      }
+    `)
   })
 })

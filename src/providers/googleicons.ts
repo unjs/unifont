@@ -1,10 +1,23 @@
 import { hash } from 'ohash'
-
 import { extractFontFaceData } from '../css/parse'
 import { $fetch } from '../fetch'
 import { defineFontProvider } from '../utils'
 
-export default defineFontProvider('googleicons', async (_options, ctx) => {
+interface ProviderOption {
+  experimental?: {
+    /**
+     * Experimental: Specifying a list of icons to be included in the font for each font family.
+     * This can reduce the size of the font file.
+     *
+     * **Only available when resolving the new `Material Symbols` icons.**
+     */
+    glyphs?: {
+      [fontFamily: string]: string[]
+    }
+  }
+}
+
+export default defineFontProvider<ProviderOption>('googleicons', async (_options, ctx) => {
   const googleIcons = await ctx.storage.getItem('googleicons:meta.json', async () => {
     const response: { families: string[] } = JSON.parse((await $fetch<string>(
       'https://fonts.google.com/metadata/icons?key=material_symbols&incomplete=true',
@@ -22,6 +35,9 @@ export default defineFontProvider('googleicons', async (_options, ctx) => {
   }
 
   async function getFontDetails(family: string) {
+    // Google Icons require sorted icon names, or we will see a 400 error
+    const iconNames = _options.experimental?.glyphs?.[family]?.sort().join(',')
+
     let css = ''
 
     if (family.includes('Icons')) {
@@ -51,6 +67,7 @@ export default defineFontProvider('googleicons', async (_options, ctx) => {
           headers: { 'user-agent': userAgents[extension as keyof typeof userAgents] },
           query: {
             family: `${family}:` + `opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200`,
+            ...(iconNames && { icon_names: iconNames }),
           },
         })
       }
@@ -63,12 +80,12 @@ export default defineFontProvider('googleicons', async (_options, ctx) => {
     listNames() {
       return googleIcons
     },
-    async resolveFont(fontFamily, defaults) {
+    async resolveFont(fontFamily, options) {
       if (!googleIcons.includes(fontFamily)) {
         return
       }
 
-      const fonts = await ctx.storage.getItem(`googleicons:${fontFamily}-${hash(defaults)}-data.json`, () => getFontDetails(fontFamily))
+      const fonts = await ctx.storage.getItem(`googleicons:${fontFamily}-${hash(options)}-data.json`, () => getFontDetails(fontFamily))
       return { fonts }
     },
   }
