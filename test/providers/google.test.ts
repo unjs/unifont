@@ -71,6 +71,12 @@ describe('google', () => {
     expect(resolvedPriorities).toMatchObject(priorities)
   })
 
+  it('handles listFonts correctly', async () => {
+    const unifont = await createUnifont([providers.google()])
+    const names = await unifont.listFonts()
+    expect(names!.length > 0).toEqual(true)
+  })
+
   it('respects glyphs option and resolves optimized font', async () => {
     const unifont = await createUnifont([providers.google({ experimental: { glyphs: { Poppins: ['Hello', 'World'] } } })])
 

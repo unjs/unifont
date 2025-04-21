@@ -364,6 +364,12 @@ describe('googleicons', () => {
     `)
   })
 
+  it('handles listFonts correctly', async () => {
+    const unifont = await createUnifont([providers.googleicons()])
+    const names = await unifont.listFonts()
+    expect(names!.length > 0).toEqual(true)
+  })
+
   it('respects glyphs option and resolves optimized Material Symbols', async () => {
     const unifont = await createUnifont([providers.googleicons({
       experimental: { glyphs: {

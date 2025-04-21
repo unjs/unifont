@@ -99,6 +99,9 @@ export default defineFontProvider<ProviderOption>('google', async (_options = {}
   }
 
   return {
+    listFonts() {
+      return googleFonts.map(font => font.family)
+    },
     async resolveFont(fontFamily, options) {
       if (!googleFonts.some(font => font.family === fontFamily)) {
         return
