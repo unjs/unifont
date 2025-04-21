@@ -99,7 +99,7 @@ export default defineFontProvider<ProviderOption>('google', async (_options = {}
   }
 
   return {
-    listNames() {
+    listFonts() {
       return googleFonts.map(font => font.family)
     },
     async resolveFont(fontFamily, options) {

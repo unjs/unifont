@@ -71,9 +71,9 @@ describe('google', () => {
     expect(resolvedPriorities).toMatchObject(priorities)
   })
 
-  it('handles listNames correctly', async () => {
+  it('handles listFonts correctly', async () => {
     const unifont = await createUnifont([providers.google()])
-    const names = await unifont.listNames()
+    const names = await unifont.listFonts()
     expect(names!.length > 0).toEqual(true)
   })
 

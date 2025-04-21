@@ -77,7 +77,7 @@ export default defineFontProvider<ProviderOption>('googleicons', async (_options
   }
 
   return {
-    listNames() {
+    listFonts() {
       return googleIcons
     },
     async resolveFont(fontFamily, options) {

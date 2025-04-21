@@ -107,9 +107,9 @@ describe('adobe', () => {
     expect(resolvedWeights).toMatchObject(weights)
   })
 
-  it('handles listNames correctly', async () => {
+  it('handles listFonts correctly', async () => {
     const unifont = await createUnifont([providers.adobe({ id: ['sij5ufr'] })])
-    const names = await unifont.listNames()
+    const names = await unifont.listFonts()
     expect(names!.length > 0).toEqual(true)
   })
 })

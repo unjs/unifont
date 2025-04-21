@@ -77,7 +77,7 @@ export interface ResolveFontResult {
 
 export interface InitializedProvider {
   resolveFont: (family: string, options: ResolveFontOptions) => Awaitable<ResolveFontResult | undefined>
-  listNames?: (() => Awaitable<string[] | undefined>) | undefined
+  listFonts?: (() => Awaitable<string[] | undefined>) | undefined
 }
 
 export interface ProviderDefinition<T = unknown> {

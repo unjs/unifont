@@ -75,11 +75,11 @@ describe('unifont', () => {
     globalThis.fetch.mockRestore()
   })
 
-  describe('listNames', () => {
+  describe('listFonts', () => {
     it('works with no providers', async () => {
       const error = vi.spyOn(console, 'error').mockImplementation(() => {})
       const unifont = await createUnifont([])
-      const names = await unifont.listNames()
+      const names = await unifont.listFonts()
       expect(names).toEqual(undefined)
       expect(console.error).not.toHaveBeenCalled()
       error.mockRestore()
@@ -89,14 +89,14 @@ describe('unifont', () => {
       const error = vi.spyOn(console, 'error').mockImplementation(() => {})
       const unifont = await createUnifont([
         defineFontProvider('stub', () => ({
-          listNames() {
+          listFonts() {
             return ['foo']
           },
           resolveFont() {
             return { fonts: [] }
           },
         }))()])
-      const names = await unifont.listNames()
+      const names = await unifont.listFonts()
       expect(names).toEqual(['foo'])
       expect(console.error).not.toHaveBeenCalled()
       error.mockRestore()
@@ -106,7 +106,7 @@ describe('unifont', () => {
       const error = vi.spyOn(console, 'error').mockImplementation(() => {})
       const unifont = await createUnifont([
         defineFontProvider('bad-provider', () => ({
-          listNames() {
+          listFonts() {
             throw new Error('test')
           },
           resolveFont() {
@@ -114,7 +114,7 @@ describe('unifont', () => {
           },
         }))(),
       ])
-      const names = await unifont.listNames()
+      const names = await unifont.listFonts()
       expect(names).toEqual(undefined)
       expect(console.error).toHaveBeenCalledWith(
         'Could not list names from `bad-provider` provider.',
