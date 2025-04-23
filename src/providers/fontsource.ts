@@ -6,8 +6,45 @@ import { defineFontProvider } from '../utils'
 
 const fontAPI = $fetch.create({ baseURL: 'https://api.fontsource.org/v1' })
 
+export function prepareWeights({
+  inputWeights,
+  weights,
+  hasVariableWeights,
+}: {
+  inputWeights: string[]
+  weights: number[]
+  hasVariableWeights: boolean
+}): { weight: string, variable: boolean }[] {
+  const collectedWeights: string[] = []
+
+  for (const weight of inputWeights) {
+    // The request weight is a range
+    if (weight.includes(' ')) {
+      if (hasVariableWeights) {
+        collectedWeights.push(weight)
+        continue
+      }
+      // As a fallback, request all weights in between
+      const [min, max] = weight.split(' ')
+      collectedWeights.push(
+        ...weights
+          .filter(w => w >= Number(min) && w <= Number(max))
+          .map(w => (String(w))),
+      )
+      continue
+    }
+    // The requested weight is a standard weight
+    if (weights.includes(Number(weight))) {
+      collectedWeights.push(weight)
+    }
+  }
+
+  return [...new Set(collectedWeights)].map(weight => ({ weight, variable: weight.includes(' ') }))
+}
+
 export default defineFontProvider('fontsource', async (_options, ctx) => {
-  const fonts = await ctx.storage.getItem('fontsource:meta.json', () => fontAPI<FontsourceFontMeta[]>('/fonts', { responseType: 'json' }))
+  const fonts = await ctx.storage.getItem('fontsource:meta.json', () =>
+    fontAPI<FontsourceFontMeta[]>('/fonts', { responseType: 'json' }))
   const familyMap = new Map<string, FontsourceFontMeta>()
 
   for (const meta of fonts) {
@@ -16,41 +53,75 @@ export default defineFontProvider('fontsource', async (_options, ctx) => {
 
   async function getFontDetails(family: string, options: ResolveFontOptions) {
     const font = familyMap.get(family)!
-    const weights = options.weights.flatMap(weight => weight.includes('') ? weight.split(' ') : [weight]).filter(weight => font.weights.includes(Number(weight)))
-    const styles = options.styles.filter(style => font.styles.includes(style))
-    const subsets = options.subsets ? options.subsets.filter(subset => font.subsets.includes(subset)) : [font.defSubset]
+    const weights = prepareWeights({
+      inputWeights: options.weights,
+      hasVariableWeights: font.variable,
+      weights: font.weights,
+    })
+    const styles = options.styles.filter(style =>
+      font.styles.includes(style),
+    )
+    const subsets = options.subsets
+      ? options.subsets.filter(subset => font.subsets.includes(subset))
+      : [font.defSubset]
     if (weights.length === 0 || styles.length === 0)
       return []
 
-    const fontDetail = await fontAPI<FontsourceFontDetail>(`/fonts/${font.id}`, { responseType: 'json' })
+    const fontDetail = await fontAPI<FontsourceFontDetail>(
+      `/fonts/${font.id}`,
+      { responseType: 'json' },
+    )
     const fontFaceData: FontFaceData[] = []
 
     for (const subset of subsets) {
       for (const style of styles) {
-        if (options.weights.some(weight => weight.includes(' ')) && font.variable) {
-          try {
-            const variableAxes = await ctx.storage.getItem(`fontsource:${font.family}-axes.json`, () => fontAPI<FontsourceVariableFontDetail>(`/variable/${font.id}`, { responseType: 'json' }))
-            if (variableAxes && variableAxes.axes.wght) {
-              fontFaceData.push({
-                style,
-                weight: [Number(variableAxes.axes.wght.min), Number(variableAxes.axes.wght.max)],
-                src: [
-                  { url: `https://cdn.jsdelivr.net/fontsource/fonts/${font.id}:vf@latest/${subset}-wght-${style}.woff2`, format: 'woff2' },
-                ],
-                unicodeRange: fontDetail.unicodeRange[subset]?.split(','),
-              })
+        for (const { weight, variable } of weights) {
+          if (variable) {
+            try {
+              const variableAxes = await ctx.storage.getItem(
+                `fontsource:${font.family}-axes.json`,
+                () =>
+                  fontAPI<FontsourceVariableFontDetail>(
+                    `/variable/${font.id}`,
+                    {
+                      responseType: 'json',
+                    },
+                  ),
+              )
+              if (variableAxes && variableAxes.axes.wght) {
+                fontFaceData.push({
+                  style,
+                  weight: [
+                    Number(variableAxes.axes.wght.min),
+                    Number(variableAxes.axes.wght.max),
+                  ],
+                  src: [
+                    {
+                      url: `https://cdn.jsdelivr.net/fontsource/fonts/${font.id}:vf@latest/${subset}-wght-${style}.woff2`,
+                      format: 'woff2',
+                    },
+                  ],
+                  unicodeRange:
+                              fontDetail.unicodeRange[subset]?.split(','),
+                })
+              }
             }
+            catch {
+              console.error(
+                `Could not download variable axes metadata for \`${font.family}\` from \`fontsource\`. \`unifont\` will not be able to inject variable axes for ${font.family}.`,
+              )
+            }
+            continue
           }
-          catch {
-            console.error(`Could not download variable axes metadata for \`${font.family}\` from \`fontsource\`. \`unifont\` will not be able to inject variable axes for ${font.family}.`)
-          }
-        }
-        for (const weight of weights) {
+
           const variantUrl = fontDetail.variants[weight]![style]![subset]!.url
           fontFaceData.push({
             style,
             weight,
-            src: Object.entries(variantUrl).map(([format, url]) => ({ url, format })),
+            src: Object.entries(variantUrl).map(([format, url]) => ({
+              url,
+              format,
+            })),
             unicodeRange: fontDetail.unicodeRange[subset]?.split(','),
           })
         }
@@ -69,7 +140,10 @@ export default defineFontProvider('fontsource', async (_options, ctx) => {
         return
       }
 
-      const fonts = await ctx.storage.getItem(`fontsource:${fontFamily}-${hash(options)}-data.json`, () => getFontDetails(fontFamily, options))
+      const fonts = await ctx.storage.getItem(
+        `fontsource:${fontFamily}-${hash(options)}-data.json`,
+        () => getFontDetails(fontFamily, options),
+      )
       return { fonts }
     },
   }
