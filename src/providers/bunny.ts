@@ -41,6 +41,9 @@ export default defineFontProvider('bunny', async (_options, ctx) => {
   }
 
   return {
+    listFonts() {
+      return [...familyMap.keys()]
+    },
     async resolveFont(fontFamily, defaults) {
       if (!familyMap.has(fontFamily)) {
         return

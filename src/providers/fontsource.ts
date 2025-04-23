@@ -61,6 +61,9 @@ export default defineFontProvider('fontsource', async (_options, ctx) => {
   }
 
   return {
+    listFonts() {
+      return [...familyMap.keys()]
+    },
     async resolveFont(fontFamily, options) {
       if (!familyMap.has(fontFamily)) {
         return

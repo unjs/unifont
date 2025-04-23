@@ -1,3 +1,4 @@
+/* eslint-disable antfu/consistent-list-newline */
 import { describe, expect, it, vi } from 'vitest'
 import { createUnifont, defineFontProvider, providers } from '../src'
 
@@ -72,5 +73,54 @@ describe('unifont', () => {
     error.mockRestore()
     // @ts-expect-error globalThis.fetch is altered
     globalThis.fetch.mockRestore()
+  })
+
+  describe('listFonts', () => {
+    it('works with no providers', async () => {
+      const error = vi.spyOn(console, 'error').mockImplementation(() => {})
+      const unifont = await createUnifont([])
+      const names = await unifont.listFonts()
+      expect(names).toEqual(undefined)
+      expect(console.error).not.toHaveBeenCalled()
+      error.mockRestore()
+    })
+
+    it('works with providers', async () => {
+      const error = vi.spyOn(console, 'error').mockImplementation(() => {})
+      const unifont = await createUnifont([
+        defineFontProvider('stub', () => ({
+          listFonts() {
+            return ['foo']
+          },
+          resolveFont() {
+            return { fonts: [] }
+          },
+        }))()])
+      const names = await unifont.listFonts()
+      expect(names).toEqual(['foo'])
+      expect(console.error).not.toHaveBeenCalled()
+      error.mockRestore()
+    })
+
+    it('handles providers that throw errors when listing names', async () => {
+      const error = vi.spyOn(console, 'error').mockImplementation(() => {})
+      const unifont = await createUnifont([
+        defineFontProvider('bad-provider', () => ({
+          listFonts() {
+            throw new Error('test')
+          },
+          resolveFont() {
+            return { fonts: [] }
+          },
+        }))(),
+      ])
+      const names = await unifont.listFonts()
+      expect(names).toEqual(undefined)
+      expect(console.error).toHaveBeenCalledWith(
+        'Could not list names from `bad-provider` provider.',
+        expect.objectContaining({}),
+      )
+      error.mockRestore()
+    })
   })
 })

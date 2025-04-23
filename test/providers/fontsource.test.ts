@@ -494,4 +494,10 @@ describe('fontsource', () => {
     error.mockRestore()
     restoreFetch()
   })
+
+  it('handles listFonts correctly', async () => {
+    const unifont = await createUnifont([providers.fontsource()])
+    const names = await unifont.listFonts()
+    expect(names!.length > 0).toEqual(true)
+  })
 })

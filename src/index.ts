@@ -3,7 +3,7 @@ import type { InitializedProvider, Provider, ResolveFontOptions, ResolveFontResu
 import { createAsyncStorage, memoryStorage } from './cache'
 
 export * as providers from './providers'
-export type { FontFaceData, FontStyles, LocalFontSource, Provider, ProviderContext, ProviderDefinition, ProviderFactory, RemoteFontSource, ResolveFontOptions } from './types'
+export type { FontFaceData, FontFaceMeta, FontStyles, LocalFontSource, Provider, ProviderContext, ProviderDefinition, ProviderFactory, RemoteFontSource, ResolveFontOptions } from './types'
 export { defineFontProvider } from './utils'
 
 export interface UnifontOptions {
@@ -18,6 +18,7 @@ export interface Unifont {
   resolveFontFace: (fontFamily: string, options?: Partial<ResolveFontOptions>, providers?: string[]) => Promise<ResolveFontResult & {
     provider?: string
   }>
+  listFonts: (providers?: string[]) => Promise<string[] | undefined>
 }
 
 export const defaultResolveOptions: ResolveFontOptions = {
@@ -84,9 +85,29 @@ export async function createUnifont(providers: Provider[], options?: UnifontOpti
     return { fonts: [] }
   }
 
+  async function listFonts(providers = allProviders): Promise<string[] | undefined> {
+    let names: string[] | undefined
+    for (const id of providers) {
+      const provider = stack[id]
+
+      try {
+        const result = await provider?.listFonts?.()
+        if (result) {
+          names ??= []
+          names.push(...result)
+        }
+      }
+      catch (err) {
+        console.error(`Could not list names from \`${id}\` provider.`, err)
+      }
+    }
+    return names
+  }
+
   return {
     resolveFont,
     // TODO: remove before v1
     resolveFontFace: resolveFont,
+    listFonts,
   }
 }

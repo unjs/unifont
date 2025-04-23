@@ -80,6 +80,9 @@ export default defineFontProvider<ProviderOption>('adobe', async (options, ctx) 
   }
 
   return {
+    listFonts() {
+      return [...familyMap.keys()]
+    },
     async resolveFont(family, options) {
       if (!familyMap.has(family)) {
         return
