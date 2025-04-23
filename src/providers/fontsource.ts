@@ -2,45 +2,9 @@ import type { FontFaceData, ResolveFontOptions } from '../types'
 
 import { hash } from 'ohash'
 import { $fetch } from '../fetch'
-import { defineFontProvider } from '../utils'
+import { defineFontProvider, prepareWeights } from '../utils'
 
 const fontAPI = $fetch.create({ baseURL: 'https://api.fontsource.org/v1' })
-
-export function prepareWeights({
-  inputWeights,
-  weights,
-  hasVariableWeights,
-}: {
-  inputWeights: string[]
-  weights: number[]
-  hasVariableWeights: boolean
-}): { weight: string, variable: boolean }[] {
-  const collectedWeights: string[] = []
-
-  for (const weight of inputWeights) {
-    // The request weight is a range
-    if (weight.includes(' ')) {
-      if (hasVariableWeights) {
-        collectedWeights.push(weight)
-        continue
-      }
-      // As a fallback, request all weights in between
-      const [min, max] = weight.split(' ')
-      collectedWeights.push(
-        ...weights
-          .filter(w => w >= Number(min) && w <= Number(max))
-          .map(w => (String(w))),
-      )
-      continue
-    }
-    // The requested weight is a standard weight
-    if (weights.includes(Number(weight))) {
-      collectedWeights.push(weight)
-    }
-  }
-
-  return [...new Set(collectedWeights)].map(weight => ({ weight, variable: weight.includes(' ') }))
-}
 
 export default defineFontProvider('fontsource', async (_options, ctx) => {
   const fonts = await ctx.storage.getItem('fontsource:meta.json', () =>
@@ -56,7 +20,7 @@ export default defineFontProvider('fontsource', async (_options, ctx) => {
     const weights = prepareWeights({
       inputWeights: options.weights,
       hasVariableWeights: font.variable,
-      weights: font.weights,
+      weights: font.weights.map(String),
     })
     const styles = options.styles.filter(style =>
       font.styles.includes(style),
