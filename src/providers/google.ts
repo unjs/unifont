@@ -3,7 +3,7 @@ import type { FontFaceData, ResolveFontOptions } from '../types'
 import { hash } from 'ohash'
 import { extractFontFaceData } from '../css/parse'
 import { $fetch } from '../fetch'
-import { defineFontProvider } from '../utils'
+import { defineFontProvider, prepareWeights } from '../utils'
 
 type VariableAxis = 'opsz' | 'slnt' | 'wdth' | (string & {})
 
@@ -46,11 +46,16 @@ export default defineFontProvider<ProviderOption>('google', async (_options = {}
     const font = googleFonts.find(font => font.family === family)!
     const styles = [...new Set(options.styles.map(i => styleMap[i]))].sort()
     const glyphs = _options.experimental?.glyphs?.[family]?.join('')
-
-    const variableWeight = font.axes.find(a => a.tag === 'wght')
-    const weights = variableWeight
-      ? [`${variableWeight.min}..${variableWeight.max}`]
-      : options.weights.filter(weight => weight in font.fonts)
+    const weights = prepareWeights({
+      inputWeights: options.weights,
+      hasVariableWeights: font.axes.some(a => a.tag === 'wght'),
+      weights: Object.keys(font.fonts),
+    }).map(v => v.variable
+      ? ({
+          weight: v.weight.replace(' ', '..'),
+          variable: v.variable,
+        })
+      : v)
 
     if (weights.length === 0 || styles.length === 0)
       return []
@@ -60,7 +65,7 @@ export default defineFontProvider<ProviderOption>('google', async (_options = {}
 
     for (const axis of ['wght', 'ital', ...Object.keys(_options?.experimental?.variableAxis?.[family] ?? {})].sort(googleFlavoredSorting)) {
       const axisValue = ({
-        wght: weights,
+        wght: weights.map(v => v.weight),
         ital: styles,
       })[axis] ?? _options!.experimental!.variableAxis![family]![axis]!.map(v => Array.isArray(v) ? `${v[0]}..${v[1]}` : v)
 
