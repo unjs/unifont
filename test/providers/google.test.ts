@@ -12,13 +12,11 @@ describe('google', () => {
 
   it('works', async () => {
     const unifont = await createUnifont([providers.google()])
-    expect(
-      await unifont.resolveFont('NonExistent Font').then(r => r.fonts),
-    ).toMatchInlineSnapshot(`[]`)
+    expect(await unifont.resolveFont('NonExistent Font').then(r => r.fonts)).toMatchInlineSnapshot(`[]`)
 
     const { fonts } = await unifont.resolveFont('Poppins')
 
-    expect(fonts).toHaveLength(6)
+    expect(fonts).toHaveLength(8)
   })
 
   it('filters fonts based on provided options', async () => {
@@ -35,7 +33,7 @@ describe('google', () => {
     const resolvedStyles = pickUniqueBy(fonts, fnt => fnt.style)
     const resolvedWeights = pickUniqueBy(fonts, fnt => String(fnt.weight))
 
-    expect(fonts).toHaveLength(3)
+    expect(fonts).toHaveLength(4)
     expect(resolvedStyles).toMatchObject(styles)
     expect(resolvedWeights).toMatchObject(weights)
   })
