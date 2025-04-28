@@ -119,4 +119,24 @@ describe('extract font face from CSS', () => {
       ]
     `)
   })
+
+  it('should always return unicodeRange as an array', () => {
+    expect(
+      extractFontFaceData(`
+@font-face {
+  src: url(https://fonts.gstatic.com/s/roboto/v47/KFOMCnqEu92Fr1ME7kSn66aGLdTylUAMQXC89YmC2DPNWubEbVmYiAr0klQmz24O0g.woff2) format("woff2");
+  unicode-range: U+1F00-1FFF;
+}`),
+    ).toEqual([
+      {
+        src: [
+          {
+            format: 'woff2',
+            url: 'https://fonts.gstatic.com/s/roboto/v47/KFOMCnqEu92Fr1ME7kSn66aGLdTylUAMQXC89YmC2DPNWubEbVmYiAr0klQmz24O0g.woff2',
+          },
+        ],
+        unicodeRange: ['U+1F00-1FFF'],
+      },
+    ])
+  })
 })
