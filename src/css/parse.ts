@@ -60,7 +60,7 @@ export function extractFontFaceData(css: string, family?: string): FontFaceData[
     for (const child of node.block?.children || []) {
       if (child.type === 'Declaration' && child.property in extractableKeyMap) {
         const value = extractCSSValue(child) as any
-        data[extractableKeyMap[child.property]!] = child.property === 'src' && !Array.isArray(value) ? [value] : value
+        data[extractableKeyMap[child.property]!] = ['src', 'unicode-range'].includes(child.property) && !Array.isArray(value) ? [value] : value
       }
     }
     if (!data.src) {
