@@ -1,5 +1,6 @@
 import type { FontFaceData, ResolveFontOptions } from '../types'
 
+import { findAll, generate, parse } from 'css-tree'
 import { hash } from 'ohash'
 import { extractFontFaceData } from '../css/parse'
 import { $fetch } from '../fetch'
@@ -23,6 +24,31 @@ interface ProviderOption {
       [fontFamily: string]: string[]
     }
   }
+}
+
+export function splitCssIntoSubsets(input: string) {
+  const data: { subset: string, css: string }[] = []
+
+  const comments: string[] = []
+  const nodes = findAll(
+    parse(input, {
+      onComment(value) {
+        comments.push(value.trim())
+      },
+    }),
+    node => node.type === 'Atrule' && node.name === 'font-face',
+  )
+
+  for (let i = 0; i < nodes.length; i++) {
+    const node = nodes[i]!
+    const subset = comments[i]
+    if (!subset)
+      continue
+
+    data.push({ subset, css: generate(node) })
+  }
+
+  return data
 }
 
 export default defineFontProvider<ProviderOption>('google', async (_options = {}, ctx) => {
@@ -82,24 +108,31 @@ export default defineFontProvider<ProviderOption>('google', async (_options = {}
     const resolvedFontFaceData: FontFaceData[] = []
 
     for (const extension in userAgents) {
-      const data = extractFontFaceData(await $fetch<string>('/css2', {
+      const rawCss = await $fetch<string>('/css2', {
         baseURL: 'https://fonts.googleapis.com',
-        headers: { 'user-agent': userAgents[extension as keyof typeof userAgents] },
+        headers: {
+          'user-agent': userAgents[extension as keyof typeof userAgents],
+        },
         query: {
-          family: `${family}:${resolvedAxes.join(',')}@${resolvedVariants.join(';')}`,
+          family: `${family}:${resolvedAxes.join(',')}@${resolvedVariants.join(
+            ';',
+          )}`,
           ...(glyphs && { text: glyphs }),
         },
-      }))
-      data.map((f) => {
-        f.meta ??= {}
-        f.meta.priority = priority
-        return f
       })
-      resolvedFontFaceData.push(...data)
+      const groups = splitCssIntoSubsets(rawCss).filter(group => options.subsets.includes(group.subset))
+      for (const group of groups) {
+        const data = extractFontFaceData(group.css)
+        data.map((f) => {
+          f.meta ??= {}
+          f.meta.priority = priority
+          return f
+        })
+        resolvedFontFaceData.push(...data)
+      }
       priority++
     }
 
-    // TODO: support subsets
     return resolvedFontFaceData
   }
 

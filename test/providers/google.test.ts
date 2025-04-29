@@ -1,6 +1,7 @@
 import type { ResolveFontOptions } from '../../src'
 import { describe, expect, it } from 'vitest'
 import { createUnifont, providers } from '../../src'
+import { splitCssIntoSubsets } from '../../src/providers/google'
 import { getOptimizerIdentityFromUrl, groupBy, pickUniqueBy } from '../utils'
 
 describe('google', () => {
@@ -145,5 +146,43 @@ describe('google', () => {
         ],
       }
     `)
+  })
+
+  it('filters subsets correctly', async () => {
+    const unifont = await createUnifont([providers.google()])
+
+    const { fonts } = await unifont.resolveFont('Roboto', { subsets: ['latin'] })
+    expect(fonts.length).toEqual(2)
+  })
+
+  describe('splitCssIntoSubsets()', () => {
+    it('associates subsets and css correctly', () => {
+      expect(
+        splitCssIntoSubsets(`
+/* vietnamese */
+@font-face {
+  font-family: 'A';
+}
+/* latin-ext */
+@font-face {
+  font-family: 'B';
+}
+/* latin */
+@font-face {
+  font-family: 'C';
+}
+body {
+  --google-font-color-bungeetint:none;
+}
+@font-face {
+  font-family: 'No match';
+}
+`),
+      ).toEqual([
+        { subset: 'vietnamese', css: '@font-face{font-family:"A"}' },
+        { subset: 'latin-ext', css: '@font-face{font-family:"B"}' },
+        { subset: 'latin', css: '@font-face{font-family:"C"}' },
+      ])
+    })
   })
 })
