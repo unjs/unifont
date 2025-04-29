@@ -26,26 +26,32 @@ interface ProviderOption {
   }
 }
 
-export function splitCssIntoSubsets(input: string) {
-  const data: { subset: string, css: string }[] = []
+export function splitCssIntoSubsets(input: string): { subset: string | null, css: string }[] {
+  const data: { subset: string | null, css: string }[] = []
 
-  const comments: string[] = []
+  const comments: { value: string, endLine: number }[] = []
   const nodes = findAll(
     parse(input, {
-      onComment(value) {
-        comments.push(value.trim())
+      positions: true,
+      // Comments are not part of the tree. We rely on the positions to infer the subset
+      onComment(value, loc) {
+        comments.push({ value: value.trim(), endLine: loc.end.line })
       },
     }),
     node => node.type === 'Atrule' && node.name === 'font-face',
   )
 
-  for (let i = 0; i < nodes.length; i++) {
-    const node = nodes[i]!
-    const subset = comments[i]
-    if (!subset)
+  // If there are no comments, we don't associate subsets because we can't
+  if (comments.length === 0) {
+    return [{ subset: null, css: input }]
+  }
+
+  for (const node of nodes) {
+    const comment = comments.filter(comment => comment.endLine < node.loc!.start.line).at(-1)
+    if (!comment)
       continue
 
-    data.push({ subset, css: generate(node) })
+    data.push({ subset: comment.value, css: generate(node) })
   }
 
   return data
@@ -120,7 +126,7 @@ export default defineFontProvider<ProviderOption>('google', async (_options = {}
           ...(glyphs && { text: glyphs }),
         },
       })
-      const groups = splitCssIntoSubsets(rawCss).filter(group => options.subsets.includes(group.subset))
+      const groups = splitCssIntoSubsets(rawCss).filter(group => group.subset ? options.subsets.includes(group.subset) : true)
       for (const group of groups) {
         const data = extractFontFaceData(group.css)
         data.map((f) => {
