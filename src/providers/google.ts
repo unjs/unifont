@@ -1,5 +1,6 @@
 import type { FontFaceData, ResolveFontOptions } from '../types'
 
+import { findAll, generate, parse } from 'css-tree'
 import { hash } from 'ohash'
 import { extractFontFaceData } from '../css/parse'
 import { $fetch } from '../fetch'
@@ -23,6 +24,37 @@ interface ProviderOption {
       [fontFamily: string]: string[]
     }
   }
+}
+
+export function splitCssIntoSubsets(input: string): { subset: string | null, css: string }[] {
+  const data: { subset: string | null, css: string }[] = []
+
+  const comments: { value: string, endLine: number }[] = []
+  const nodes = findAll(
+    parse(input, {
+      positions: true,
+      // Comments are not part of the tree. We rely on the positions to infer the subset
+      onComment(value, loc) {
+        comments.push({ value: value.trim(), endLine: loc.end.line })
+      },
+    }),
+    node => node.type === 'Atrule' && node.name === 'font-face',
+  )
+
+  // If there are no comments, we don't associate subsets because we can't
+  if (comments.length === 0) {
+    return [{ subset: null, css: input }]
+  }
+
+  for (const node of nodes) {
+    const comment = comments.filter(comment => comment.endLine < node.loc!.start.line).at(-1)
+    if (!comment)
+      continue
+
+    data.push({ subset: comment.value, css: generate(node) })
+  }
+
+  return data
 }
 
 export default defineFontProvider<ProviderOption>('google', async (_options = {}, ctx) => {
@@ -82,24 +114,31 @@ export default defineFontProvider<ProviderOption>('google', async (_options = {}
     const resolvedFontFaceData: FontFaceData[] = []
 
     for (const extension in userAgents) {
-      const data = extractFontFaceData(await $fetch<string>('/css2', {
+      const rawCss = await $fetch<string>('/css2', {
         baseURL: 'https://fonts.googleapis.com',
-        headers: { 'user-agent': userAgents[extension as keyof typeof userAgents] },
+        headers: {
+          'user-agent': userAgents[extension as keyof typeof userAgents],
+        },
         query: {
-          family: `${family}:${resolvedAxes.join(',')}@${resolvedVariants.join(';')}`,
+          family: `${family}:${resolvedAxes.join(',')}@${resolvedVariants.join(
+            ';',
+          )}`,
           ...(glyphs && { text: glyphs }),
         },
-      }))
-      data.map((f) => {
-        f.meta ??= {}
-        f.meta.priority = priority
-        return f
       })
-      resolvedFontFaceData.push(...data)
+      const groups = splitCssIntoSubsets(rawCss).filter(group => group.subset ? options.subsets.includes(group.subset) : true)
+      for (const group of groups) {
+        const data = extractFontFaceData(group.css)
+        data.map((f) => {
+          f.meta ??= {}
+          f.meta.priority = priority
+          return f
+        })
+        resolvedFontFaceData.push(...data)
+      }
       priority++
     }
 
-    // TODO: support subsets
     return resolvedFontFaceData
   }
 
