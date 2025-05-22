@@ -1,4 +1,4 @@
-import type { FontFaceData, ResolveFontOptions } from '../types'
+import type { FontFaceData, FontFaceMeta, ResolveFontOptions } from '../types'
 import { existsSync } from 'node:fs'
 import { readFile } from 'node:fs/promises'
 import { join, resolve } from 'node:path'
@@ -26,7 +26,7 @@ interface NPMProviderOptions {
   packagePrefixes?: string[]
 }
 
-// 自定义元数据接口，扩展原有FontFaceMeta
+// Extend the FontFaceMeta interface
 interface NPMFontFaceMeta {
   source: string
   package: string
