@@ -1,4 +1,5 @@
 {
+  "name": "unifont-playground",
   "type": "module",
   "private": true,
   "scripts": {
