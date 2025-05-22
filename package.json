@@ -43,6 +43,7 @@
     "bumpp": "10.1.1",
     "eslint": "9.27.0",
     "lint-staged": "16.0.0",
+    "pathe": "^2.0.3",
     "simple-git-hooks": "2.13.0",
     "typescript": "5.8.3",
     "unbuild": "3.5.0",
