@@ -17,17 +17,17 @@ npm install unifont
 ```
 
 ```js
-import { createUnifont, providers } from "unifont";
+import { createUnifont, providers } from 'unifont'
 
-const unifont = await createUnifont([providers.google()]);
+const unifont = await createUnifont([providers.google()])
 
-const fonts = await unifont.resolveFont("Poppins");
+const fonts = await unifont.resolveFont('Poppins')
 
-console.log(fonts);
+console.log(fonts)
 
-const availableFonts = await unifont.listFonts();
+const availableFonts = await unifont.listFonts()
 
-console.log(availableFonts);
+console.log(availableFonts)
 ```
 
 In most environments, you will want to cache the results of font APIs to avoid unnecessary hits to them. By default `unifont` caches font data in memory.
@@ -35,18 +35,18 @@ In most environments, you will want to cache the results of font APIs to avoid u
 For full control, `unifont` exposes a storage API which is compatible with `unstorage`. It simply needs to expose a `getItem` and `setItem` method.
 
 ```ts
-import { createUnifont, providers } from "unifont";
+import { createUnifont, providers } from 'unifont'
 
-import { createStorage } from "unstorage";
-import fsDriver from "unstorage/drivers/fs-lite";
+import { createStorage } from 'unstorage'
+import fsDriver from 'unstorage/drivers/fs-lite'
 
 const storage = createStorage({
-  driver: fsDriver({ base: "node_modules/.cache/unifont" }),
-});
+  driver: fsDriver({ base: 'node_modules/.cache/unifont' }),
+})
 
-const cachedUnifont = await createUnifont([providers.google()], { storage });
+const cachedUnifont = await createUnifont([providers.google()], { storage })
 
-console.log(await cachedUnifont.resolveFont("Poppins"));
+console.log(await cachedUnifont.resolveFont('Poppins'))
 
 // cached data is stored in `node_modules/.cache/unifont`
 ```
@@ -58,7 +58,7 @@ For more about the storage drivers exposed from `unstorage`, check out https://u
 You can use fonts installed as NPM packages (like those from @fontsource) before falling back to remote sources:
 
 ```ts
-import { createUnifont, providers } from "unifont";
+import { createUnifont, providers } from 'unifont'
 
 // First install the fonts you need
 // npm install @fontsource/poppins @fontsource/roboto
@@ -72,34 +72,34 @@ const unifont = await createUnifont(
   {
     preferLocal: true, // Prioritize local npm packages
   }
-);
+)
 
 // This will first check @fontsource/poppins in node_modules
 // and only use Google Fonts if not found locally
-const fonts = await unifont.resolveFont("Poppins");
+const fonts = await unifont.resolveFont('Poppins')
 
-console.log(fonts);
+console.log(fonts)
 ```
 
 You can also provide custom options to the npm provider:
 
 ```ts
-import { createUnifont, providers } from "unifont";
+import { createUnifont, providers } from 'unifont'
 
 const unifont = await createUnifont(
   [
     providers.npm({
       // Explicitly specify packages to look for
-      packages: ["@fontsource/poppins", "@fontsource/roboto"],
+      packages: ['@fontsource/poppins', '@fontsource/roboto'],
       // Custom base directory if your node_modules is elsewhere
-      baseDir: "./custom/path/node_modules",
+      baseDir: './custom/path/node_modules',
     }),
     providers.google(),
   ],
   {
     preferLocal: true,
   }
-);
+)
 ```
 
 ## 💻 Development
