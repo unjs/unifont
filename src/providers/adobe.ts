@@ -54,8 +54,6 @@ export default defineFontProvider<ProviderOption>('adobe', async (options, ctx) 
         weights: font.variations.map(v => `${v.slice(-1)}00`),
       }).map(w => w.weight)
 
-      console.error(weights)
-
       const styles: string[] = []
       for (const style of font.variations) {
         if (style.includes('i') && !options.styles.includes('italic')) {
