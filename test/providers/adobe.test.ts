@@ -112,4 +112,12 @@ describe('adobe', () => {
     const names = await unifont.listFonts()
     expect(names!.length > 0).toEqual(true)
   })
+
+  it('falls back to static weights', async () => {
+    const unifont = await createUnifont([providers.adobe({ id: 'sij5ufr' })])
+    const { fonts } = await unifont.resolveFont('Aleo', {
+      weights: ['400 1100'],
+    })
+    expect(fonts.length).toBe(4)
+  })
 })
