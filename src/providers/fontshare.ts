@@ -3,7 +3,7 @@ import type { ResolveFontOptions } from '../types'
 import { hash } from 'ohash'
 import { extractFontFaceData } from '../css/parse'
 import { $fetch } from '../fetch'
-import { defineFontProvider } from '../utils'
+import { defineFontProvider, prepareWeights } from '../utils'
 
 const fontAPI = $fetch.create({ baseURL: 'https://api.fontshare.com/v2' })
 export default defineFontProvider('fontshare', async (_options, ctx) => {
@@ -35,6 +35,13 @@ export default defineFontProvider('fontshare', async (_options, ctx) => {
   // https://api.fontshare.com/v2/css?f[]=alpino@300
     const font = fonts.find(f => f.name === family)!
     const numbers: number[] = []
+
+    const weights = prepareWeights({
+      inputWeights: options.weights,
+      hasVariableWeights: false,
+      weights: font.styles.map(s => String(s.weight.weight)),
+    }).map(w => w.weight)
+
     for (const style of font.styles) {
       if (style.is_italic && !options.styles.includes('italic')) {
         continue
@@ -42,7 +49,7 @@ export default defineFontProvider('fontshare', async (_options, ctx) => {
       if (!style.is_italic && !options.styles.includes('normal')) {
         continue
       }
-      if (!options.weights.includes(String(style.weight.weight))) {
+      if (!weights.includes(String(style.weight.weight))) {
         continue
       }
       numbers.push(style.weight.number)

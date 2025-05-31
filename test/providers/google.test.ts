@@ -201,4 +201,12 @@ body {
 
     expect(splitCssIntoSubsets(input)).toEqual([{ subset: null, css: input }])
   })
+
+  it('falls back to static weights', async () => {
+    const unifont = await createUnifont([providers.google()])
+    const { fonts } = await unifont.resolveFont('Lato', {
+      weights: ['400 1100'],
+    })
+    expect(fonts.length).toBe(18)
+  })
 })

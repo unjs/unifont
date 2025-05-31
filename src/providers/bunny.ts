@@ -3,7 +3,7 @@ import type { ResolveFontOptions } from '../types'
 import { hash } from 'ohash'
 import { extractFontFaceData } from '../css/parse'
 import { $fetch } from '../fetch'
-import { defineFontProvider } from '../utils'
+import { defineFontProvider, prepareWeights } from '../utils'
 
 const fontAPI = $fetch.create({ baseURL: 'https://fonts.bunny.net' })
 
@@ -18,7 +18,11 @@ export default defineFontProvider('bunny', async (_options, ctx) => {
   async function getFontDetails(family: string, options: ResolveFontOptions) {
     const id = familyMap.get(family) as keyof typeof fonts
     const font = fonts[id]!
-    const weights = options.weights.filter(weight => font.weights.includes(Number(weight)))
+    const weights = prepareWeights({
+      inputWeights: options.weights,
+      hasVariableWeights: false,
+      weights: font.weights.map(String),
+    })
     const styleMap = {
       italic: 'i',
       oblique: 'i',
@@ -28,7 +32,7 @@ export default defineFontProvider('bunny', async (_options, ctx) => {
     if (weights.length === 0 || styles.size === 0)
       return []
 
-    const resolvedVariants = weights.flatMap(w => [...styles].map(s => `${w}${s}`))
+    const resolvedVariants = weights.flatMap(w => [...styles].map(s => `${w.weight}${s}`))
 
     const css = await fontAPI<string>('/css', {
       query: {
