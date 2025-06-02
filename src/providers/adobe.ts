@@ -27,17 +27,34 @@ export default defineFontProvider<ProviderOption>('adobe', async (options, ctx) 
   }
 
   const kits = typeof options.id === 'string' ? [options.id] : options.id
-  await Promise.all(kits.map(async (id) => {
-    const meta = await ctx.storage.getItem<AdobeFontKit>(`adobe:meta-${id}.json`, () => getAdobeFontMeta(id))
-    if (!meta) {
-      throw new TypeError('No font metadata found in adobe response.')
-    }
 
-    fonts.kits.push(meta)
-    for (const family of meta.families) {
-      familyMap.set(family.name, family.id)
-    }
-  }))
+  await fetchKits()
+
+  async function fetchKits(bypassCache: boolean = false) {
+    familyMap.clear()
+    fonts.kits = []
+
+    await Promise.all(kits.map(async (id) => {
+      let meta: AdobeFontKit
+      const key = `adobe:meta-${id}.json`
+      if (bypassCache) {
+        meta = await getAdobeFontMeta(id)
+        await ctx.storage.setItem(key, meta)
+      }
+      else {
+        meta = await ctx.storage.getItem(key, () => getAdobeFontMeta(id))
+      }
+
+      if (!meta) {
+        throw new TypeError('No font metadata found in adobe response.')
+      }
+
+      fonts.kits.push(meta)
+      for (const family of meta.families) {
+        familyMap.set(family.name, family.id)
+      }
+    }))
+  }
 
   async function getFontDetails(family: string, options: ResolveFontOptions) {
     options.weights = options.weights.map(String)
@@ -90,6 +107,11 @@ export default defineFontProvider<ProviderOption>('adobe', async (options, ctx) 
       return [...familyMap.keys()]
     },
     async resolveFont(family, options) {
+      // Try fetching kits bypassing the cache if the family is not found (kits may have been updated)
+      if (!familyMap.has(family)) {
+        await fetchKits(true)
+      }
+
       if (!familyMap.has(family)) {
         return
       }
