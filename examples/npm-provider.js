@@ -20,14 +20,11 @@ async function main() {
   console.warn(`Found ${roboto.fonts.length} Roboto font variants`)
 
   // Method 2: Combine npm provider with other providers, prioritizing local fonts
-  const unifontCombined = await createUnifont(
-    [
-      providers.npm(), // Auto-detect installed font packages
-      providers.google(), // If not found locally, get from Google Fonts
-      providers.bunny(), // If not found on Google Fonts, try Bunny Fonts
-    ],
-    { preferLocal: true }, // Enable priority for local option
-  )
+  const unifontCombined = await createUnifont([
+    providers.npm(), // Auto-detect installed font packages
+    providers.google(), // If not found locally, get from Google Fonts
+    providers.bunny(), // If not found on Google Fonts, try Bunny Fonts
+  ])
 
   // Try to resolve font, will prioritize from local npm packages
   const lato = await unifontCombined.resolveFont('Lato')

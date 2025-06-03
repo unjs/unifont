@@ -19,7 +19,9 @@ npm install unifont
 ```js
 import { createUnifont, providers } from 'unifont'
 
-const unifont = await createUnifont([providers.google()])
+const unifont = await createUnifont([
+  providers.google(),
+])
 
 const fonts = await unifont.resolveFont('Poppins')
 
@@ -55,7 +57,7 @@ For more about the storage drivers exposed from `unstorage`, check out https://u
 
 ### Using Local Fonts from NPM Packages
 
-You can use fonts installed as NPM packages (like those from @fontsource) before falling back to remote sources:
+You can use fonts installed as NPM packages (like those from `@fontsource`) before falling back to remote sources:
 
 ```ts
 import { createUnifont, providers } from 'unifont'
@@ -64,17 +66,12 @@ import { createUnifont, providers } from 'unifont'
 // npm install @fontsource/poppins @fontsource/roboto
 
 // Include the npm provider and set preferLocal to true
-const unifont = await createUnifont(
-  [
-    providers.npm(), // Will check for fonts in local packages first
-    providers.google(), // Fallback to Google Fonts if not found locally
-  ],
-  {
-    preferLocal: true, // Prioritize local npm packages
-  }
-)
+const unifont = await createUnifont([
+  providers.npm(), // Will check for fonts in local packages first
+  providers.google(), // Fallback to Google Fonts if not found locally
+])
 
-// This will first check @fontsource/poppins in node_modules
+// This will first check `@fontsource/poppins` in node_modules
 // and only use Google Fonts if not found locally
 const fonts = await unifont.resolveFont('Poppins')
 
@@ -86,20 +83,15 @@ You can also provide custom options to the npm provider:
 ```ts
 import { createUnifont, providers } from 'unifont'
 
-const unifont = await createUnifont(
-  [
-    providers.npm({
-      // Explicitly specify packages to look for
-      packages: ['@fontsource/poppins', '@fontsource/roboto'],
-      // Custom base directory if your node_modules is elsewhere
-      baseDir: './custom/path/node_modules',
-    }),
-    providers.google(),
-  ],
-  {
-    preferLocal: true,
-  }
-)
+const unifont = await createUnifont([
+  providers.npm({
+    // Explicitly specify packages to look for
+    packages: ['@fontsource/poppins', '@fontsource/roboto'],
+    // Custom base directory if your node_modules is elsewhere
+    baseDir: './custom/path/node_modules',
+  }),
+  providers.google(),
+])
 ```
 
 ## 💻 Development
