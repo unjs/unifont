@@ -16,15 +16,19 @@ async function getAdobeFontMeta(id: string): Promise<AdobeFontKit> {
   return kit
 }
 
+const KIT_REFRESH_TIMEOUT = 5 * 60 * 1000
+
 export default defineFontProvider<ProviderOption>('adobe', async (options, ctx) => {
   if (!options.id) {
     return
   }
 
   const familyMap = new Map<string, string>()
+  const notFoundFamilies = new Set<string>()
   const fonts = {
     kits: [] as AdobeFontKit[],
   }
+  let lastRefreshKitTime: number
 
   const kits = typeof options.id === 'string' ? [options.id] : options.id
 
@@ -32,6 +36,7 @@ export default defineFontProvider<ProviderOption>('adobe', async (options, ctx) 
 
   async function fetchKits(bypassCache: boolean = false) {
     familyMap.clear()
+    notFoundFamilies.clear()
     fonts.kits = []
 
     await Promise.all(kits.map(async (id) => {
@@ -107,12 +112,25 @@ export default defineFontProvider<ProviderOption>('adobe', async (options, ctx) 
       return [...familyMap.keys()]
     },
     async resolveFont(family, options) {
-      // Try fetching kits bypassing the cache if the family is not found (kits may have been updated)
+      // Check if family is in negative cache first (used to prevent unnecessary refreshes)
+      if (notFoundFamilies.has(family)) {
+        return
+      }
+
+      // Try refreshing the kit metadata if family is not found. We use a debounce mechanism to avoid frequent refreshes.
       if (!familyMap.has(family)) {
-        await fetchKits(true)
+        const lastRefetch = lastRefreshKitTime || 0
+        const now = Date.now()
+
+        if (now - lastRefetch > KIT_REFRESH_TIMEOUT) {
+          lastRefreshKitTime = Date.now()
+          await fetchKits(true)
+        }
       }
 
       if (!familyMap.has(family)) {
+        // Add to negative cache to avoid future refreshes for this family
+        notFoundFamilies.add(family)
         return
       }
 

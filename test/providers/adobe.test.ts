@@ -122,7 +122,7 @@ describe('adobe', () => {
     expect(fonts.length).toBe(4)
   })
 
-  it('refetches kit metadata when font is not found in cache', async () => {
+  it('refreshes kit metadata when font is not found in cache', async () => {
     let apiCallCount = 0
 
     // Mock the API endpoint to return different kits on subsequent calls
