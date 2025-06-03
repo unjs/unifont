@@ -65,7 +65,6 @@ import { createUnifont, providers } from 'unifont'
 // First install the fonts you need
 // npm install @fontsource/poppins @fontsource/roboto
 
-// Include the npm provider and set preferLocal to true
 const unifont = await createUnifont([
   providers.npm(), // Will check for fonts in local packages first
   providers.google(), // Fallback to Google Fonts if not found locally

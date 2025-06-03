@@ -131,7 +131,7 @@ describe('npm provider', () => {
     expect((result.fonts[0]!.src[0] as any).url).toContain('file://')
   })
 
-  it('should prefer local fonts when preferLocal is true', async () => {
+  it('should prefer local fonts', async () => {
     const { existsSync } = await import('node:fs')
     const { readFile, readdir } = await import('node:fs/promises')
 

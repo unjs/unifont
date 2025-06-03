@@ -45,7 +45,7 @@ describe('npm', () => {
 
   it('should prefer local fonts', async () => {
     // Create a Unifont instance using both npm and google providers
-    const unifontWithPreferLocal = await createUnifont([
+    const unifont = await createUnifont([
       providers.npm({
         packages: ['@fontsource/roboto'],
       }),
@@ -53,16 +53,16 @@ describe('npm', () => {
     ])
 
     // Resolve Roboto font
-    const resultWithPreferLocal = await unifontWithPreferLocal.resolveFont(
+    const result = await unifont.resolveFont(
       'Roboto',
     )
-    expect(resultWithPreferLocal.provider).toBe('npm')
+    expect(result.provider).toBe('npm')
 
     if (
-      resultWithPreferLocal.fonts.length > 0
-      && resultWithPreferLocal.fonts[0]?.meta
+      result.fonts.length > 0
+      && result.fonts[0]?.meta
     ) {
-      expect((resultWithPreferLocal.fonts[0].meta as any).source).toBe('npm')
+      expect((result.fonts[0].meta as any).source).toBe('npm')
     }
   })
 })
