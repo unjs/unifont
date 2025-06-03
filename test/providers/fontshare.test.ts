@@ -72,4 +72,12 @@ describe('fontshare', () => {
     const names = await unifont.listFonts()
     expect(names!.length > 0).toEqual(true)
   })
+
+  it('falls back to static weights', async () => {
+    const unifont = await createUnifont([providers.fontshare()])
+    const { fonts } = await unifont.resolveFont('Tanker', {
+      weights: ['400 1100'],
+    })
+    expect(fonts.length).toBe(1)
+  })
 })

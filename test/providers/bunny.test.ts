@@ -53,4 +53,12 @@ describe('bunny', () => {
     const names = await unifont.listFonts()
     expect(names!.length > 0).toEqual(true)
   })
+
+  it('falls back to static weights', async () => {
+    const unifont = await createUnifont([providers.bunny()])
+    const { fonts } = await unifont.resolveFont('Alef', {
+      weights: ['400 1100'],
+    })
+    expect(fonts.length).toBe(6)
+  })
 })

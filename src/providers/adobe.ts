@@ -3,7 +3,7 @@ import type { ResolveFontOptions } from '../types'
 import { hash } from 'ohash'
 import { extractFontFaceData } from '../css/parse'
 import { $fetch } from '../fetch'
-import { defineFontProvider } from '../utils'
+import { defineFontProvider, prepareWeights } from '../utils'
 
 interface ProviderOption {
   id: string[] | string
@@ -48,12 +48,18 @@ export default defineFontProvider<ProviderOption>('adobe', async (options, ctx) 
         continue
       }
 
+      const weights = prepareWeights({
+        inputWeights: options.weights,
+        hasVariableWeights: false,
+        weights: font.variations.map(v => `${v.slice(-1)}00`),
+      }).map(w => w.weight)
+
       const styles: string[] = []
       for (const style of font.variations) {
         if (style.includes('i') && !options.styles.includes('italic')) {
           continue
         }
-        if (!options.weights.includes(String(`${style.slice(-1)}00`))) {
+        if (!weights.includes(String(`${style.slice(-1)}00`))) {
           continue
         }
         styles.push(style)
@@ -71,7 +77,7 @@ export default defineFontProvider<ProviderOption>('adobe', async (options, ctx) 
 
         return (
           (!options.styles || !font.style || options.styles.includes(font.style as 'normal'))
-          && (!options.weights || !font.weight || Array.isArray(font.weight) ? options.weights.some(weight => Number(weight) <= upperWeight || Number(weight) >= lowerWeight) : options.weights.includes(String(font.weight)))
+          && (!weights || !font.weight || Array.isArray(font.weight) ? weights.some(weight => Number(weight) <= upperWeight || Number(weight) >= lowerWeight) : weights.includes(String(font.weight)))
         )
       })
     }
