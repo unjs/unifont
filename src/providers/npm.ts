@@ -2,14 +2,16 @@ import type { FontFaceData, FontFaceMeta, ResolveFontOptions } from '../types'
 import { existsSync } from 'node:fs'
 import { readFile } from 'node:fs/promises'
 import { join, resolve } from 'node:path'
+import { cwd } from 'node:process'
+import { readPackageJSON } from 'pkg-types'
 import { extractFontFaceData } from '../css/parse'
 import { defineFontProvider } from '../utils'
 
 interface NPMProviderOptions {
   /**
    * List of npm packages to check for fonts
-   * For example: ['@fontsource/poppins', '@fontsource/roboto']
-   * If not provided, will try to autodetect @fontsource packages
+   * For example: ['@fontsource/poppins', '@fontsource/roboto', 'cal-sans', 'geist']
+   * If not provided, will try to autodetect font packages from dependencies
    */
   packages?: string[]
 
@@ -21,7 +23,7 @@ interface NPMProviderOptions {
 
   /**
    * List of known font package prefixes to try
-   * @default ['@fontsource/']
+   * @default ['@fontsource/', '@next/font/', 'cal-sans', 'geist', 'inter', 'roboto']
    */
   packagePrefixes?: string[]
 }
@@ -33,27 +35,98 @@ interface NPMFontFaceMeta {
 }
 
 /**
- * Try to detect installed @fontsource packages
+ * General function to detect all font packages in the base directory
+ * @returns Array of font package names found in dependencies
  */
-async function detectFontsourcePackages(baseDir: string): Promise<string[]> {
+async function detectFontPackages(workspaceDir: string = cwd()): Promise<string[]> {
   try {
-    // Check if @fontsource directory exists
-    const fontsourceDir = join(baseDir, '@fontsource')
-    if (!existsSync(fontsourceDir)) {
-      return []
+    const packages = await readPackageJSON(workspaceDir)
+    const allDeps = {
+      ...packages.dependencies,
+      ...packages.devDependencies,
     }
 
-    // Read the directory to find installed font packages
-    const { readdir } = await import('node:fs/promises')
-    const files = await readdir(fontsourceDir)
+    // Common font packages
+    const fontPackagePatterns = [
+      /^@fontsource\//, // @fontsource packages
+      /^@next\/font$/, // Next.js font optimization
+      /^cal-sans$/, // Cal Sans font
+      /^geist$/, // Geist font
+      /^inter$/, // Inter font
+      /^roboto$/, // Roboto font
+      /font/i, // Any package with "font" in the name
+    ]
 
-    return files.map(file => `@fontsource/${file}`)
+    const fontPackages = Object.keys(allDeps).filter(pkg =>
+      fontPackagePatterns.some(pattern => pattern.test(pkg)),
+    )
+
+    return fontPackages
   }
   catch (error) {
-    // In case of any error, return empty array
-    console.error('Failed to detect @fontsource packages:', error)
+    console.error('Failed to detect font packages:', error)
     return []
   }
+}
+
+/**
+ * Extract font name from package name using common patterns
+ */
+function extractFontNameFromPackageName(packageName: string): string | null {
+  // @fontsource/font-name -> Font Name
+  if (packageName.startsWith('@fontsource/')) {
+    return packageName.replace('@fontsource/', '').replace(/-/g, ' ')
+  }
+
+  // Handle special cases for known font packages
+  const knownFonts: Record<string, string> = {
+    'cal-sans': 'Cal Sans',
+    'geist': 'Geist',
+    'inter': 'Inter',
+    'roboto': 'Roboto',
+    '@next/font': 'System Font',
+  }
+
+  if (knownFonts[packageName]) {
+    return knownFonts[packageName]
+  }
+
+  // Generic patterns
+  if (packageName.endsWith('-font')) {
+    return packageName.replace('-font', '').replace(/-/g, ' ')
+  }
+
+  if (packageName.includes('font-')) {
+    return packageName.replace('font-', '').replace(/-/g, ' ')
+  }
+
+  return null
+}
+
+/**
+ * Extract font family name from package name and package.json
+ * This handles different font package naming conventions generically
+ */
+function extractFontFamilyName(packageName: string, packageJson: any): string | null {
+  // First try explicit font metadata from package.json
+  if (packageJson.fontName)
+    return packageJson.fontName
+  if (packageJson.fontFamily)
+    return packageJson.fontFamily
+
+  // For packages with well-known naming conventions
+  const fontNameFromPackage = extractFontNameFromPackageName(packageName)
+  if (fontNameFromPackage)
+    return fontNameFromPackage
+
+  // Fallback: use package description hints
+  if (packageJson.description && /font/i.test(packageJson.description)) {
+    const match = packageJson.description.match(/\b(\w+(?:\s+\w+)?)\s+font/i)
+    if (match)
+      return match[1]
+  }
+
+  return null
 }
 
 export default defineFontProvider<NPMProviderOptions>(
@@ -61,13 +134,13 @@ export default defineFontProvider<NPMProviderOptions>(
   async (options = {}, ctx) => {
     const {
       baseDir = 'node_modules',
-      packagePrefixes: _packagePrefixes = ['@fontsource/'],
+      packagePrefixes: _packagePrefixes = ['@fontsource/', '@next/font/', 'cal-sans', 'geist', 'inter', 'roboto'],
     } = options
 
-    // Get packages from options or detect @fontsource packages
+    // Get packages from options or detect packages
     let packages = options.packages || []
     if (!packages.length) {
-      packages = await detectFontsourcePackages(baseDir)
+      packages = await detectFontPackages()
     }
 
     // Build a map of font family names to package paths
@@ -84,10 +157,7 @@ export default defineFontProvider<NPMProviderOptions>(
 
         // Extract font family name from package.json
         // Most font packages have fontName, fontFamily or name that can be used
-        const fontFamily
-          = pkgJson.fontName
-            || pkgJson.fontFamily
-            || (pkgJson.name && pkgJson.name.replace(/^@fontsource\//, ''))
+        const fontFamily = extractFontFamilyName(pkg, pkgJson)
 
         if (fontFamily) {
           fontFamilyMap.set(fontFamily.toLowerCase(), pkg)
