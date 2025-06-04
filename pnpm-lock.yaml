@@ -17,10 +17,16 @@ importers:
       ohash:
         specifier: ^2.0.0
         version: 2.0.11
+      pkg-types:
+        specifier: ^2.1.0
+        version: 2.1.0
     devDependencies:
       '@antfu/eslint-config':
         specifier: 4.13.2
         version: 4.13.2(@vue/compiler-sfc@3.5.14)(eslint@9.28.0(jiti@2.4.2))(typescript@5.8.3)(vitest@3.2.0(@types/debug@4.1.12)(@types/node@22.15.29)(jiti@2.4.2)(yaml@2.8.0))
+      '@fontsource/roboto':
+        specifier: ^5.2.5
+        version: 5.2.5
       '@types/css-tree':
         specifier: 2.3.10
         version: 2.3.10
@@ -388,6 +394,9 @@ packages:
   '@eslint/plugin-kit@0.3.1':
     resolution: {integrity: sha512-0J+zgWxHN+xXONWIyPWKFMgVuJoZuGiIFu8yxk7RJjxkzpGmyja5wRFqZIVtjDVOQpV+Rw0iOAjYPE2eQyjr0w==}
     engines: {node: ^18.18.0 || ^20.9.0 || >=21.1.0}
+
+  '@fontsource/roboto@5.2.5':
+    resolution: {integrity: sha512-70r2UZ0raqLn5W+sPeKhqlf8wGvUXFWlofaDlcbt/S3d06+17gXKr3VNqDODB0I1ASme3dGT5OJj9NABt7OTZQ==}
 
   '@humanfs/core@0.19.1':
     resolution: {integrity: sha512-5DyQ4+1JEUzejeK1JGICcideyfUbGixgS9jNgex5nqkW+cY7WZhxBigmieN5Qnw9ZosSNVC9KQKyb+GUaGyKUA==}
@@ -3052,6 +3061,8 @@ snapshots:
     dependencies:
       '@eslint/core': 0.14.0
       levn: 0.4.1
+
+  '@fontsource/roboto@5.2.5': {}
 
   '@humanfs/core@0.19.1': {}
 

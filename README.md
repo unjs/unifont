@@ -55,6 +55,44 @@ console.log(await cachedUnifont.resolveFont('Poppins'))
 
 For more about the storage drivers exposed from `unstorage`, check out https://unstorage.unjs.io.
 
+### Using Local Fonts from NPM Packages
+
+You can use fonts installed as NPM packages (like those from `@fontsource`) before falling back to remote sources:
+
+```ts
+import { createUnifont, providers } from 'unifont'
+
+// First install the fonts you need
+// npm install @fontsource/poppins @fontsource/roboto
+
+const unifont = await createUnifont([
+  providers.npm(), // Will check for fonts in local packages first
+  providers.google(), // Fallback to Google Fonts if not found locally
+])
+
+// This will first check `@fontsource/poppins` in node_modules
+// and only use Google Fonts if not found locally
+const fonts = await unifont.resolveFont('Poppins')
+
+console.log(fonts)
+```
+
+You can also provide custom options to the npm provider:
+
+```ts
+import { createUnifont, providers } from 'unifont'
+
+const unifont = await createUnifont([
+  providers.npm({
+    // Explicitly specify packages to look for
+    packages: ['@fontsource/poppins', '@fontsource/roboto'],
+    // Custom base directory if your node_modules is elsewhere
+    baseDir: './custom/path/node_modules',
+  }),
+  providers.google(),
+])
+```
+
 ## 💻 Development
 
 - Clone this repository
