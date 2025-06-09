@@ -40,15 +40,6 @@ export default defineFontProvider<ProviderOption>('googleicons', async (_options
 
     let css = ''
 
-    if (family.includes('Icons')) {
-      css += await $fetch<string>('/css2', {
-        baseURL: 'https://fonts.googleapis.com/icon',
-        query: {
-          family,
-        },
-      })
-    }
-
     for (const extension in userAgents) {
     // Legacy Material Icons
       if (family.includes('Icons')) {

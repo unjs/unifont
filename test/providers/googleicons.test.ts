@@ -353,6 +353,10 @@ describe('googleicons', () => {
         {
           "src": [
             {
+              "format": "woff2",
+              "url": "https://fonts.gstatic.com/font",
+            },
+            {
               "format": "woff",
               "url": "https://fonts.gstatic.com/font",
             },
