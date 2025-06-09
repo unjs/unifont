@@ -16,28 +16,50 @@ async function getAdobeFontMeta(id: string): Promise<AdobeFontKit> {
   return kit
 }
 
+const KIT_REFRESH_TIMEOUT = 5 * 60 * 1000
+
 export default defineFontProvider<ProviderOption>('adobe', async (options, ctx) => {
   if (!options.id) {
     return
   }
 
   const familyMap = new Map<string, string>()
+  const notFoundFamilies = new Set<string>()
   const fonts = {
     kits: [] as AdobeFontKit[],
   }
+  let lastRefreshKitTime: number
 
   const kits = typeof options.id === 'string' ? [options.id] : options.id
-  await Promise.all(kits.map(async (id) => {
-    const meta = await ctx.storage.getItem<AdobeFontKit>(`adobe:meta-${id}.json`, () => getAdobeFontMeta(id))
-    if (!meta) {
-      throw new TypeError('No font metadata found in adobe response.')
-    }
 
-    fonts.kits.push(meta)
-    for (const family of meta.families) {
-      familyMap.set(family.name, family.id)
-    }
-  }))
+  await fetchKits()
+
+  async function fetchKits(bypassCache: boolean = false) {
+    familyMap.clear()
+    notFoundFamilies.clear()
+    fonts.kits = []
+
+    await Promise.all(kits.map(async (id) => {
+      let meta: AdobeFontKit
+      const key = `adobe:meta-${id}.json`
+      if (bypassCache) {
+        meta = await getAdobeFontMeta(id)
+        await ctx.storage.setItem(key, meta)
+      }
+      else {
+        meta = await ctx.storage.getItem(key, () => getAdobeFontMeta(id))
+      }
+
+      if (!meta) {
+        throw new TypeError('No font metadata found in adobe response.')
+      }
+
+      fonts.kits.push(meta)
+      for (const family of meta.families) {
+        familyMap.set(family.name, family.id)
+      }
+    }))
+  }
 
   async function getFontDetails(family: string, options: ResolveFontOptions) {
     options.weights = options.weights.map(String)
@@ -90,7 +112,25 @@ export default defineFontProvider<ProviderOption>('adobe', async (options, ctx) 
       return [...familyMap.keys()]
     },
     async resolveFont(family, options) {
+      // Check if family is in negative cache first (used to prevent unnecessary refreshes)
+      if (notFoundFamilies.has(family)) {
+        return
+      }
+
+      // Try refreshing the kit metadata if family is not found. We use a debounce mechanism to avoid frequent refreshes.
       if (!familyMap.has(family)) {
+        const lastRefetch = lastRefreshKitTime || 0
+        const now = Date.now()
+
+        if (now - lastRefetch > KIT_REFRESH_TIMEOUT) {
+          lastRefreshKitTime = Date.now()
+          await fetchKits(true)
+        }
+      }
+
+      if (!familyMap.has(family)) {
+        // Add to negative cache to avoid future refreshes for this family
+        notFoundFamilies.add(family)
         return
       }
 
