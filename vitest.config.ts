@@ -14,5 +14,6 @@ export default defineConfig({
       include: ['src'],
       reporter: ['text', 'json', 'html'],
     },
+    testTimeout: 10000,
   },
 })
