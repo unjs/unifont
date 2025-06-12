@@ -1,13 +1,14 @@
 import { afterAll, beforeEach, describe, expect, it, vi } from 'vitest'
-import { $fetch } from '../src/fetch'
+import { $fetch, mini$fetch } from '../src/fetch'
+import * as fetchModule from '../src/fetch'
 
 describe('unifont', () => {
-  let mockedFetch: typeof globalThis.fetch
   const originalFetch = globalThis.fetch
   beforeEach(() => {
-    mockedFetch = globalThis.fetch = vi.fn(() =>
+    globalThis.fetch = vi.fn(() =>
       Promise.reject(new Error('Network Error')),
     )
+    vi.spyOn(fetchModule, 'mini$fetch')
   })
   afterAll(() => {
     globalThis.fetch = originalFetch
@@ -21,6 +22,7 @@ describe('unifont', () => {
       },
     }
     await $fetch('/css2', options).catch(() => null)
-    expect(mockedFetch).toHaveBeenLastCalledWith('https://fonts.googleapis.com/css2?family=test', { ...options, retries: 0 })
+    expect(mini$fetch).toHaveBeenCalledTimes(3)
+    expect(mini$fetch).toHaveBeenLastCalledWith('/css2', { ...options, retries: 0 })
   })
 })
