@@ -18,6 +18,7 @@ export function mini$fetch<T = unknown>(url: string, options?: Mini$FetchOptions
     query: options?.query,
     responseType: options?.responseType ?? 'text',
     headers: options?.headers,
+    retry: false,
   }).catch((err) => {
     if (retries <= 0) {
       throw err
