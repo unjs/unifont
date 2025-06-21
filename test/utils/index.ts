@@ -1,4 +1,5 @@
 import type { FontFaceData } from '../../src'
+import { vi } from 'vitest'
 
 // Quick and dirty way to pick into a new array, not needed if the test is un-necessary
 export function pickUniqueBy<T, K>(arr: T[], by: (arg: T) => K): K[] {
@@ -60,4 +61,19 @@ export function mockFetchReturn(condition: RegExp, value: () => unknown) {
   return () => {
     globalThis.fetch = originalFetch
   }
+}
+
+export async function disable$fetchRetry() {
+  vi.mock('../../src/fetch', async (importOriginal) => {
+    const mod = await importOriginal<typeof import('../../src/fetch')>()
+    return {
+      $fetch: Object.assign(mod.mini$fetch, {
+        create: (defaults?: any) => (url: string, options?: any) => mod.mini$fetch(url, {
+          ...defaults,
+          ...options,
+          retries: 0, // Disable retries
+        }),
+      }),
+    }
+  })
 }
