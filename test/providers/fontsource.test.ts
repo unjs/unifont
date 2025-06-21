@@ -2,6 +2,12 @@ import { describe, expect, it, vi } from 'vitest'
 import { createUnifont, providers } from '../../src'
 import { mockFetchReturn } from '../utils'
 
+// Disable $fetch retry logic
+await vi.hoisted(async () => {
+  const { disable$fetchRetry } = await import('../utils')
+  await disable$fetchRetry()
+})
+
 describe('fontsource', () => {
   it('works', async () => {
     const unifont = await createUnifont([providers.fontsource()])
