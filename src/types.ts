@@ -89,8 +89,8 @@ export interface Provider {
   (ctx: ProviderContext): Awaitable<InitializedProvider | undefined>
 }
 
-export type ProviderFactory<T = unknown> =
-  unknown extends T
+export type ProviderFactory<T = unknown>
+  = unknown extends T
     ? () => Provider
     : Partial<T> extends T
       ? (options?: T) => Provider
