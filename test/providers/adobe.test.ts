@@ -2,6 +2,12 @@ import { describe, expect, it, vi } from 'vitest'
 import { createUnifont, providers } from '../../src'
 import { mockFetchReturn, pickUniqueBy, sanitizeFontSource } from '../utils'
 
+// Disable $fetch retry logic
+await vi.hoisted(async () => {
+  const { disable$fetchRetry } = await import('../utils')
+  await disable$fetchRetry()
+})
+
 describe('adobe', () => {
   it('correctly types options for adobe provider', async () => {
     providers.adobe({ id: [] })
@@ -125,79 +131,72 @@ describe('adobe', () => {
   it('refreshes kit metadata when font is not found in cache', async () => {
     let apiCallCount = 0
 
+    const originalFetch = globalThis.fetch
+
     // Mock the API endpoint to return different kits on subsequent calls
-    const restoreFetch = mockFetchReturn(
-      /^https:\/\/typekit.com\/api\/v1\/json\/kits\/test123\/published/,
-      () => {
+    globalThis.fetch = vi.fn().mockImplementation(async (url: string) => {
+      if (url.includes('typekit.com/api/v1/json/kits/test123/published')) {
         apiCallCount++
 
         if (apiCallCount === 1) {
           // First API call - return kit without NewFont
-          return Promise.resolve({
-            json: () => Promise.resolve({
-              kit: {
-                id: 'test123',
-                families: [
-                  {
-                    id: 'aleo',
-                    name: 'Aleo',
-                    slug: 'aleo',
-                    css_names: ['aleo'],
-                    css_stack: 'aleo, serif',
-                    variations: ['n4', 'i4'],
-                  },
-                ],
-              },
-            }),
-          })
+          return new Response(JSON.stringify({
+            kit: {
+              id: 'test123',
+              families: [
+                {
+                  id: 'aleo',
+                  name: 'Aleo',
+                  slug: 'aleo',
+                  css_names: ['aleo'],
+                  css_stack: 'aleo, serif',
+                  variations: ['n4', 'i4'],
+                },
+              ],
+            },
+          }), { status: 200, headers: { 'content-type': 'application/json' } })
         }
         else {
           // Second API call - return kit with NewFont
-          return Promise.resolve({
-            json: () => Promise.resolve({
-              kit: {
-                id: 'test123',
-                families: [
-                  {
-                    id: 'aleo',
-                    name: 'Aleo',
-                    slug: 'aleo',
-                    css_names: ['aleo'],
-                    css_stack: 'aleo, serif',
-                    variations: ['n4', 'i4'],
-                  },
-                  {
-                    id: 'newfont',
-                    name: 'NewFont',
-                    slug: 'newfont',
-                    css_names: ['newfont'],
-                    css_stack: 'newfont, sans-serif',
-                    variations: ['n4', 'n7'],
-                  },
-                ],
-              },
-            }),
-          })
+          return new Response(JSON.stringify({
+            kit: {
+              id: 'test123',
+              families: [
+                {
+                  id: 'aleo',
+                  name: 'Aleo',
+                  slug: 'aleo',
+                  css_names: ['aleo'],
+                  css_stack: 'aleo, serif',
+                  variations: ['n4', 'i4'],
+                },
+                {
+                  id: 'newfont',
+                  name: 'NewFont',
+                  slug: 'newfont',
+                  css_names: ['newfont'],
+                  css_stack: 'newfont, sans-serif',
+                  variations: ['n4', 'n7'],
+                },
+              ],
+            },
+          }), { status: 200, headers: { 'content-type': 'application/json' } })
         }
-      },
-    )
-
-    // Add a mock for the CSS file that will be fetched
-    mockFetchReturn(
-      /^https:\/\/use\.typekit\.net\/test123\.css/,
-      () => {
-        return Promise.resolve({
-          text: () => Promise.resolve(`
-            @font-face {
-              font-family: "newfont";
-              src: url("https://use.typekit.net/font.woff2") format("woff2");
-              font-weight: 400;
-              font-style: normal;
-            }
-          `),
-        })
-      },
-    )
+      }
+      else if (url.includes('test123.css')) {
+        // Mock CSS response
+        return new Response(`
+          @font-face {
+            font-family: "newfont";
+            src: url("https://use.typekit.net/font.woff2") format("woff2");
+            font-weight: 400;
+            font-style: normal;
+          }
+        `, { status: 200, headers: { 'content-type': 'text/css' } })
+      }
+      // For all other URLs, let the original fetch handle it or throw
+      return originalFetch(url)
+    })
 
     try {
       // Initialize unifont with the initial kit (without NewFont)
@@ -206,6 +205,7 @@ describe('adobe', () => {
 
       // Verify NewFont is not initially available
       const initialFonts = await unifont.listFonts()
+      expect(initialFonts).toEqual(expect.arrayContaining(['Aleo']))
       expect(initialFonts).not.toContain('NewFont')
 
       // Try to resolve NewFont - this should trigger a refetch
@@ -217,7 +217,8 @@ describe('adobe', () => {
       expect(result.fonts.length).toBeGreaterThan(0)
     }
     finally {
-      restoreFetch()
+      // Restore original fetch
+      globalThis.fetch = originalFetch
     }
   })
 })
