@@ -9,7 +9,7 @@ const extractableKeyMap: Record<string, keyof FontFaceData> = {
   'font-weight': 'weight',
   'font-style': 'style',
   'font-feature-settings': 'featureSettings',
-  'font-variations-settings': 'variationSettings',
+  'font-variation-settings': 'variationSettings',
   'unicode-range': 'unicodeRange',
 }
 
