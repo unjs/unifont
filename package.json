@@ -2,7 +2,7 @@
   "name": "unifont",
   "type": "module",
   "version": "0.5.2",
-  "packageManager": "pnpm@10.14.0",
+  "packageManager": "pnpm@10.15.0",
   "description": "Framework agnostic tools for accessing data from font CDNs and providers",
   "license": "MIT",
   "repository": {
@@ -47,7 +47,7 @@
     "simple-git-hooks": "2.13.1",
     "typescript": "5.9.2",
     "unbuild": "3.6.1",
-    "unstorage": "1.16.1",
+    "unstorage": "1.17.0",
     "vite": "7.1.2",
     "vitest": "3.2.4"
   },
