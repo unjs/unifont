@@ -1,6 +1,5 @@
 import type { ResolveFontOptions } from '../types'
 
-import { hash } from 'ohash'
 import { extractFontFaceData } from '../css/parse'
 import { $fetch } from '../fetch'
 import { defineFontProvider, prepareWeights } from '../utils'
@@ -41,7 +40,7 @@ export default defineFontProvider<ProviderOption>('adobe', async (options, ctx) 
 
     await Promise.all(kits.map(async (id) => {
       let meta: AdobeFontKit
-      const key = `adobe:meta-${id}.json`
+      const key = ctx.cacheKey('meta.json', ({ join }) => join('kit', id))
       if (bypassCache) {
         meta = await getAdobeFontMeta(id)
         await ctx.storage.setItem(key, meta)
@@ -134,7 +133,10 @@ export default defineFontProvider<ProviderOption>('adobe', async (options, ctx) 
         return
       }
 
-      const fonts = await ctx.storage.getItem(`adobe:${family}-${hash(options)}-data.json`, () => getFontDetails(family, options))
+      const fonts = await ctx.storage.getItem(
+        ctx.cacheKey('data.json', ({ hash, join }) => join(family, hash(options))),
+        () => getFontDetails(family, options),
+      )
       return { fonts }
     },
   }
