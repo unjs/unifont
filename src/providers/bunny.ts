@@ -1,6 +1,5 @@
 import type { ResolveFontOptions } from '../types'
 
-import { hash } from 'ohash'
 import { extractFontFaceData } from '../css/parse'
 import { $fetch } from '../fetch'
 import { defineFontProvider, prepareWeights } from '../utils'
@@ -10,7 +9,10 @@ const fontAPI = $fetch.create({ baseURL: 'https://fonts.bunny.net' })
 export default defineFontProvider('bunny', async (_options, ctx) => {
   const familyMap = new Map<string, string>()
 
-  const fonts = await ctx.storage.getItem('bunny:meta.json', () => fontAPI<BunnyFontMeta>('/list', { responseType: 'json' }))
+  const fonts = await ctx.storage.getItem(
+    ctx.cacheKey('meta.json'),
+    () => fontAPI<BunnyFontMeta>('/list', { responseType: 'json' }),
+  )
   for (const [id, family] of Object.entries(fonts)) {
     familyMap.set(family.familyName, id)
   }
@@ -53,7 +55,10 @@ export default defineFontProvider('bunny', async (_options, ctx) => {
         return
       }
 
-      const fonts = await ctx.storage.getItem(`bunny:${fontFamily}-${hash(defaults)}-data.json`, () => getFontDetails(fontFamily, defaults))
+      const fonts = await ctx.storage.getItem(
+        ctx.cacheKey('data.json', ({ hash, join }) => join(fontFamily, hash(defaults))),
+        () => getFontDetails(fontFamily, defaults),
+      )
       return { fonts }
     },
   }

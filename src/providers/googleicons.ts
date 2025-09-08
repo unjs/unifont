@@ -1,4 +1,3 @@
-import { hash } from 'ohash'
 import { extractFontFaceData } from '../css/parse'
 import { $fetch } from '../fetch'
 import { defineFontProvider } from '../utils'
@@ -18,13 +17,16 @@ interface ProviderOption {
 }
 
 export default defineFontProvider<ProviderOption>('googleicons', async (_options, ctx) => {
-  const googleIcons = await ctx.storage.getItem('googleicons:meta.json', async () => {
-    const response: { families: string[] } = JSON.parse((await $fetch<string>(
-      'https://fonts.google.com/metadata/icons?key=material_symbols&incomplete=true',
-    )).split('\n').slice(1).join('\n')) // remove the first line which makes it an invalid JSON
+  const googleIcons = await ctx.storage.getItem(
+    ctx.cacheKey('meta.json'),
+    async () => {
+      const response: { families: string[] } = JSON.parse((await $fetch<string>(
+        'https://fonts.google.com/metadata/icons?key=material_symbols&incomplete=true',
+      )).split('\n').slice(1).join('\n')) // remove the first line which makes it an invalid JSON
 
-    return response.families
-  })
+      return response.families
+    },
+  )
 
   const userAgents = {
     woff2: 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/121.0.0.0 Safari/537.36',
@@ -76,7 +78,10 @@ export default defineFontProvider<ProviderOption>('googleicons', async (_options
         return
       }
 
-      const fonts = await ctx.storage.getItem(`googleicons:${fontFamily}-${hash(options)}-data.json`, () => getFontDetails(fontFamily))
+      const fonts = await ctx.storage.getItem(
+        ctx.cacheKey('data.json', ({ hash, join }) => join(fontFamily, hash(options))),
+        () => getFontDetails(fontFamily),
+      )
       return { fonts }
     },
   }

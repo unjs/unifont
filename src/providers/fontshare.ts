@@ -1,6 +1,5 @@
 import type { ResolveFontOptions } from '../types'
 
-import { hash } from 'ohash'
 import { extractFontFaceData } from '../css/parse'
 import { $fetch } from '../fetch'
 import { defineFontProvider, prepareWeights } from '../utils'
@@ -9,23 +8,26 @@ const fontAPI = $fetch.create({ baseURL: 'https://api.fontshare.com/v2' })
 export default defineFontProvider('fontshare', async (_options, ctx) => {
   const fontshareFamilies = new Set<string>()
 
-  const fonts = await ctx.storage.getItem('fontshare:meta.json', async () => {
-    const fonts: FontshareFontMeta[] = []
-    let offset = 0
-    let chunk
-    do {
-      chunk = await fontAPI<{ fonts: FontshareFontMeta[], has_more: boolean }>('/fonts', {
-        responseType: 'json',
-        query: {
-          offset,
-          limit: 100,
-        },
-      })
-      fonts.push(...chunk.fonts)
-      offset++
-    } while (chunk.has_more)
-    return fonts
-  })
+  const fonts = await ctx.storage.getItem(
+    ctx.cacheKey('meta.json'),
+    async () => {
+      const fonts: FontshareFontMeta[] = []
+      let offset = 0
+      let chunk
+      do {
+        chunk = await fontAPI<{ fonts: FontshareFontMeta[], has_more: boolean }>('/fonts', {
+          responseType: 'json',
+          query: {
+            offset,
+            limit: 100,
+          },
+        })
+        fonts.push(...chunk.fonts)
+        offset++
+      } while (chunk.has_more)
+      return fonts
+    },
+  )
 
   for (const font of fonts) {
     fontshareFamilies.add(font.name)
@@ -73,7 +75,10 @@ export default defineFontProvider('fontshare', async (_options, ctx) => {
         return
       }
 
-      const fonts = await ctx.storage.getItem(`fontshare:${fontFamily}-${hash(defaults)}-data.json`, () => getFontDetails(fontFamily, defaults))
+      const fonts = await ctx.storage.getItem(
+        ctx.cacheKey('data.json', ({ hash, join }) => join(fontFamily, hash(defaults))),
+        () => getFontDetails(fontFamily, defaults),
+      )
 
       return { fonts }
     },

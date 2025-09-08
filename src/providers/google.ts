@@ -1,7 +1,6 @@
 import type { FontFaceData, ResolveFontOptions } from '../types'
 
 import { findAll, generate, parse } from 'css-tree'
-import { hash } from 'ohash'
 import { extractFontFaceData } from '../css/parse'
 import { $fetch } from '../fetch'
 import { defineFontProvider, prepareWeights } from '../utils'
@@ -58,7 +57,11 @@ export function splitCssIntoSubsets(input: string): { subset: string | null, css
 }
 
 export default defineFontProvider<ProviderOption>('google', async (_options = {}, ctx) => {
-  const googleFonts = await ctx.storage.getItem('google:meta.json', () => $fetch<{ familyMetadataList: FontIndexMeta[] }>('https://fonts.google.com/metadata/fonts', { responseType: 'json' }).then(r => r.familyMetadataList))
+  const googleFonts = await ctx.storage.getItem(
+    ctx.cacheKey('meta.json'),
+    () => $fetch<{ familyMetadataList: FontIndexMeta[] }>('https://fonts.google.com/metadata/fonts', { responseType: 'json' })
+      .then(r => r.familyMetadataList),
+  )
 
   const styleMap = {
     italic: '1',
@@ -151,7 +154,10 @@ export default defineFontProvider<ProviderOption>('google', async (_options = {}
         return
       }
 
-      const fonts = await ctx.storage.getItem(`google:${fontFamily}-${hash(options)}-data.json`, () => getFontDetails(fontFamily, options))
+      const fonts = await ctx.storage.getItem(
+        ctx.cacheKey('data.json', ({ hash, join }) => join(fontFamily, hash(options))),
+        () => getFontDetails(fontFamily, options),
+      )
       return { fonts }
     },
   }

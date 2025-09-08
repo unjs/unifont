@@ -1,13 +1,15 @@
 import type { FontFaceData, ResolveFontOptions } from '../types'
 
-import { hash } from 'ohash'
 import { $fetch } from '../fetch'
 import { defineFontProvider, prepareWeights } from '../utils'
 
 const fontAPI = $fetch.create({ baseURL: 'https://api.fontsource.org/v1' })
 
 export default defineFontProvider('fontsource', async (_options, ctx) => {
-  const fonts = await ctx.storage.getItem('fontsource:meta.json', () => fontAPI<FontsourceFontMeta[]>('/fonts', { responseType: 'json' }))
+  const fonts = await ctx.storage.getItem(
+    ctx.cacheKey('meta.json'),
+    () => fontAPI<FontsourceFontMeta[]>('/fonts', { responseType: 'json' }),
+  )
   const familyMap = new Map<string, FontsourceFontMeta>()
 
   for (const meta of fonts) {
@@ -34,7 +36,10 @@ export default defineFontProvider('fontsource', async (_options, ctx) => {
         for (const { weight, variable } of weights) {
           if (variable) {
             try {
-              const variableAxes = await ctx.storage.getItem(`fontsource:${font.family}-axes.json`, () => fontAPI<FontsourceVariableFontDetail>(`/variable/${font.id}`, { responseType: 'json' }))
+              const variableAxes = await ctx.storage.getItem(
+                ctx.cacheKey('axes.json', ({ join }) => join(font.id, font.family)),
+                () => fontAPI<FontsourceVariableFontDetail>(`/variable/${font.id}`, { responseType: 'json' }),
+              )
               if (variableAxes && variableAxes.axes.wght) {
                 fontFaceData.push({
                   style,
@@ -75,7 +80,10 @@ export default defineFontProvider('fontsource', async (_options, ctx) => {
         return
       }
 
-      const fonts = await ctx.storage.getItem(`fontsource:${fontFamily}-${hash(options)}-data.json`, () => getFontDetails(fontFamily, options))
+      const fonts = await ctx.storage.getItem(
+        ctx.cacheKey('data.json', ({ hash, join }) => join(fontFamily, hash(options))),
+        () => getFontDetails(fontFamily, options),
+      )
       return { fonts }
     },
   }
