@@ -2,7 +2,7 @@ type Awaitable<T> = T | Promise<T>
 
 interface CacheKeyUtils {
   hash: (value: unknown) => string
-  join: (...parts: Array<string | number | boolean | null | undefined>) => string
+  join: (...parts: Array<string | number>) => string
 }
 
 export type CacheKeyBuilder = (utils: CacheKeyUtils) => string

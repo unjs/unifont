@@ -7,12 +7,15 @@ function sanitize(input?: string) {
   return input.replace(/[^\w.-]/g, '_')
 }
 
-function join(...parts: Array<string | null | undefined | boolean | number>) {
-  // Sanitize each part and remove empty results, then join with a hyphen.
-  return parts
-    .map(p => sanitize(String(p)))
-    .filter(p => p !== '')
-    .join('-')
+function join(...parts: Array<string | number>) {
+  const out: string[] = []
+  for (const p of parts) {
+    const s = sanitize(String(p))
+    if (!s)
+      continue
+    out.push(s)
+  }
+  return out.join('-')
 }
 
 /**
