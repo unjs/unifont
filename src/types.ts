@@ -1,5 +1,12 @@
 type Awaitable<T> = T | Promise<T>
 
+interface CacheKeyUtils {
+  hash: (value: unknown) => string
+  join: (...parts: Array<string | number | boolean | null | undefined>) => string
+}
+
+export type CacheKeyBuilder = (utils: CacheKeyUtils) => string
+
 export interface ProviderContext {
   storage: {
     getItem: {
@@ -8,6 +15,27 @@ export interface ProviderContext {
     }
     setItem: (key: string, value: unknown) => Awaitable<void>
   }
+
+  /**
+   * Build a safe cache key bound to the provider and its options.
+   * Provider name and bound provider options are automatically included in the final key.
+   *
+   * Format: `"<provider>:<hash>-<body?>-<label>"` (body omitted if empty).
+   * All parts are sanitized to `[\w.-]` and joined with `-`.
+   *
+   * Example (meta):
+   * ```ts
+   * const key = ctx.cacheKey('meta.json')
+   * const meta = await ctx.storage.getItem(key, fetchMeta)
+   * ```
+   *
+   * Example (data):
+   * ```ts
+   * const key = ctx.cacheKey('data.json', ({ hash, join }) => join(fontFamily, hash(options)))
+   * const data = await ctx.storage.getItem(key, () => getFontDetails(fontFamily, options))
+   * ```
+   */
+  cacheKey: (label: string, build?: CacheKeyBuilder) => string
 }
 
 export type FontStyles = 'normal' | 'italic' | 'oblique'
@@ -86,6 +114,7 @@ export interface ProviderDefinition<T = unknown> {
 
 export interface Provider {
   _name: string
+  _providerOptions: unknown // Bound options passed when creating the provider (used for cache key hashing).
   (ctx: ProviderContext): Awaitable<InitializedProvider | undefined>
 }
 
