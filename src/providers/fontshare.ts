@@ -76,7 +76,7 @@ export default defineFontProvider('fontshare', async (_options, ctx) => {
       }
 
       const fonts = await ctx.storage.getItem(
-        ctx.cacheKey('data.json', ({ hash, join }) => join(fontFamily, hash(defaults))),
+        ctx.cacheKey('data.json', fontFamily, defaults),
         () => getFontDetails(fontFamily, defaults),
       )
 

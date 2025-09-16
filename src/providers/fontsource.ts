@@ -37,7 +37,7 @@ export default defineFontProvider('fontsource', async (_options, ctx) => {
           if (variable) {
             try {
               const variableAxes = await ctx.storage.getItem(
-                ctx.cacheKey('axes.json', ({ join }) => join(font.id, font.family)),
+                ctx.cacheKey('axes.json', font.id, font.family),
                 () => fontAPI<FontsourceVariableFontDetail>(`/variable/${font.id}`, { responseType: 'json' }),
               )
               if (variableAxes && variableAxes.axes.wght) {
@@ -81,7 +81,7 @@ export default defineFontProvider('fontsource', async (_options, ctx) => {
       }
 
       const fonts = await ctx.storage.getItem(
-        ctx.cacheKey('data.json', ({ hash, join }) => join(fontFamily, hash(options))),
+        ctx.cacheKey('data.json', fontFamily, options),
         () => getFontDetails(fontFamily, options),
       )
       return { fonts }

@@ -10,8 +10,8 @@ describe('cache-key', () => {
   it('differs when provider options change', () => {
     const optA = { experimental: { glyphs: { Roboto: ['Hello'] } } } satisfies GoogleProviderOption
     const optB = { experimental: { glyphs: { Roboto: ['World'] } } } satisfies GoogleProviderOption
-    const keyA = createCacheKeyFactory('google', optA)('data.json', ({ hash, join }) => join('Roboto', hash({ weights: ['400'], styles: ['normal'] })))
-    const keyB = createCacheKeyFactory('google', optB)('data.json', ({ hash, join }) => join('Roboto', hash({ weights: ['400'], styles: ['normal'] })))
+    const keyA = createCacheKeyFactory('google', optA)('data.json', 'Roboto', { weights: ['400'], styles: ['normal'] })
+    const keyB = createCacheKeyFactory('google', optB)('data.json', 'Roboto', { weights: ['400'], styles: ['normal'] })
 
     expect(keyA).not.toBe(keyB)
   })

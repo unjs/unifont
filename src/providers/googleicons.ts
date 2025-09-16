@@ -79,7 +79,7 @@ export default defineFontProvider<ProviderOption>('googleicons', async (_options
       }
 
       const fonts = await ctx.storage.getItem(
-        ctx.cacheKey('data.json', ({ hash, join }) => join(fontFamily, hash(options))),
+        ctx.cacheKey('data.json', fontFamily, options),
         () => getFontDetails(fontFamily),
       )
       return { fonts }

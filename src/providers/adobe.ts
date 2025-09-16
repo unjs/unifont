@@ -40,7 +40,7 @@ export default defineFontProvider<ProviderOption>('adobe', async (options, ctx) 
 
     await Promise.all(kits.map(async (id) => {
       let meta: AdobeFontKit
-      const key = ctx.cacheKey('meta.json', ({ join }) => join('kit', id))
+      const key = ctx.cacheKey('meta.json', 'kit', id)
       if (bypassCache) {
         meta = await getAdobeFontMeta(id)
         await ctx.storage.setItem(key, meta)
@@ -134,7 +134,7 @@ export default defineFontProvider<ProviderOption>('adobe', async (options, ctx) 
       }
 
       const fonts = await ctx.storage.getItem(
-        ctx.cacheKey('data.json', ({ hash, join }) => join(family, hash(options))),
+        ctx.cacheKey('data.json', family, options),
         () => getFontDetails(family, options),
       )
       return { fonts }
