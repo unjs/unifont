@@ -1,11 +1,6 @@
 type Awaitable<T> = T | Promise<T>
 
-interface CacheKeyUtils {
-  hash: (value: unknown) => string
-  join: (...parts: Array<string | number>) => string
-}
-
-export type CacheKeyBuilder = (utils: CacheKeyUtils) => string
+export type CacheKeyFactory = (label: string, ...rest: (string | Record<string, any>)[]) => string
 
 export interface ProviderContext {
   storage: {
@@ -20,9 +15,6 @@ export interface ProviderContext {
    * Build a safe cache key bound to the provider and its options.
    * Provider name and bound provider options are automatically included in the final key.
    *
-   * Format: `"<provider>:<hash>-<body?>-<label>"` (body omitted if empty).
-   * All parts are sanitized to `[\w.-]` and joined with `-`.
-   *
    * Example (meta):
    * ```ts
    * const key = ctx.cacheKey('meta.json')
@@ -31,11 +23,11 @@ export interface ProviderContext {
    *
    * Example (data):
    * ```ts
-   * const key = ctx.cacheKey('data.json', ({ hash, join }) => join(fontFamily, hash(options)))
+   * const key = ctx.cacheKey('data.json', fontFamily, options)
    * const data = await ctx.storage.getItem(key, () => getFontDetails(fontFamily, options))
    * ```
    */
-  cacheKey: (label: string, build?: CacheKeyBuilder) => string
+  cacheKey: CacheKeyFactory
 }
 
 export type FontStyles = 'normal' | 'italic' | 'oblique'

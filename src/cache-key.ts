@@ -1,4 +1,4 @@
-import type { CacheKeyBuilder } from './types'
+import type { CacheKeyFactory } from './types'
 import { hash as ohash } from 'ohash'
 
 function sanitize(input?: string) {
@@ -32,14 +32,14 @@ function join(...parts: Array<string | number>) {
  * const dataKey = cacheKey('data.json', ({ hash, join }) => join('Roboto', hash({ weights: ['400'], styles: ['normal'], subsets: ['latin'] })))
  * ```
  */
-export function createCacheKeyFactory(providerName: string, providerOptions: unknown) {
+export function createCacheKeyFactory(providerName: string, providerOptions: unknown): CacheKeyFactory {
   const provider = sanitize(providerName)
   const providerHash = ohash(providerOptions)
 
-  return (label: string, build?: CacheKeyBuilder) => {
+  return (label, ...rest) => {
     const safeLabel = sanitize(label)
 
-    const body = build ? build({ hash: ohash, join }) : ''
+    const body = join(...rest.map(r => typeof r === 'string' ? r : ohash(r)))
     const safeBody = sanitize(body)
 
     // <provider>:<providerOptionsHash>-<label> (when body empty)
