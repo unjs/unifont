@@ -11,9 +11,9 @@ function join(...parts: Array<string | number>) {
   const out: string[] = []
   for (const p of parts) {
     const s = sanitize(String(p))
-    if (!s)
-      continue
-    out.push(s)
+    if (s) {
+      out.push(s)
+    }
   }
   return out.join('-')
 }
