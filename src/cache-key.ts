@@ -42,10 +42,6 @@ export function createCacheKeyFactory(providerName: string, providerOptions: unk
     const body = join(...rest.map(r => typeof r === 'string' ? r : ohash(r)))
     const safeBody = sanitize(body)
 
-    // <provider>:<providerOptionsHash>-<label> (when body empty)
-    // <provider>:<providerOptionsHash>-<body>-<label>
-    return safeBody
-      ? `${provider}:${providerHash}-${safeBody}-${safeLabel}`
-      : `${provider}:${providerHash}-${safeLabel}`
+    return `${provider}:${[providerHash, safeBody, safeLabel].filter(Boolean).join('-')}`
   }
 }
