@@ -35,6 +35,10 @@ export interface FontFaceMeta {
   /** The priority of the font face, usually used to indicate fallbacks. Smaller is more prioritized. */
   priority?: number
   /**
+   * The subset name of the font face. Many fonts provides font subsets such as latin, latin-ext, cyrillic, etc.
+   */
+  subset?: string
+  /**
    * A `RequestInit` object that should be used when fetching this font. This can be useful for
    * adding authorization headers and other metadata required for a font request.
    * @see https://developer.mozilla.org/en-US/docs/Web/API/RequestInit

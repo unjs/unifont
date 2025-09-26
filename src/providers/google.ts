@@ -132,6 +132,9 @@ export default defineFontProvider<ProviderOption>('google', async (_options = {}
         data.map((f) => {
           f.meta ??= {}
           f.meta.priority = priority
+          if (group.subset) {
+            f.meta.subset = group.subset
+          }
           return f
         })
         resolvedFontFaceData.push(...data)
