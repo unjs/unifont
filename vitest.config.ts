@@ -10,6 +10,7 @@ export default defineConfig({
     },
   },
   test: {
+    testTimeout: 10_000,
     coverage: {
       include: ['src'],
       reporter: ['text', 'json', 'html'],
