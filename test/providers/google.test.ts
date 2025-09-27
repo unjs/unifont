@@ -18,6 +18,12 @@ describe('google', () => {
     const { fonts } = await unifont.resolveFont('Poppins')
 
     expect(fonts).toHaveLength(6)
+    expect(fonts[0]?.meta).toMatchInlineSnapshot(`
+      {
+        "priority": 0,
+        "subset": "latin-ext",
+      }
+    `)
   })
 
   it('filters fonts based on provided options', async () => {

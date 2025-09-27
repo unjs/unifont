@@ -43,6 +43,7 @@ export default defineFontProvider('fontsource', async (_options, ctx) => {
                     { url: `https://cdn.jsdelivr.net/fontsource/fonts/${font.id}:vf@latest/${subset}-wght-${style}.woff2`, format: 'woff2' },
                   ],
                   unicodeRange: fontDetail.unicodeRange[subset]?.split(','),
+                  meta: { subset },
                 })
               }
             }
@@ -58,6 +59,7 @@ export default defineFontProvider('fontsource', async (_options, ctx) => {
             weight,
             src: Object.entries(variantUrl).map(([format, url]) => ({ url, format })),
             unicodeRange: fontDetail.unicodeRange[subset]?.split(','),
+            meta: { subset },
           })
         }
       }

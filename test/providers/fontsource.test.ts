@@ -18,6 +18,9 @@ describe('fontsource', () => {
     expect(fonts).toMatchInlineSnapshot(`
       [
         {
+          "meta": {
+            "subset": "cyrillic-ext",
+          },
           "src": [
             {
               "format": "woff2",
@@ -44,6 +47,9 @@ describe('fontsource', () => {
           "weight": "400",
         },
         {
+          "meta": {
+            "subset": "cyrillic-ext",
+          },
           "src": [
             {
               "format": "woff2",
@@ -70,6 +76,9 @@ describe('fontsource', () => {
           "weight": "400",
         },
         {
+          "meta": {
+            "subset": "cyrillic",
+          },
           "src": [
             {
               "format": "woff2",
@@ -95,6 +104,9 @@ describe('fontsource', () => {
           "weight": "400",
         },
         {
+          "meta": {
+            "subset": "cyrillic",
+          },
           "src": [
             {
               "format": "woff2",
@@ -120,6 +132,9 @@ describe('fontsource', () => {
           "weight": "400",
         },
         {
+          "meta": {
+            "subset": "greek",
+          },
           "src": [
             {
               "format": "woff2",
@@ -146,6 +161,9 @@ describe('fontsource', () => {
           "weight": "400",
         },
         {
+          "meta": {
+            "subset": "greek",
+          },
           "src": [
             {
               "format": "woff2",
@@ -172,6 +190,9 @@ describe('fontsource', () => {
           "weight": "400",
         },
         {
+          "meta": {
+            "subset": "vietnamese",
+          },
           "src": [
             {
               "format": "woff2",
@@ -205,6 +226,9 @@ describe('fontsource', () => {
           "weight": "400",
         },
         {
+          "meta": {
+            "subset": "vietnamese",
+          },
           "src": [
             {
               "format": "woff2",
@@ -238,6 +262,9 @@ describe('fontsource', () => {
           "weight": "400",
         },
         {
+          "meta": {
+            "subset": "latin-ext",
+          },
           "src": [
             {
               "format": "woff2",
@@ -275,6 +302,9 @@ describe('fontsource', () => {
           "weight": "400",
         },
         {
+          "meta": {
+            "subset": "latin-ext",
+          },
           "src": [
             {
               "format": "woff2",
@@ -312,6 +342,9 @@ describe('fontsource', () => {
           "weight": "400",
         },
         {
+          "meta": {
+            "subset": "latin",
+          },
           "src": [
             {
               "format": "woff2",
@@ -351,6 +384,9 @@ describe('fontsource', () => {
           "weight": "400",
         },
         {
+          "meta": {
+            "subset": "latin",
+          },
           "src": [
             {
               "format": "woff2",
@@ -405,6 +441,9 @@ describe('fontsource', () => {
     expect(fonts).toMatchInlineSnapshot(`
       [
         {
+          "meta": {
+            "subset": "latin",
+          },
           "src": [
             {
               "format": "woff2",
@@ -444,6 +483,9 @@ describe('fontsource', () => {
           "weight": "400",
         },
         {
+          "meta": {
+            "subset": "latin",
+          },
           "src": [
             {
               "format": "woff2",
