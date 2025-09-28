@@ -215,4 +215,23 @@ body {
     })
     expect(fonts.length).toBe(18)
   })
+
+  it('inferVariableWeights', async () => {
+    const unifont = await createUnifont([providers.google({
+      experimental: {
+        inferVaraibleWeights: true,
+      },
+    })])
+    const { fonts } = await unifont.resolveFont('Inter', {
+      styles: ['normal'],
+    })
+    expect(fonts.find(f => f.meta?.priority === 0)?.weight).toMatchInlineSnapshot(`
+      [
+        100,
+        900,
+      ]
+    `)
+    // priority=1 doesn't return variable font
+    expect(fonts.find(f => f.meta?.priority === 1)?.weight).toMatchInlineSnapshot(`100`)
+  })
 })
