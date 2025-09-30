@@ -23,6 +23,10 @@ interface ProviderOption {
     glyphs?: {
       [fontFamily: string]: string[]
     }
+    /**
+     * Experimental: exclude fallback font format for old browsers without woff2 support
+     */
+    excludeFallbackFormats?: (fontFamily: string) => boolean
   }
 }
 
@@ -113,7 +117,12 @@ export default defineFontProvider<ProviderOption>('google', async (_options = {}
     let priority = 0
     const resolvedFontFaceData: FontFaceData[] = []
 
-    for (const extension in userAgents) {
+    let formats = Object.keys(userAgents)
+    if (_options.experimental?.excludeFallbackFormats?.(family)) {
+      formats = formats.slice(0, 1) // keep only woff2
+    }
+
+    for (const extension of formats) {
       const rawCss = await $fetch<string>('/css2', {
         baseURL: 'https://fonts.googleapis.com',
         headers: {

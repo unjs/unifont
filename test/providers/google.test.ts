@@ -215,4 +215,22 @@ body {
     })
     expect(fonts.length).toBe(18)
   })
+
+  it('experimental.includeFallbackFormat', async () => {
+    const unifont = await createUnifont([
+      providers.google({
+        experimental: {
+          excludeFallbackFormats: (fontFamily: string) => fontFamily === 'Poppins',
+        },
+      }),
+    ])
+    {
+      const { fonts } = await unifont.resolveFont('Poppins', {})
+      expect(fonts.filter(f => f.src.some(s => 'format' in s && s.format !== 'woff2'))).toEqual([])
+    }
+    {
+      const { fonts } = await unifont.resolveFont('Geist', {})
+      expect(fonts.filter(f => f.src.some(s => 'format' in s && s.format !== 'woff2'))).not.toEqual([])
+    }
+  })
 })
