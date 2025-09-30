@@ -228,11 +228,19 @@ body {
     ])
     {
       const { fonts } = await unifont.resolveFont('Poppins', {})
-      expect(fonts.filter(f => f.src.some(s => 'format' in s && s.format !== 'woff2'))).toEqual([])
+      const remoteFontSources = fonts.flatMap(fnt =>
+        fnt.src.flatMap(src => ('url' in src ? src : [])),
+      )
+      expect(remoteFontSources).not.toEqual([])
+      expect(remoteFontSources.filter(s => s.format !== 'woff2')).toEqual([])
     }
     {
       const { fonts } = await unifont.resolveFont('Geist', {})
-      expect(fonts.filter(f => f.src.some(s => 'format' in s && s.format !== 'woff2'))).not.toEqual([])
+      const remoteFontSources = fonts.flatMap(fnt =>
+        fnt.src.flatMap(src => ('url' in src ? src : [])),
+      )
+      expect(remoteFontSources).not.toEqual([])
+      expect(remoteFontSources.filter(s => s.format !== 'woff2')).not.toEqual([])
     }
   })
 })
