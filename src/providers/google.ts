@@ -23,6 +23,12 @@ interface ProviderOption {
     glyphs?: {
       [fontFamily: string]: string[]
     }
+    /**
+     * Experimental: Inferring variable weight ranges for fonts that support variable weights but do not explicitly declare the `wght` axis.
+     */
+    inferVaraibleWeights?: boolean | {
+      [fontFamily: string]: boolean
+    }
   }
 }
 
@@ -78,9 +84,16 @@ export default defineFontProvider<ProviderOption>('google', async (_options = {}
     const font = googleFonts.find(font => font.family === family)!
     const styles = [...new Set(options.styles.map(i => styleMap[i]))].sort()
     const glyphs = _options.experimental?.glyphs?.[family]?.join('')
+    const weightAxis = font.axes.find(a => a.tag === 'wght')
+    const inferVariableWeights = typeof _options.experimental?.inferVaraibleWeights === 'object'
+      ? _options.experimental?.inferVaraibleWeights?.[family]
+      : _options.experimental?.inferVaraibleWeights
+    if (weightAxis && inferVariableWeights) {
+      options.weights = [`${weightAxis.min} ${weightAxis.max}`]
+    }
     const weights = prepareWeights({
       inputWeights: options.weights,
-      hasVariableWeights: font.axes.some(a => a.tag === 'wght'),
+      hasVariableWeights: !!weightAxis,
       weights: Object.keys(font.fonts),
     }).map(v => v.variable
       ? ({
