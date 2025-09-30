@@ -24,9 +24,9 @@ interface ProviderOption {
       [fontFamily: string]: string[]
     }
     /**
-     * Experimental: exclude fallback font format for old browsers without woff2 support
+     * Experimental: include only modern font format without fallback for old browsers
      */
-    excludeFallbackFormats?: (fontFamily: string) => boolean
+    modernFormatsOnly?: (fontFamily: string) => boolean
   }
 }
 
@@ -118,7 +118,7 @@ export default defineFontProvider<ProviderOption>('google', async (_options = {}
     const resolvedFontFaceData: FontFaceData[] = []
 
     let formats = Object.keys(userAgents)
-    if (_options.experimental?.excludeFallbackFormats?.(family)) {
+    if (_options.experimental?.modernFormatsOnly?.(family)) {
       formats = formats.slice(0, 1) // keep only woff2
     }
 
