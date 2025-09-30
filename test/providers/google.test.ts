@@ -216,7 +216,7 @@ body {
     expect(fonts.length).toBe(18)
   })
 
-  it('experimental.includeFallbackFormat', async () => {
+  it('experimental.modernFormatsOnly', async () => {
     const unifont = await createUnifont([
       providers.google({
         experimental: {
