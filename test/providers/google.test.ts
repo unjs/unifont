@@ -220,7 +220,9 @@ body {
     const unifont = await createUnifont([
       providers.google({
         experimental: {
-          modernFormatsOnly: (fontFamily: string) => fontFamily === 'Poppins',
+          modernFormatsOnly: {
+            Poppins: true,
+          },
         },
       }),
     ])

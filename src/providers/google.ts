@@ -26,7 +26,9 @@ interface ProviderOption {
     /**
      * Experimental: include only modern font format without fallback for old browsers
      */
-    modernFormatsOnly?: (fontFamily: string) => boolean
+    modernFormatsOnly?: boolean | {
+      [fontFamily: string]: boolean
+    }
   }
 }
 
@@ -118,8 +120,14 @@ export default defineFontProvider<ProviderOption>('google', async (_options = {}
     const resolvedFontFaceData: FontFaceData[] = []
 
     let formats = Object.keys(userAgents)
-    if (_options.experimental?.modernFormatsOnly?.(family)) {
-      formats = formats.slice(0, 1) // keep only woff2
+    const modernFormatsOnly = _options.experimental?.modernFormatsOnly
+    if (
+      modernFormatsOnly === true
+      || (modernFormatsOnly
+        && typeof modernFormatsOnly === 'object'
+        && modernFormatsOnly?.[family] === true)
+    ) {
+      formats = formats.slice(0, 1) // keep only 1st user agent
     }
 
     for (const extension of formats) {
