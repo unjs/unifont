@@ -48,7 +48,7 @@
     "tsdown": "0.15.10",
     "typescript": "5.9.3",
     "unstorage": "1.17.1",
-    "vite": "7.1.11",
+    "vite": "7.1.12",
     "vitest": "3.2.4"
   },
   "resolutions": {
