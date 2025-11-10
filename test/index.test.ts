@@ -124,8 +124,8 @@ describe('unifont', () => {
     })
   })
 
-  describe('provider aware caching', () => {
-    it('uses isolated storage per provider\'s name', async () => {
+  describe('cache isolation', () => {
+    it('uses isolated namespace per provider\'s name', async () => {
       const storage = {
         getItem: vi.fn(),
         setItem: vi.fn(),
@@ -161,7 +161,7 @@ describe('unifont', () => {
       expect(providerACacheKey).not.toBe(providerBCacheKey)
     })
 
-    it('uses isolated storage per provider\'s options', async () => {
+    it('uses isolated namespace per provider\'s options', async () => {
       const storage = {
         getItem: vi.fn(),
         setItem: vi.fn(),
