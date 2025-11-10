@@ -1,7 +1,7 @@
 import { createStorage } from 'unstorage'
 import { describe, expect, it, vi } from 'vitest'
 
-import { createAsyncStorage, memoryStorage } from '../src/cache'
+import { createCachedAsyncStorage, memoryStorage } from '../src/cache'
 import { createUnifont, defineFontProvider } from '../src/index'
 
 describe('cache storage', () => {
@@ -15,7 +15,7 @@ describe('cache storage', () => {
   const storageTypes = { unstorage: createStorage(), memoryStorage: memoryStorage() }
 
   it.each(Object.entries(storageTypes))('createAsyncStorage works with %s', async (name, storage) => {
-    const asyncStorage = createAsyncStorage(storage)
+    const asyncStorage = createCachedAsyncStorage(storage)
 
     await asyncStorage.setItem('key', 'value')
     expect(await asyncStorage.getItem('key')).toBe('value')
