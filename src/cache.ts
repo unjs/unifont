@@ -22,7 +22,7 @@ export function memoryStorage() {
 
 const ONE_WEEK = 1000 * 60 * 60 * 24 * 7
 
-export function createAsyncStorage(storage: Storage) {
+export function createCachedAsyncStorage(storage: Storage) {
   return {
     async getItem<T = unknown>(key: string, init?: () => T | Promise<T>) {
       const now = Date.now()
