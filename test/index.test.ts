@@ -131,38 +131,34 @@ describe('unifont', () => {
         setItem: vi.fn(),
       }
 
-      const getProviderWithNoOptions = (name: string) => {
+      const getProvider = (name: string) => {
         return defineFontProvider(name, async (_options, ctx) => {
           return {
             async resolveFont() {
               await ctx.storage.setItem('key', 'value')
-              return undefined // call next provider
+              return { fonts: [] }
             },
           }
         })()
       }
-      const sentinel = defineFontProvider('sentinel', async () => {
-        return {
-          async resolveFont() {
-            return { fonts: [] }
-          },
-        }
-      })
 
-      const unifont = await createUnifont([
-        getProviderWithNoOptions('provider-1'),
-        getProviderWithNoOptions('provider-2'),
-        sentinel(),
+      const unifontA = await createUnifont([
+        getProvider('provider-A'),
       ], { storage })
-      await unifont.resolveFont('Poppins', undefined, ['provider-1', 'provider-2', 'sentinel'])
+      const unifontB = await createUnifont([
+        getProvider('provider-B'),
+      ], { storage })
 
-      const provider1CacheKey = storage.setItem.mock.calls.at(0)?.at(0) as string | undefined
-      const provider2CacheKey = storage.setItem.mock.calls.at(1)?.at(0) as string | undefined
+      await unifontA.resolveFont('Poppins')
+      await unifontB.resolveFont('Poppins')
+
+      const providerACacheKey = storage.setItem.mock.calls.at(0)?.at(0) as string | undefined
+      const providerBCacheKey = storage.setItem.mock.calls.at(1)?.at(0) as string | undefined
 
       expect(storage.setItem).toHaveBeenCalledTimes(2)
-      expect(provider1CacheKey).toBeDefined()
-      expect(provider2CacheKey).toBeDefined()
-      expect(provider1CacheKey).not.toBe(provider2CacheKey)
+      expect(providerACacheKey).toBeDefined()
+      expect(providerBCacheKey).toBeDefined()
+      expect(providerACacheKey).not.toBe(providerBCacheKey)
     })
 
     it('uses isolated storage per provider\'s options', async () => {

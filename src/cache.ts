@@ -73,13 +73,13 @@ export function createCachedAsyncStorage(storage: Storage, options: CachedStorag
 }
 
 function createCacheKey(...fragments: any[]): string {
-  const a = fragments.map((f) => {
+  const parts = fragments.map((f) => {
     // No hash for string parts for better readability.
     const part = typeof f === 'string' ? f : hash(f)
     return sanitize(part)
   })
 
-  return a.join(':')
+  return parts.join(':')
 }
 
 function sanitize(input: string): string {

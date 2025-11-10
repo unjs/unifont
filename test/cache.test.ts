@@ -90,13 +90,13 @@ describe('cache storage', () => {
       await cachedA.setItem('key', 'data')
       await cachedB.setItem('key', 'data')
 
-      const key1 = storage.setItem.mock.calls.at(0)?.at(0) as string | undefined
-      const key2 = storage.setItem.mock.calls.at(1)?.at(0) as string | undefined
+      const keyA = storage.setItem.mock.calls.at(0)?.at(0) as string | undefined
+      const keyB = storage.setItem.mock.calls.at(1)?.at(0) as string | undefined
 
       expect(storage.setItem).toHaveBeenCalledTimes(2)
-      expect(key1).toBeDefined()
-      expect(key2).toBeDefined()
-      expect(key1).not.toBe(key2)
+      expect(keyA).toBeDefined()
+      expect(keyB).toBeDefined()
+      expect(keyA).not.toBe(keyB)
     })
 
     it.each([
