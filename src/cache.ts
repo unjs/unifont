@@ -1,3 +1,4 @@
+import { hash } from 'ohash'
 import { version } from '../package.json'
 
 type Awaitable<T> = T | Promise<T>
@@ -22,11 +23,39 @@ export function memoryStorage() {
 
 const ONE_WEEK = 1000 * 60 * 60 * 24 * 7
 
-export function createCachedAsyncStorage(storage: Storage) {
+interface CachedStorageOptions {
+  /**
+   * Array of fragments used to construct the cache key prefix.
+   * Each fragment can be a string or an object (which will be hashed).
+   * This allows cache isolation across different contexts (e.g., provider configurations).
+   *
+   * @example
+   * ```ts
+   * // Isolate cache per provider configuration
+   * const providerName = 'some-awesome-font-provider'
+   * const providerOptions = { apiKey: 'xxx', subset: 'latin' }
+   * createCachedAsyncStorage(storage, {
+   *   keyFragments: [providerName, providerOptions]
+   * })
+   * ```
+   */
+  keyFragments?: any[]
+}
+
+export function createCachedAsyncStorage(storage: Storage, options: CachedStorageOptions = {}) {
+  function resolveKey(key: string): string {
+    if (!options?.keyFragments || options.keyFragments.length === 0) {
+      return key
+    }
+
+    return `${createCacheKey(...options.keyFragments)}:${key}`
+  }
+
   return {
     async getItem<T = unknown>(key: string, init?: () => T | Promise<T>) {
+      const resolvedKey = resolveKey(key)
       const now = Date.now()
-      const res = await storage.getItem(key)
+      const res = await storage.getItem(resolvedKey)
       if (res && res.expires > now && res.version === version) {
         return res.data
       }
@@ -34,11 +63,28 @@ export function createCachedAsyncStorage(storage: Storage) {
         return null
       }
       const data = await init()
-      await storage.setItem(key, { expires: now + ONE_WEEK, version, data })
+      await storage.setItem(resolvedKey, { expires: now + ONE_WEEK, version, data })
       return data
     },
     async setItem(key: string, data: unknown) {
-      await storage.setItem(key, { expires: Date.now() + ONE_WEEK, version, data })
+      await storage.setItem(resolveKey(key), { expires: Date.now() + ONE_WEEK, version, data })
     },
   }
+}
+
+function createCacheKey(...fragments: any[]): string {
+  const a = fragments.map((f) => {
+    // No hash for string parts for better readability.
+    const part = typeof f === 'string' ? f : hash(f)
+    return sanitize(part)
+  })
+
+  return a.join(':')
+}
+
+function sanitize(input: string): string {
+  if (!input)
+    return ''
+
+  return input.replace(/[^\w.-]/g, '_')
 }
