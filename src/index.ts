@@ -42,7 +42,7 @@ export async function createUnifont(providers: Provider[], options?: UnifontOpti
   function createProviderAwareStorage(providerName: string, providerOptions: unknown): ProviderContext['storage'] {
     // https://github.com/unjs/unifont/issues/184
     return createCachedAsyncStorage(storageImpl, {
-      keyFragments: [providerName, providerOptions],
+      namespace: [providerName, providerOptions],
     })
   }
 

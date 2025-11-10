@@ -25,9 +25,7 @@ const ONE_WEEK = 1000 * 60 * 60 * 24 * 7
 
 interface CachedStorageOptions {
   /**
-   * Array of fragments used to construct the cache key prefix.
-   * Each fragment can be a string or an object (which will be hashed).
-   * This allows cache isolation across different contexts (e.g., provider configurations).
+   * Namespace fragments to isolate cache keys.
    *
    * @example
    * ```ts
@@ -35,20 +33,20 @@ interface CachedStorageOptions {
    * const providerName = 'some-awesome-font-provider'
    * const providerOptions = { apiKey: 'xxx', subset: 'latin' }
    * createCachedAsyncStorage(storage, {
-   *   keyFragments: [providerName, providerOptions]
+   *   namespace: [providerName, providerOptions]
    * })
    * ```
    */
-  keyFragments?: any[]
+  namespace?: any[]
 }
 
 export function createCachedAsyncStorage(storage: Storage, options: CachedStorageOptions = {}) {
   function resolveKey(key: string): string {
-    if (!options?.keyFragments || options.keyFragments.length === 0) {
+    if (!options?.namespace || options.namespace.length === 0) {
       return key
     }
 
-    return `${createCacheKey(...options.keyFragments)}:${key}`
+    return `${createCacheKey(...options.namespace)}:${key}`
   }
 
   return {
