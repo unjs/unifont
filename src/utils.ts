@@ -1,7 +1,7 @@
 import type { ProviderDefinition, ProviderFactory } from './types'
 
 export function defineFontProvider<TName extends string, TOptions extends Record<string, any> = never>(name: TName, provider: ProviderDefinition<TOptions>): ProviderFactory<TName, TOptions> {
-  return ((options: TOptions) => Object.assign(provider.bind(null, options || {} as TOptions), { _name: name })) as ProviderFactory<TName, TOptions>
+  return ((options: TOptions) => Object.assign(provider.bind(null, options || {} as TOptions), { _name: name, _options: options })) as ProviderFactory<TName, TOptions>
 }
 
 export function prepareWeights({
