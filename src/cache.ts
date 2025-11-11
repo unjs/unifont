@@ -1,3 +1,4 @@
+import { hash } from 'ohash'
 import { version } from '../package.json'
 
 type Awaitable<T> = T | Promise<T>
@@ -22,11 +23,37 @@ export function memoryStorage() {
 
 const ONE_WEEK = 1000 * 60 * 60 * 24 * 7
 
-export function createAsyncStorage(storage: Storage) {
+interface CachedStorageOptions {
+  /**
+   * Namespace fragments to isolate cache keys.
+   *
+   * @example
+   * ```ts
+   * // Isolate cache per provider configuration
+   * const providerName = 'some-awesome-font-provider'
+   * const providerOptions = { apiKey: 'xxx', subset: 'latin' }
+   * createCachedAsyncStorage(storage, {
+   *   namespace: [providerName, providerOptions]
+   * })
+   * ```
+   */
+  namespace?: any[]
+}
+
+export function createCachedAsyncStorage(storage: Storage, options: CachedStorageOptions = {}) {
+  function resolveKey(key: string): string {
+    if (!options?.namespace || options.namespace.length === 0) {
+      return key
+    }
+
+    return `${createCacheKey(...options.namespace)}:${key}`
+  }
+
   return {
     async getItem<T = unknown>(key: string, init?: () => T | Promise<T>) {
+      const resolvedKey = resolveKey(key)
       const now = Date.now()
-      const res = await storage.getItem(key)
+      const res = await storage.getItem(resolvedKey)
       if (res && res.expires > now && res.version === version) {
         return res.data
       }
@@ -34,11 +61,28 @@ export function createAsyncStorage(storage: Storage) {
         return null
       }
       const data = await init()
-      await storage.setItem(key, { expires: now + ONE_WEEK, version, data })
+      await storage.setItem(resolvedKey, { expires: now + ONE_WEEK, version, data })
       return data
     },
     async setItem(key: string, data: unknown) {
-      await storage.setItem(key, { expires: Date.now() + ONE_WEEK, version, data })
+      await storage.setItem(resolveKey(key), { expires: Date.now() + ONE_WEEK, version, data })
     },
   }
+}
+
+function createCacheKey(...fragments: any[]): string {
+  const parts = fragments.map((f) => {
+    // No hash for string parts for better readability.
+    const part = typeof f === 'string' ? f : hash(f)
+    return sanitize(part)
+  })
+
+  return parts.join(':')
+}
+
+function sanitize(input: string): string {
+  if (!input)
+    return ''
+
+  return input.replace(/[^\w.-]/g, '_')
 }

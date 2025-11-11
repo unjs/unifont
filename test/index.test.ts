@@ -123,4 +123,78 @@ describe('unifont', () => {
       error.mockRestore()
     })
   })
+
+  describe('cache isolation', () => {
+    it('uses isolated namespace per provider\'s name', async () => {
+      const storage = {
+        getItem: vi.fn(),
+        setItem: vi.fn(),
+      }
+
+      const getProvider = (name: string) => {
+        return defineFontProvider(name, async (_options, ctx) => {
+          return {
+            async resolveFont() {
+              await ctx.storage.setItem('key', 'value')
+              return { fonts: [] }
+            },
+          }
+        })()
+      }
+
+      const unifontA = await createUnifont([
+        getProvider('provider-A'),
+      ], { storage })
+      const unifontB = await createUnifont([
+        getProvider('provider-B'),
+      ], { storage })
+
+      await unifontA.resolveFont('Poppins')
+      await unifontB.resolveFont('Poppins')
+
+      const providerACacheKey = storage.setItem.mock.calls.at(0)?.at(0) as string | undefined
+      const providerBCacheKey = storage.setItem.mock.calls.at(1)?.at(0) as string | undefined
+
+      expect(storage.setItem).toHaveBeenCalledTimes(2)
+      expect(providerACacheKey).toBeDefined()
+      expect(providerBCacheKey).toBeDefined()
+      expect(providerACacheKey).not.toBe(providerBCacheKey)
+    })
+
+    it('uses isolated namespace per provider\'s options', async () => {
+      const storage = {
+        getItem: vi.fn(),
+        setItem: vi.fn(),
+      }
+
+      const getProvider = (options: { variant: string }) => {
+        return defineFontProvider<{ variant: string }>('optioned-provider', async (_options, ctx) => {
+          return {
+            async resolveFont() {
+              await ctx.storage.setItem('key', 'value')
+              return { fonts: [] }
+            },
+          }
+        })(options)
+      }
+
+      const unifontA = await createUnifont([
+        getProvider({ variant: 'A' }),
+      ], { storage })
+      const unifontB = await createUnifont([
+        getProvider({ variant: 'B' }),
+      ], { storage })
+
+      await unifontA.resolveFont('Poppins')
+      await unifontB.resolveFont('Poppins')
+
+      const variantACacheKey = storage.setItem.mock.calls.at(0)?.at(0) as string | undefined
+      const variantBCacheKey = storage.setItem.mock.calls.at(1)?.at(0) as string | undefined
+
+      expect(storage.setItem).toHaveBeenCalledTimes(2)
+      expect(variantACacheKey).toBeDefined()
+      expect(variantBCacheKey).toBeDefined()
+      expect(variantACacheKey).not.toBe(variantBCacheKey)
+    })
+  })
 })

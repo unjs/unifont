@@ -90,6 +90,7 @@ export interface ProviderDefinition<T = unknown> {
 
 export interface Provider {
   _name: string
+  _options: unknown
   (ctx: ProviderContext): Awaitable<InitializedProvider | undefined>
 }
 
