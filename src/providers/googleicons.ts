@@ -17,7 +17,7 @@ interface ProviderOption {
   }
 }
 
-export default defineFontProvider<ProviderOption>('googleicons', async (_options, ctx) => {
+export default defineFontProvider('googleicons', async (_options: ProviderOption, ctx) => {
   const googleIcons = await ctx.storage.getItem('googleicons:meta.json', async () => {
     const response: { families: string[] } = JSON.parse((await $fetch<string>(
       'https://fonts.google.com/metadata/icons?key=material_symbols&incomplete=true',

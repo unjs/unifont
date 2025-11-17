@@ -17,7 +17,6 @@ export interface ResolveFontOptions {
   styles: FontStyles[]
   // TODO: improve support and support unicode range
   subsets: string[]
-  fallbacks?: string[]
 }
 
 export interface RemoteFontSource {
@@ -76,7 +75,6 @@ export interface ResolveFontResult {
    * @see https://developer.mozilla.org/en-US/docs/Web/CSS/@font-face
    */
   fonts: FontFaceData[]
-  fallbacks?: string[]
 }
 
 export interface InitializedProvider {
@@ -88,14 +86,14 @@ export interface ProviderDefinition<T = unknown> {
   (options: T, ctx: ProviderContext): Awaitable<InitializedProvider | undefined>
 }
 
-export interface Provider {
-  _name: string
+export interface Provider<TName extends string = string> {
+  _name: TName
   (ctx: ProviderContext): Awaitable<InitializedProvider | undefined>
 }
 
-export type ProviderFactory<T = unknown>
-  = unknown extends T
-    ? () => Provider
-    : Partial<T> extends T
-      ? (options?: T) => Provider
-      : (options: T) => Provider
+export type ProviderFactory<TName extends string, TOptions = unknown>
+  = unknown extends TOptions
+    ? () => Provider<TName>
+    : Partial<TOptions> extends TOptions
+      ? (options?: TOptions) => Provider<TName>
+      : (options: TOptions) => Provider<TName>

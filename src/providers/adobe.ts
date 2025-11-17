@@ -18,7 +18,7 @@ async function getAdobeFontMeta(id: string): Promise<AdobeFontKit> {
 
 const KIT_REFRESH_TIMEOUT = 5 * 60 * 1000
 
-export default defineFontProvider<ProviderOption>('adobe', async (options, ctx) => {
+export default defineFontProvider('adobe', async (options: ProviderOption, ctx) => {
   if (!options.id) {
     return
   }

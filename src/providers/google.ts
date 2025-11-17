@@ -57,7 +57,7 @@ export function splitCssIntoSubsets(input: string): { subset: string | null, css
   return data
 }
 
-export default defineFontProvider<ProviderOption>('google', async (_options = {}, ctx) => {
+export default defineFontProvider('google', async (_options: ProviderOption = {}, ctx) => {
   const googleFonts = await ctx.storage.getItem('google:meta.json', () => $fetch<{ familyMetadataList: FontIndexMeta[] }>('https://fonts.google.com/metadata/fonts', { responseType: 'json' }).then(r => r.familyMetadataList))
 
   const styleMap = {
