@@ -23,7 +23,9 @@ const unifont = await createUnifont([
   providers.google(),
 ])
 
-const fonts = await unifont.resolveFont('Poppins')
+console.log(unifont.providers)
+
+const fonts = await unifont.resolveFont({ fontFamily: 'Poppins', provider: 'google' })
 
 console.log(fonts)
 
@@ -48,7 +50,7 @@ const storage = createStorage({
 
 const cachedUnifont = await createUnifont([providers.google()], { storage })
 
-console.log(await cachedUnifont.resolveFont('Poppins'))
+console.log(await cachedUnifont.resolveFont({ fontFamily: 'Poppins', provider: 'google' }))
 
 // cached data is stored in `node_modules/.cache/unifont`
 ```
