@@ -60,11 +60,10 @@ export async function createUnifont<T extends Provider[]>(providers: T, options?
     }
   }))
 
+  const allProviders = Object.keys(stack)
+
   return {
-    // Prevent mutating
-    get providers() {
-      return Object.keys(stack)
-    },
+    providers: allProviders,
     async resolveFont({
       fontFamily,
       provider: id,
