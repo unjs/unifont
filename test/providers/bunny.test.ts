@@ -4,9 +4,9 @@ import { createUnifont, providers } from '../../src'
 describe('bunny', () => {
   it('works', async () => {
     const unifont = await createUnifont([providers.bunny()])
-    expect(await unifont.resolveFont('NonExistent Font').then(r => r.fonts)).toMatchInlineSnapshot(`[]`)
-    expect(await unifont.resolveFont('Abel', { weights: ['1100'] }).then(r => r.fonts)).toMatchInlineSnapshot(`[]`)
-    const { fonts } = await unifont.resolveFont('Abel')
+    expect(await unifont.resolveFont({ fontFamily: 'NonExistent Font', provider: 'bunny' }).then(r => r.fonts)).toMatchInlineSnapshot(`[]`)
+    expect(await unifont.resolveFont({ fontFamily: 'Abel', provider: 'bunny', weights: ['1100'] }).then(r => r.fonts)).toMatchInlineSnapshot(`[]`)
+    const { fonts } = await unifont.resolveFont({ fontFamily: 'Abel', provider: 'bunny' })
     expect(fonts).toMatchInlineSnapshot(`
       [
         {
@@ -50,13 +50,15 @@ describe('bunny', () => {
 
   it('handles listFonts correctly', async () => {
     const unifont = await createUnifont([providers.bunny()])
-    const names = await unifont.listFonts()
+    const names = await unifont.listFonts({ provider: 'bunny' })
     expect(names!.length > 0).toEqual(true)
   })
 
   it('falls back to static weights', async () => {
     const unifont = await createUnifont([providers.bunny()])
-    const { fonts } = await unifont.resolveFont('Alef', {
+    const { fonts } = await unifont.resolveFont({
+      fontFamily: 'Alef',
+      provider: 'bunny',
       weights: ['400 1100'],
     })
     expect(fonts.length).toBe(6)

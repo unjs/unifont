@@ -11,9 +11,12 @@ await vi.hoisted(async () => {
 describe('fontsource', () => {
   it('works', async () => {
     const unifont = await createUnifont([providers.fontsource()])
-    expect(await unifont.resolveFont('NonExistent Font').then(r => r.fonts)).toMatchInlineSnapshot(`[]`)
-    expect(await unifont.resolveFont('Roboto Mono', { weights: ['1100'] }).then(r => r.fonts)).toMatchInlineSnapshot(`[]`)
-    const { fonts } = await unifont.resolveFont('Roboto Mono')
+    expect(await unifont.resolveFont({ fontFamily: 'NonExistent Font', provider: 'fontsource' }).then(r => r.fonts)).toMatchInlineSnapshot(`[]`)
+    expect(await unifont.resolveFont({ fontFamily: 'Roboto Mono', provider: 'fontsource', weights: ['1100'] }).then(r => r.fonts)).toMatchInlineSnapshot(`[]`)
+    const { fonts } = await unifont.resolveFont({
+      fontFamily: 'Roboto Mono',
+      provider: 'fontsource',
+    })
 
     expect(fonts).toMatchInlineSnapshot(`
       [
@@ -431,13 +434,13 @@ describe('fontsource', () => {
 
   it('supports variable fonts', async () => {
     const unifont = await createUnifont([providers.fontsource()])
-    const { fonts } = await unifont.resolveFont('Roboto Mono', { weights: ['400 700'] })
+    const { fonts } = await unifont.resolveFont({ fontFamily: 'Roboto Mono', provider: 'fontsource', weights: ['400 700'] })
     expect(fonts.some(fnt => Array.isArray(fnt.weight))).toBe(true)
   })
 
   it('handles default subsets', async () => {
     const unifont = await createUnifont([providers.fontsource()])
-    const { fonts } = await unifont.resolveFont('Roboto Mono', { subsets: undefined })
+    const { fonts } = await unifont.resolveFont({ fontFamily: 'Roboto Mono', provider: 'fontsource', subsets: undefined })
     expect(fonts).toMatchInlineSnapshot(`
       [
         {
@@ -535,7 +538,7 @@ describe('fontsource', () => {
     })
 
     const unifont = await createUnifont([providers.fontsource()])
-    await unifont.resolveFont('Roboto Mono', { weights: ['400 700'] })
+    await unifont.resolveFont({ fontFamily: 'Roboto Mono', provider: 'fontsource', weights: ['400 700'] })
 
     expect(error).toHaveBeenCalledWith('Could not download variable axes metadata for `Roboto Mono` from `fontsource`. `unifont` will not be able to inject variable axes for Roboto Mono.')
 
@@ -545,13 +548,15 @@ describe('fontsource', () => {
 
   it('handles listFonts correctly', async () => {
     const unifont = await createUnifont([providers.fontsource()])
-    const names = await unifont.listFonts()
+    const names = await unifont.listFonts({ provider: 'fontsource' })
     expect(names!.length > 0).toEqual(true)
   })
 
   it('falls back to static weights', async () => {
     const unifont = await createUnifont([providers.fontsource()])
-    const { fonts } = await unifont.resolveFont('Roboto', {
+    const { fonts } = await unifont.resolveFont({
+      fontFamily: 'Roboto',
+      provider: 'fontsource',
       weights: ['400 1100'],
     })
     expect(fonts.length).toBe(14)

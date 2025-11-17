@@ -13,9 +13,9 @@ describe('google', () => {
 
   it('works', async () => {
     const unifont = await createUnifont([providers.google()])
-    expect(await unifont.resolveFont('NonExistent Font').then(r => r.fonts)).toMatchInlineSnapshot(`[]`)
+    expect(await unifont.resolveFont({ fontFamily: 'NonExistent Font', provider: 'google' }).then(r => r.fonts)).toMatchInlineSnapshot(`[]`)
 
-    const { fonts } = await unifont.resolveFont('Poppins')
+    const { fonts } = await unifont.resolveFont({ fontFamily: 'Poppins', provider: 'google' })
 
     expect(fonts).toHaveLength(6)
     expect(fonts[0]?.meta).toMatchInlineSnapshot(`
@@ -31,7 +31,9 @@ describe('google', () => {
 
     const styles = ['normal'] as ResolveFontOptions['styles']
     const weights = ['600']
-    const { fonts } = await unifont.resolveFont('Poppins', {
+    const { fonts } = await unifont.resolveFont({
+      fontFamily: 'Poppins',
+      provider: 'google',
       styles,
       weights,
     })
@@ -60,7 +62,9 @@ describe('google', () => {
       }),
     ])
 
-    const { fonts } = await unifont.resolveFont('Recursive', {
+    const { fonts } = await unifont.resolveFont({
+      fontFamily: 'Recursive',
+      provider: 'google',
       weights: ['300 1000'],
     })
 
@@ -92,14 +96,14 @@ describe('google', () => {
   it('does not download variable fonts if a weight range is not specified', async () => {
     const unifont = await createUnifont([providers.google()])
 
-    const { fonts } = await unifont.resolveFont('Roboto')
+    const { fonts } = await unifont.resolveFont({ fontFamily: 'Roboto', provider: 'google' })
 
     expect(fonts.map(fnt => Number(fnt.weight)).every(Boolean)).toBeTruthy()
   })
 
   it('handles listFonts correctly', async () => {
     const unifont = await createUnifont([providers.google()])
-    const names = await unifont.listFonts()
+    const names = await unifont.listFonts({ provider: 'google' })
     expect(names!.length > 0).toEqual(true)
   })
 
@@ -110,7 +114,9 @@ describe('google', () => {
       }),
     ])
 
-    const { fonts } = await unifont.resolveFont('Poppins', {
+    const { fonts } = await unifont.resolveFont({
+      fontFamily: 'Poppins',
+      provider: 'google',
       styles: ['normal'],
       weights: ['400'],
     })
@@ -155,7 +161,7 @@ describe('google', () => {
   it('filters subsets correctly', async () => {
     const unifont = await createUnifont([providers.google()])
 
-    const { fonts } = await unifont.resolveFont('Roboto', { subsets: ['latin'] })
+    const { fonts } = await unifont.resolveFont({ fontFamily: 'Roboto', provider: 'google', subsets: ['latin'] })
     expect(fonts.length).toEqual(4)
   })
 
@@ -210,7 +216,9 @@ body {
 
   it('falls back to static weights', async () => {
     const unifont = await createUnifont([providers.google()])
-    const { fonts } = await unifont.resolveFont('Lato', {
+    const { fonts } = await unifont.resolveFont({
+      fontFamily: 'Lato',
+      provider: 'google',
       weights: ['400 1100'],
     })
     expect(fonts.length).toBe(18)

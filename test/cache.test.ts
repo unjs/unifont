@@ -45,7 +45,7 @@ describe('cache storage', () => {
       }
     })
     const unifont = await createUnifont([provider()], { storage: customStorage })
-    await unifont.resolveFont('Poppins')
+    await unifont.resolveFont({ fontFamily: 'Poppins', provider: 'custom-storage' })
     expect(customStorage.getItem).toHaveBeenCalledWith('key')
     expect(customStorage.setItem).toHaveBeenCalledWith('key', expect.objectContaining({ data: 'value' }))
     expect(customStorage.setItem).toHaveBeenCalledWith('another-key', expect.objectContaining({ data: 'value' }))

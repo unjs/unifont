@@ -33,7 +33,7 @@ export const defaultResolveOptions: ResolveFontOptions = {
   ],
 }
 
-export async function createUnifont<T extends Provider[]>(providers: T, options?: UnifontOptions): Promise<Unifont<T[number]['_name']>> {
+export async function createUnifont<T extends [Provider, ...Provider[]]>(providers: T, options?: UnifontOptions): Promise<Unifont<T[number]['_name']>> {
   const stack: Record<string, InitializedProvider> = {}
   const unifontContext = {
     storage: createAsyncStorage(options?.storage ?? memoryStorage()),
@@ -71,7 +71,8 @@ export async function createUnifont<T extends Provider[]>(providers: T, options?
     }) {
       const provider = stack[id]
       if (!provider) {
-        throw new Error(`No provider found for id ${id}`)
+        console.error(`Could not found \`${id}\` provider.`)
+        return { fonts: [] }
       }
 
       try {

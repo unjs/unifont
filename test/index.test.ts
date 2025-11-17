@@ -5,22 +5,23 @@ import { createUnifont, defineFontProvider, providers } from '../src'
 describe('unifont', () => {
   it('works with no providers', async () => {
     const error = vi.spyOn(console, 'error').mockImplementation(() => {})
+    // @ts-expect-error at least a provider is required
     const unifont = await createUnifont([])
-    const { fonts } = await unifont.resolveFont('Poppins')
-    expect(fonts).toMatchInlineSnapshot(`[]`)
-    // @ts-expect-error invalid name because of no providers
-    await unifont.resolveFont('Poppins', {}, ['non-existent'])
-    expect(console.error).not.toHaveBeenCalled()
+    await unifont.resolveFont({ fontFamily: 'Poppins', provider: 'non-existent' })
+    expect(console.error).toHaveBeenCalled()
     error.mockRestore()
   })
 
   it('sanitizes providers that do not return a valid provider', async () => {
+    const error = vi.spyOn(console, 'error').mockImplementation(() => {})
     const unifont = await createUnifont([
       // @ts-expect-error invalid provider
       () => {},
     ])
-    const { fonts } = await unifont.resolveFont('Poppins')
+    const { fonts } = await unifont.resolveFont({ fontFamily: 'Poppins', provider: 'any' })
     expect(fonts).toMatchInlineSnapshot(`[]`)
+    expect(console.error).toHaveBeenCalled()
+    error.mockRestore()
   })
 
   it('handles providers that throw errors in initialisation', async () => {
@@ -28,7 +29,7 @@ describe('unifont', () => {
     const unifont = await createUnifont([
       defineFontProvider('bad-provider', () => { throw new Error('test') })(),
     ])
-    const { fonts } = await unifont.resolveFont('Poppins')
+    const { fonts } = await unifont.resolveFont({ fontFamily: 'Poppins', provider: 'bad-provider' })
     expect(fonts).toMatchInlineSnapshot(`[]`)
     expect(console.error).toHaveBeenCalledWith(
       'Could not initialize provider `bad-provider`. `unifont` will not be able to process fonts provided by this provider.',
@@ -42,7 +43,7 @@ describe('unifont', () => {
     const unifont = await createUnifont([
       defineFontProvider('bad-provider', () => ({ resolveFont() { throw new Error('test') } }))(),
     ])
-    const { fonts } = await unifont.resolveFont('Poppins')
+    const { fonts } = await unifont.resolveFont({ fontFamily: 'Poppins', provider: 'bad-provider' })
     expect(fonts).toMatchInlineSnapshot(`[]`)
     expect(console.error).toHaveBeenCalledWith(
       'Could not resolve font face for `Poppins` from `bad-provider` provider.',
@@ -60,7 +61,7 @@ describe('unifont', () => {
     const unifont = await createUnifont([
       providers.google(),
     ])
-    const { fonts } = await unifont.resolveFont('Poppins')
+    const { fonts } = await unifont.resolveFont({ fontFamily: 'Poppins', provider: 'google' })
     expect(fonts).toMatchInlineSnapshot(`[]`)
     expect(console.warn).toHaveBeenCalledTimes(3)
     expect(console.warn).toHaveBeenNthCalledWith(1, 'Could not fetch from `https://fonts.google.com/metadata/fonts`. Will retry in `1000ms`. `3` retries left.')
@@ -79,8 +80,10 @@ describe('unifont', () => {
   describe('listFonts', () => {
     it('works with no providers', async () => {
       const error = vi.spyOn(console, 'error').mockImplementation(() => {})
+      // @ts-expect-error at least a provider is required
       const unifont = await createUnifont([])
-      const names = await unifont.listFonts()
+      // @ts-expect-error at least a provider is required
+      const names = await unifont.listFonts({})
       expect(names).toEqual(undefined)
       expect(console.error).not.toHaveBeenCalled()
       error.mockRestore()
@@ -97,7 +100,7 @@ describe('unifont', () => {
             return { fonts: [] }
           },
         }))()])
-      const names = await unifont.listFonts()
+      const names = await unifont.listFonts({ provider: 'stub' })
       expect(names).toEqual(['foo'])
       expect(console.error).not.toHaveBeenCalled()
       error.mockRestore()
@@ -115,7 +118,7 @@ describe('unifont', () => {
           },
         }))(),
       ])
-      const names = await unifont.listFonts()
+      const names = await unifont.listFonts({ provider: 'bad-provider' })
       expect(names).toEqual(undefined)
       expect(console.error).toHaveBeenCalledWith(
         'Could not list names from `bad-provider` provider.',
