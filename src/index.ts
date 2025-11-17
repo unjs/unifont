@@ -14,10 +14,6 @@ export interface Unifont {
   resolveFont: (fontFamily: string, options?: Partial<ResolveFontOptions>, providers?: string[]) => Promise<ResolveFontResult & {
     provider?: string
   }>
-  /** @deprecated use `resolveFont` */
-  resolveFontFace: (fontFamily: string, options?: Partial<ResolveFontOptions>, providers?: string[]) => Promise<ResolveFontResult & {
-    provider?: string
-  }>
   listFonts: (providers?: string[]) => Promise<string[] | undefined>
 }
 
@@ -106,8 +102,6 @@ export async function createUnifont(providers: Provider[], options?: UnifontOpti
 
   return {
     resolveFont,
-    // TODO: remove before v1
-    resolveFontFace: resolveFont,
     listFonts,
   }
 }
