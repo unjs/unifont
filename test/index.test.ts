@@ -77,6 +77,14 @@ describe('unifont', () => {
     globalThis.fetch.mockRestore()
   })
 
+  it('returns providers list', async () => {
+    const unifont = await createUnifont([
+      defineFontProvider('foo', () => ({ resolveFont() { throw new Error('test') } }))(),
+      defineFontProvider('bar', () => ({ resolveFont() { throw new Error('test') } }))(),
+    ])
+    expect(unifont.providers).toStrictEqual(['foo', 'bar'])
+  })
+
   describe('listFonts', () => {
     it('works with no providers', async () => {
       const error = vi.spyOn(console, 'error').mockImplementation(() => {})
