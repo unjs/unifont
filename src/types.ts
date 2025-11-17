@@ -17,7 +17,6 @@ export interface ResolveFontOptions {
   styles: FontStyles[]
   // TODO: improve support and support unicode range
   subsets: string[]
-  fallbacks?: string[]
 }
 
 export interface RemoteFontSource {
@@ -76,7 +75,6 @@ export interface ResolveFontResult {
    * @see https://developer.mozilla.org/en-US/docs/Web/CSS/@font-face
    */
   fonts: FontFaceData[]
-  fallbacks?: string[]
 }
 
 export interface InitializedProvider {
