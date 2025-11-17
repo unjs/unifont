@@ -8,6 +8,7 @@ describe('unifont', () => {
     const unifont = await createUnifont([])
     const { fonts } = await unifont.resolveFont('Poppins')
     expect(fonts).toMatchInlineSnapshot(`[]`)
+    // @ts-expect-error invalid name because of no providers
     await unifont.resolveFont('Poppins', {}, ['non-existent'])
     expect(console.error).not.toHaveBeenCalled()
     error.mockRestore()
