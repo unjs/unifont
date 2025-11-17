@@ -88,14 +88,14 @@ export interface ProviderDefinition<T = unknown> {
   (options: T, ctx: ProviderContext): Awaitable<InitializedProvider | undefined>
 }
 
-export interface Provider {
-  _name: string
+export interface Provider<TName extends string = string> {
+  _name: TName
   (ctx: ProviderContext): Awaitable<InitializedProvider | undefined>
 }
 
-export type ProviderFactory<T = unknown>
-  = unknown extends T
-    ? () => Provider
-    : Partial<T> extends T
-      ? (options?: T) => Provider
-      : (options: T) => Provider
+export type ProviderFactory<TName extends string, TOptions = unknown>
+  = unknown extends TOptions
+    ? () => Provider<TName>
+    : Partial<TOptions> extends TOptions
+      ? (options?: TOptions) => Provider<TName>
+      : (options: TOptions) => Provider<TName>

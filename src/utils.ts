@@ -1,7 +1,7 @@
 import type { ProviderDefinition, ProviderFactory } from './types'
 
-export function defineFontProvider<T = unknown>(name: string, provider: ProviderDefinition<T>): ProviderFactory<T> {
-  return ((options: T) => Object.assign(provider.bind(null, options || {} as T), { _name: name })) as ProviderFactory<T>
+export function defineFontProvider<TName extends string, TOptions = unknown>(name: TName, provider: ProviderDefinition<TOptions>): ProviderFactory<TName, TOptions> {
+  return ((options: TOptions) => Object.assign(provider.bind(null, options || {} as TOptions), { _name: name })) as ProviderFactory<TName, TOptions>
 }
 
 export function prepareWeights({

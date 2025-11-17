@@ -10,15 +10,15 @@ export interface UnifontOptions {
   storage?: Storage
 }
 
-export interface Unifont {
-  resolveFont: (fontFamily: string, options?: Partial<ResolveFontOptions>, providers?: string[]) => Promise<ResolveFontResult & {
-    provider?: string
+export interface Unifont<T> {
+  resolveFont: (fontFamily: string, options?: Partial<ResolveFontOptions>, providers?: T[]) => Promise<ResolveFontResult & {
+    provider?: T
   }>
   /** @deprecated use `resolveFont` */
-  resolveFontFace: (fontFamily: string, options?: Partial<ResolveFontOptions>, providers?: string[]) => Promise<ResolveFontResult & {
-    provider?: string
+  resolveFontFace: (fontFamily: string, options?: Partial<ResolveFontOptions>, providers?: T[]) => Promise<ResolveFontResult & {
+    provider?: T
   }>
-  listFonts: (providers?: string[]) => Promise<string[] | undefined>
+  listFonts: (providers?: T[]) => Promise<string[] | undefined>
 }
 
 export const defaultResolveOptions: ResolveFontOptions = {
@@ -35,7 +35,7 @@ export const defaultResolveOptions: ResolveFontOptions = {
   ],
 }
 
-export async function createUnifont(providers: Provider[], options?: UnifontOptions): Promise<Unifont> {
+export async function createUnifont<T extends Provider[]>(providers: T, options?: UnifontOptions): Promise<Unifont<T[number]['_name']>> {
   const stack: Record<string, InitializedProvider> = {}
   const unifontContext = {
     storage: createAsyncStorage(options?.storage ?? memoryStorage()),
