@@ -87,7 +87,7 @@ export async function createUnifont<T extends Provider[]>(providers: T, options?
 
       return { fonts: [] }
     },
-    async listFonts({ provider: id }): Promise<string[] | undefined> {
+    async listFonts({ provider: id }) {
       const provider = stack[id]
       try {
         return await provider?.listFonts?.()

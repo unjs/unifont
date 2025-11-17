@@ -8,7 +8,7 @@ import { defineFontProvider, prepareWeights } from '../utils'
 
 type VariableAxis = 'opsz' | 'slnt' | 'wdth' | (string & {})
 
-interface ProviderOption {
+interface ProviderOptions {
   experimental?: {
     /**
      * Experimental: Setting variable axis configuration on a per-font basis.
@@ -57,7 +57,7 @@ export function splitCssIntoSubsets(input: string): { subset: string | null, css
   return data
 }
 
-export default defineFontProvider('google', async (_options: ProviderOption = {}, ctx) => {
+export default defineFontProvider('google', async (_options: ProviderOptions = {}, ctx) => {
   const googleFonts = await ctx.storage.getItem('google:meta.json', () => $fetch<{ familyMetadataList: FontIndexMeta[] }>('https://fonts.google.com/metadata/fonts', { responseType: 'json' }).then(r => r.familyMetadataList))
 
   const styleMap = {
