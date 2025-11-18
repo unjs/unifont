@@ -76,7 +76,7 @@ export async function createUnifont<T extends [Provider, ...Provider[]]>(provide
       }
 
       try {
-        const result = await provider?.resolveFont(fontFamily, { ...defaultResolveOptions, ...options })
+        const result = await provider.resolveFont(fontFamily, { ...defaultResolveOptions, ...options })
         if (result) {
           return result
         }
