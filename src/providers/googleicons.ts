@@ -1,9 +1,10 @@
+import type { ResolveFontOptions } from '../types'
 import { hash } from 'ohash'
 import { extractFontFaceData } from '../css/parse'
 import { $fetch } from '../fetch'
 import { defineFontProvider } from '../utils'
 
-interface ProviderOptions {
+interface GoogleiconsFamilyOptions {
   experimental?: {
     /**
      * Experimental: Specifying a list of icons to be included in the font for each font family.
@@ -11,13 +12,11 @@ interface ProviderOptions {
      *
      * **Only available when resolving the new `Material Symbols` icons.**
      */
-    glyphs?: {
-      [fontFamily: string]: string[]
-    }
+    glyphs?: string[]
   }
 }
 
-export default defineFontProvider('googleicons', async (_options: ProviderOptions, ctx) => {
+export default defineFontProvider<GoogleiconsFamilyOptions>()('googleicons', async (_options, ctx) => {
   const googleIcons = await ctx.storage.getItem('googleicons:meta.json', async () => {
     const response: { families: string[] } = JSON.parse((await $fetch<string>(
       'https://fonts.google.com/metadata/icons?key=material_symbols&incomplete=true',
@@ -34,18 +33,23 @@ export default defineFontProvider('googleicons', async (_options: ProviderOption
   // svg: 'Mozilla/4.0 (iPad; CPU OS 4_0_1 like Mac OS X) AppleWebKit/534.46 (KHTML, like Gecko) Version/4.1 Mobile/9A405 Safari/7534.48.3',
   }
 
-  async function getFontDetails(family: string) {
+  async function getFontDetails(
+    family: string,
+    options: ResolveFontOptions<GoogleiconsFamilyOptions>,
+  ) {
     // Google Icons require sorted icon names, or we will see a 400 error
-    const iconNames = _options.experimental?.glyphs?.[family]?.sort().join(',')
+    const iconNames = options.options?.experimental?.glyphs?.sort().join(',')
 
     let css = ''
 
     for (const extension in userAgents) {
-    // Legacy Material Icons
+      // Legacy Material Icons
       if (family.includes('Icons')) {
         css += await $fetch<string>('/icon', {
           baseURL: 'https://fonts.googleapis.com',
-          headers: { 'user-agent': userAgents[extension as keyof typeof userAgents] },
+          headers: {
+            'user-agent': userAgents[extension as keyof typeof userAgents],
+          },
           query: {
             family,
           },
@@ -55,9 +59,13 @@ export default defineFontProvider('googleicons', async (_options: ProviderOption
       else {
         css += await $fetch<string>('/css2', {
           baseURL: 'https://fonts.googleapis.com',
-          headers: { 'user-agent': userAgents[extension as keyof typeof userAgents] },
+          headers: {
+            'user-agent': userAgents[extension as keyof typeof userAgents],
+          },
           query: {
-            family: `${family}:` + `opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200`,
+            family:
+              `${family}:`
+              + `opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200`,
             ...(iconNames && { icon_names: iconNames }),
           },
         })
@@ -76,7 +84,10 @@ export default defineFontProvider('googleicons', async (_options: ProviderOption
         return
       }
 
-      const fonts = await ctx.storage.getItem(`googleicons:${fontFamily}-${hash(options)}-data.json`, () => getFontDetails(fontFamily))
+      const fonts = await ctx.storage.getItem(
+        `googleicons:${fontFamily}-${hash(options)}-data.json`,
+        () => getFontDetails(fontFamily, options),
+      )
       return { fonts }
     },
   }

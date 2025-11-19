@@ -1,8 +1,27 @@
 import type { ProviderDefinition, ProviderFactory } from './types'
 
-export function defineFontProvider<TName extends string, TOptions = unknown>(name: TName, provider: ProviderDefinition<TOptions>): ProviderFactory<TName, TOptions> {
-  return ((options: TOptions) => Object.assign(provider.bind(null, options || {} as TOptions), { _name: name })) as ProviderFactory<TName, TOptions>
+interface DefineFontProvider {
+  <TName extends string, TOptions extends Record<string, any> = never>(name: TName,
+    provider: ProviderDefinition<TOptions>,): ProviderFactory<TName, TOptions, never>
+
+  <TFamilyOptions extends Record<string, any> = never>(): <TName extends string, TOptions extends Record<string, any> = never>(name: TName, provider: ProviderDefinition<TOptions, TFamilyOptions>) => ProviderFactory<TName, TOptions, TFamilyOptions>
 }
+
+function defineFontProviderImpl<
+  TName extends string,
+  TOptions extends Record<string, any>,
+  TFamilyOptions extends Record<string, any>,
+>(name: TName, provider: ProviderDefinition<TOptions, TFamilyOptions>) {
+  return ((options: TOptions) =>
+    Object.assign(provider.bind(null, options || ({} as TOptions)), {
+      _name: name,
+    })) as ProviderFactory<TName, TOptions, TFamilyOptions>
+}
+
+export const defineFontProvider = ((name, provider) =>
+  name
+    ? defineFontProviderImpl(name, provider)
+    : defineFontProviderImpl) as DefineFontProvider
 
 export function prepareWeights({
   inputWeights,

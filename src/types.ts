@@ -12,11 +12,12 @@ export interface ProviderContext {
 
 export type FontStyles = 'normal' | 'italic' | 'oblique'
 
-export interface ResolveFontOptions {
+export interface ResolveFontOptions<TFamilyOptions extends Record<string, any> | never = never> {
   weights: string[]
   styles: FontStyles[]
   // TODO: improve support and support unicode range
   subsets: string[]
+  options?: [TFamilyOptions] extends [never] ? undefined : TFamilyOptions
 }
 
 export interface RemoteFontSource {
@@ -77,23 +78,28 @@ export interface ResolveFontResult {
   fonts: FontFaceData[]
 }
 
-export interface InitializedProvider {
-  resolveFont: (family: string, options: ResolveFontOptions) => Awaitable<ResolveFontResult | undefined>
+export interface InitializedProvider<
+  TFamilyOptions extends Record<string, any> = never,
+> {
+  resolveFont: (
+    family: string,
+    options: ResolveFontOptions<TFamilyOptions>,
+  ) => Awaitable<ResolveFontResult | undefined>
   listFonts?: (() => Awaitable<string[] | undefined>) | undefined
 }
 
-export interface ProviderDefinition<T = unknown> {
-  (options: T, ctx: ProviderContext): Awaitable<InitializedProvider | undefined>
+export interface ProviderDefinition<TOptions extends Record<string, any> = never, TFamilyOptions extends Record<string, any> = never> {
+  (options: TOptions, ctx: ProviderContext): Awaitable<InitializedProvider<TFamilyOptions> | undefined>
 }
 
-export interface Provider<TName extends string = string> {
+export interface Provider<TName extends string = string, TFamilyOptions extends Record<string, any> = never> {
   _name: TName
-  (ctx: ProviderContext): Awaitable<InitializedProvider | undefined>
+  (ctx: ProviderContext): Awaitable<InitializedProvider<TFamilyOptions> | undefined>
 }
 
-export type ProviderFactory<TName extends string, TOptions = unknown>
-  = unknown extends TOptions
-    ? () => Provider<TName>
+export type ProviderFactory<TName extends string, TOptions extends Record<string, any>, TFamilyOptions extends Record<string, any>>
+  = [TOptions] extends [never]
+    ? () => Provider<TName, TFamilyOptions>
     : Partial<TOptions> extends TOptions
-      ? (options?: TOptions) => Provider<TName>
-      : (options: TOptions) => Provider<TName>
+      ? (options?: TOptions) => Provider<TName, TFamilyOptions>
+      : (options: TOptions) => Provider<TName, TFamilyOptions>

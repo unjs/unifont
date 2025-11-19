@@ -8,21 +8,17 @@ import { defineFontProvider, prepareWeights } from '../utils'
 
 type VariableAxis = 'opsz' | 'slnt' | 'wdth' | (string & {})
 
-interface ProviderOptions {
+export interface GoogleFamilyOptions {
+  /**
+   * Experimental: Setting variable axis configuration on a per-font basis.
+   */
   experimental?: {
-    /**
-     * Experimental: Setting variable axis configuration on a per-font basis.
-     */
-    variableAxis?: {
-      [key: string]: Partial<Record<VariableAxis, ([string, string] | string)[]>>
-    }
+    variableAxis?: Partial<Record<VariableAxis, ([string, string] | string)[]>>
     /**
      * Experimental: Specifying a list of glyphs to be included in the font for each font family.
      * This can reduce the size of the font file.
      */
-    glyphs?: {
-      [fontFamily: string]: string[]
-    }
+    glyphs?: string[]
   }
 }
 
@@ -57,7 +53,7 @@ export function splitCssIntoSubsets(input: string): { subset: string | null, css
   return data
 }
 
-export default defineFontProvider('google', async (_options: ProviderOptions = {}, ctx) => {
+export default defineFontProvider<GoogleFamilyOptions>()('google', async (_options, ctx) => {
   const googleFonts = await ctx.storage.getItem('google:meta.json', () => $fetch<{ familyMetadataList: FontIndexMeta[] }>('https://fonts.google.com/metadata/fonts', { responseType: 'json' }).then(r => r.familyMetadataList))
 
   const styleMap = {
@@ -74,10 +70,10 @@ export default defineFontProvider('google', async (_options: ProviderOptions = {
   // svg: 'Mozilla/4.0 (iPad; CPU OS 4_0_1 like Mac OS X) AppleWebKit/534.46 (KHTML, like Gecko) Version/4.1 Mobile/9A405 Safari/7534.48.3',
   }
 
-  async function getFontDetails(family: string, options: ResolveFontOptions) {
+  async function getFontDetails(family: string, options: ResolveFontOptions<GoogleFamilyOptions>) {
     const font = googleFonts.find(font => font.family === family)!
     const styles = [...new Set(options.styles.map(i => styleMap[i]))].sort()
-    const glyphs = _options.experimental?.glyphs?.[family]?.join('')
+    const glyphs = options.options?.experimental?.glyphs?.join('')
     const weights = prepareWeights({
       inputWeights: options.weights,
       hasVariableWeights: font.axes.some(a => a.tag === 'wght'),
@@ -95,11 +91,11 @@ export default defineFontProvider('google', async (_options: ProviderOptions = {
     const resolvedAxes = []
     let resolvedVariants: string[] = []
 
-    for (const axis of ['wght', 'ital', ...Object.keys(_options?.experimental?.variableAxis?.[family] ?? {})].sort(googleFlavoredSorting)) {
+    for (const axis of ['wght', 'ital', ...Object.keys(options.options?.experimental?.variableAxis ?? {})].sort(googleFlavoredSorting)) {
       const axisValue = ({
         wght: weights.map(v => v.weight),
         ital: styles,
-      })[axis] ?? _options!.experimental!.variableAxis![family]![axis]!.map(v => Array.isArray(v) ? `${v[0]}..${v[1]}` : v)
+      })[axis] ?? options!.options!.experimental!.variableAxis![axis]!.map(v => Array.isArray(v) ? `${v[0]}..${v[1]}` : v)
 
       if (resolvedVariants.length === 0) {
         resolvedVariants = axisValue
