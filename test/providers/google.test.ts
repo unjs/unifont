@@ -45,11 +45,14 @@ describe('google', () => {
   })
 
   it('supports variable axes', async () => {
-    const unifont = await createUnifont([
-      providers.google({
-        experimental: {
-          variableAxis: {
-            Recursive: {
+    const unifont = await createUnifont([providers.google()])
+
+    const { fonts } = await unifont.resolveFont('Recursive', {
+      weights: ['300 1000'],
+      options: {
+        google: {
+          experimental: {
+            variableAxis: {
               slnt: [['-15', '0']],
               CASL: [['0', '1']],
               CRSV: ['1'],
@@ -57,11 +60,7 @@ describe('google', () => {
             },
           },
         },
-      }),
-    ])
-
-    const { fonts } = await unifont.resolveFont('Recursive', {
-      weights: ['300 1000'],
+      },
     })
 
     const resolvedStyles = pickUniqueBy(fonts, fnt => fnt.style)
@@ -104,15 +103,18 @@ describe('google', () => {
   })
 
   it('respects glyphs option and resolves optimized font', async () => {
-    const unifont = await createUnifont([
-      providers.google({
-        experimental: { glyphs: { Poppins: ['Hello', 'World'] } },
-      }),
-    ])
+    const unifont = await createUnifont([providers.google()])
 
     const { fonts } = await unifont.resolveFont('Poppins', {
       styles: ['normal'],
       weights: ['400'],
+      options: {
+        google: {
+          experimental: {
+            glyphs: ['Hello', 'World'],
+          },
+        },
+      },
     })
 
     // Do not use sanitizeFontSource here, as we must test the optimizer identity in url params

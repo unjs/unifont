@@ -375,16 +375,19 @@ describe('googleicons', () => {
   })
 
   it('respects glyphs option and resolves optimized Material Symbols', async () => {
-    const unifont = await createUnifont([providers.googleicons({
-      experimental: { glyphs: {
-        'Material Symbols Outlined': ['arrow_right', 'favorite', 'arrow_drop_down'],
-      } },
-    })])
+    const unifont = await createUnifont([providers.googleicons()])
 
     const { fonts } = await unifont.resolveFont('Material Symbols Outlined', {
       styles: ['normal'],
       weights: ['400'],
       subsets: [],
+      options: {
+        googleicons: {
+          experimental: {
+            glyphs: ['arrow_right', 'favorite', 'arrow_drop_down'],
+          },
+        },
+      },
     })
 
     // Do not use sanitizeFontSource here, as we must test the optimizer identity in url params
