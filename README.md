@@ -5,7 +5,7 @@
 [![Github Actions][github-actions-src]][github-actions-href]
 [![Codecov][codecov-src]][codecov-href]
 
-Framework agnostic tools for accessing data from font CDNs and providers.
+> Framework agnostic tools for accessing data from font CDNs and providers.
 
 ## Installation
 
@@ -143,7 +143,7 @@ providers.google({
 
 - Type: `{ [fontFamily: string]: string[] }`
 
-Allows pecifying a list of glyphs to be included in the font for each font family. This can reduce the size of the font file:
+Allows specifying a list of glyphs to be included in the font for each font family. This can reduce the size of the font file:
 
 ```js
 import { providers } from 'unifont'
@@ -173,7 +173,7 @@ providers.googleicons()
 
 - Type: `{ [fontFamily: string]: string[] }`
 
-Allows pecifying a list of glyphs to be included in the font for each font family. This can reduce the size of the font file:
+Allows specifying a list of glyphs to be included in the font for each font family. This can reduce the size of the font file:
 
 ```js
 import { providers } from 'unifont'
