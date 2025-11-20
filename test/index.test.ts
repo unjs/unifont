@@ -14,6 +14,15 @@ describe('unifont', () => {
     error.mockRestore()
   })
 
+  it('works with a non existent provider', async () => {
+    const error = vi.spyOn(console, 'error').mockImplementation(() => {})
+    const unifont = await createUnifont([providers.google()])
+    // @ts-expect-error invalid provider
+    await unifont.resolveFont('Poppins', {}, ['non-existent'])
+    expect(console.error).not.toHaveBeenCalled()
+    error.mockRestore()
+  })
+
   it('sanitizes providers that do not return a valid provider', async () => {
     const unifont = await createUnifont([
       // @ts-expect-error invalid provider
