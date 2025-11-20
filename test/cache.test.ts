@@ -46,9 +46,16 @@ describe('cache storage', () => {
     })
     const unifont = await createUnifont([provider()], { storage: customStorage })
     await unifont.resolveFont('Poppins')
-    expect(customStorage.getItem).toHaveBeenCalledWith('key')
-    expect(customStorage.setItem).toHaveBeenCalledWith('key', expect.objectContaining({ data: 'value' }))
-    expect(customStorage.setItem).toHaveBeenCalledWith('another-key', expect.objectContaining({ data: 'value' }))
+
+    expect(customStorage.getItem).toHaveBeenCalledWith(expect.stringMatching(/key$/))
+    expect(customStorage.setItem).toHaveBeenCalledWith(
+      expect.stringMatching(/key$/),
+      expect.objectContaining({ data: 'value' }),
+    )
+    expect(customStorage.setItem).toHaveBeenCalledWith(
+      expect.stringMatching(/another-key$/),
+      expect.objectContaining({ data: 'value' }),
+    )
   })
 
   describe('keyFragments option', () => {
