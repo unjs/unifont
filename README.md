@@ -386,7 +386,106 @@ const availableFonts = await unifont.listFont(['google'])
 
 ## Building your own provider
 
-TODO:
+### Defining a provider
+
+To build your own font provider, use the `defineFontProvider()` helper:
+
+```ts
+import { defineFontProvider } from 'unifont'
+
+export const myProvider = defineFontProvider(/* ... */)
+```
+
+It accepts a unique name as a first argument and a callback function as 2nd argument:
+
+```ts
+import { defineFontProvider } from 'unifont'
+
+export const myProvider = defineFontProvider('my-provider', async (options, ctx) => {
+  // ...
+})
+```
+
+If you use options, you can simply annotate it:
+
+```ts
+import { defineFontProvider } from 'unifont'
+
+export interface MyProviderOptions {
+  foo?: string
+}
+
+export const myProvider = defineFontProvider('my-provider', async (options: MyProviderOptions, ctx) => {
+  // ...
+})
+```
+
+The context (`ctx`) gives access to the [`storage`](#storage), allowing you to cache results. We'll see how below.
+
+### Initialization
+
+The callback runs when a `Unifont` instance is created. It is used for initialization logic, such as fetching the list of available fonts:
+
+```ts
+import { defineFontProvider } from 'unifont'
+
+export const myProvider = defineFontProvider('my-provider', async (options, ctx) => {
+  const fonts: { name: string, cssUrl: string }[] = await ctx.storage.getItem('my-provider:meta.json', () => fetch('https://api.example.com/fonts.json').then(res => res.json()))
+
+  // ...
+})
+```
+
+You can now use this data in the methods.
+
+### `listFonts()`
+
+While optional, it's easy to implement this method now that we have the full list:
+
+```ts
+import { defineFontProvider } from 'unifont'
+
+export const myProvider = defineFontProvider('my-provider', async (options, ctx) => {
+  const fonts: { name: string, cssUrl: string }[] = [/* ... */]
+
+  return {
+    listFonts() {
+      return fonts.map(font => font.name)
+    }
+    // ...
+  }
+})
+```
+
+### `resolveFont()`
+
+This is where most of the logic lies. It depends a lot on how the provider works, and often involves parsing CSS files. Have a look at the implementation of built-in providers for inspiration!
+
+```ts
+import { hash } from 'ohash'
+import { defineFontProvider } from 'unifont'
+
+export const myProvider = defineFontProvider('my-provider', async (options, ctx) => {
+  const fonts: { name: string, cssUrl: string }[] = [/* ... */]
+
+  return {
+    // ...
+    async resolveFont(fontFamily, options) {
+      const font = fonts.find(font => font.name === fontFamily)
+      if (!font) {
+        return
+      }
+
+      return {
+        fonts: await ctx.storage.getItem(`my-provider:${fontFamily}-${hash(options)}-data.json`, async () => {
+          // Fetch an API, extract CSS...
+          return [/* ... */]
+        })
+      }
+    }
+  }
+})
+```
 
 ## 💻 Development
 
