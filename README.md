@@ -252,7 +252,7 @@ const unifont = await createUnifont([
 
 ### Methods
 
-#### `listFonts()`
+#### `resolveFont()`
 
 - Type: `(fontFamily: string, options?: Partial<ResolveFontOptions>, providers?: T[]) => Promise<ResolveFontResult & { provider?: T }>`
 
@@ -349,12 +349,40 @@ const unifont = await createUnifont([
 const { fonts } = await unifont.resolveFont('Poppins', {}, ['google'])
 ```
 
-#### `resolveFont()`
+#### `listFonts()`
 
 - Type: `(providers?: T[]) => Promise<string[] | undefined>`
 
-- what it does
-- providers
+Retrieves font names available for all providers:
+
+```js
+import { createUnifont, providers } from 'unifont'
+
+const unifont = await createUnifont([
+  providers.google(),
+])
+
+const availableFonts = await unifont.listFont()
+```
+
+It may return `undefined` if no provider is able to return names.
+
+##### Providers
+
+- Type: `string[]`
+
+By default it uses all the providers provided to `createUnifont()`. However you can restrict usage to only a subset:
+
+```js
+import { createUnifont, providers } from 'unifont'
+
+const unifont = await createUnifont([
+  providers.google(),
+  providers.fontsource(),
+])
+
+const availableFonts = await unifont.listFont(['google'])
+```
 
 ## Building your own provider
 
