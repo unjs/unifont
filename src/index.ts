@@ -8,6 +8,7 @@ export { defineFontProvider } from './utils'
 
 export interface UnifontOptions {
   storage?: Storage
+  throwOnError?: boolean
 }
 
 export interface Unifont<T> {
@@ -31,10 +32,10 @@ export const defaultResolveOptions: ResolveFontOptions = {
   ],
 }
 
-export async function createUnifont<T extends Provider[]>(providers: T, options?: UnifontOptions): Promise<Unifont<T[number]['_name']>> {
+export async function createUnifont<T extends Provider[]>(providers: T, unifontOptions?: UnifontOptions): Promise<Unifont<T[number]['_name']>> {
   const stack: Record<string, InitializedProvider> = {}
   const unifontContext = {
-    storage: createAsyncStorage(options?.storage ?? memoryStorage()),
+    storage: createAsyncStorage(unifontOptions?.storage ?? memoryStorage()),
   }
 
   // preserve provider order
@@ -50,8 +51,12 @@ export async function createUnifont<T extends Provider[]>(providers: T, options?
       if (initializedProvider)
         stack[provider._name] = initializedProvider
     }
-    catch (err) {
-      console.error(`Could not initialize provider \`${provider._name}\`. \`unifont\` will not be able to process fonts provided by this provider.`, err)
+    catch (cause) {
+      const message = `Could not initialize provider \`${provider._name}\`. \`unifont\` will not be able to process fonts provided by this provider.`
+      if (unifontOptions?.throwOnError) {
+        throw new Error(message, { cause })
+      }
+      console.error(message, cause)
     }
     if (!stack[provider._name]?.resolveFont) {
       delete stack[provider._name]
@@ -74,8 +79,12 @@ export async function createUnifont<T extends Provider[]>(providers: T, options?
           }
         }
       }
-      catch (err) {
-        console.error(`Could not resolve font face for \`${fontFamily}\` from \`${id}\` provider.`, err)
+      catch (cause) {
+        const message = `Could not resolve font face for \`${fontFamily}\` from \`${id}\` provider.`
+        if (unifontOptions?.throwOnError) {
+          throw new Error(message, { cause })
+        }
+        console.error(message, cause)
       }
     }
     return { fonts: [] }
@@ -93,8 +102,12 @@ export async function createUnifont<T extends Provider[]>(providers: T, options?
           names.push(...result)
         }
       }
-      catch (err) {
-        console.error(`Could not list names from \`${id}\` provider.`, err)
+      catch (cause) {
+        const message = `Could not list names from \`${id}\` provider.`
+        if (unifontOptions?.throwOnError) {
+          throw new Error(message, { cause })
+        }
+        console.error(message, cause)
       }
     }
     return names
