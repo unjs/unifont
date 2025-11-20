@@ -50,4 +50,68 @@ describe('cache storage', () => {
     expect(customStorage.setItem).toHaveBeenCalledWith('key', expect.objectContaining({ data: 'value' }))
     expect(customStorage.setItem).toHaveBeenCalledWith('another-key', expect.objectContaining({ data: 'value' }))
   })
+
+  describe('keyFragments option', () => {
+    it('preserves string fragments in cache key', async () => {
+      const storage = {
+        getItem: vi.fn(),
+        setItem: vi.fn(),
+      }
+      const cached = createCachedAsyncStorage(storage, {
+        namespace: ['provider-name', { a: 1 }, 'variant-a'],
+      })
+      await cached.setItem('test-key', 'data')
+
+      expect(storage.setItem).toHaveBeenCalledExactlyOnceWith(
+        expect.stringMatching(/^provider-name:.+:variant-a:.+$/),
+        expect.objectContaining({ data: 'data' }),
+      )
+    })
+
+    it('generates different keys for different object fragments', async () => {
+      const storage = {
+        getItem: vi.fn(),
+        setItem: vi.fn(),
+      }
+
+      const cachedA = createCachedAsyncStorage(storage, {
+        namespace: [{ variant: 'A' }],
+      })
+      const cachedB = createCachedAsyncStorage(storage, {
+        namespace: [{ variant: 'B' }],
+      })
+      await cachedA.setItem('key', 'data')
+      await cachedB.setItem('key', 'data')
+
+      const keyA = storage.setItem.mock.calls.at(0)?.at(0) as string | undefined
+      const keyB = storage.setItem.mock.calls.at(1)?.at(0) as string | undefined
+
+      expect(storage.setItem).toHaveBeenCalledTimes(2)
+      expect(keyA).toBeDefined()
+      expect(keyB).toBeDefined()
+      expect(keyA).not.toBe(keyB)
+    })
+
+    it.each([
+      { input: 'provider/name' },
+      { input: 'provider@v2' },
+      { input: 'provider name' },
+      { input: 'provider:name' },
+    ])('sanitizes "$input" in fragments', async ({ input }) => {
+      const storage = {
+        getItem: vi.fn(),
+        setItem: vi.fn(),
+      }
+      const cached = createCachedAsyncStorage(storage, {
+        namespace: [input],
+      })
+
+      await cached.setItem('test-key', 'data')
+
+      expect(storage.setItem).toHaveBeenCalledExactlyOnceWith(
+        expect.not.stringContaining(input),
+        expect.objectContaining({ data: 'data' }),
+      )
+    })
+  })
 })
