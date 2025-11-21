@@ -5,10 +5,19 @@ import { createUnifont, defineFontProvider, providers } from '../src'
 describe('unifont', () => {
   it('works with no providers', async () => {
     const error = vi.spyOn(console, 'error').mockImplementation(() => {})
+    // @ts-expect-error at least a provider is required
     const unifont = await createUnifont([])
     const { fonts } = await unifont.resolveFont('Poppins')
     expect(fonts).toMatchInlineSnapshot(`[]`)
-    // @ts-expect-error invalid name because of no providers
+    await unifont.resolveFont('Poppins', {}, ['non-existent'])
+    expect(console.error).not.toHaveBeenCalled()
+    error.mockRestore()
+  })
+
+  it('works with a non existent provider', async () => {
+    const error = vi.spyOn(console, 'error').mockImplementation(() => {})
+    const unifont = await createUnifont([providers.google()])
+    // @ts-expect-error invalid provider
     await unifont.resolveFont('Poppins', {}, ['non-existent'])
     expect(console.error).not.toHaveBeenCalled()
     error.mockRestore()
@@ -101,6 +110,7 @@ describe('unifont', () => {
   describe('listFonts', () => {
     it('works with no providers', async () => {
       const error = vi.spyOn(console, 'error').mockImplementation(() => {})
+      // @ts-expect-error at least a provider is required
       const unifont = await createUnifont([])
       const names = await unifont.listFonts()
       expect(names).toEqual(undefined)

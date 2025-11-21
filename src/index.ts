@@ -11,11 +11,11 @@ export interface UnifontOptions {
   throwOnError?: boolean
 }
 
-export interface Unifont<T> {
-  resolveFont: (fontFamily: string, options?: Partial<ResolveFontOptions>, providers?: T[]) => Promise<ResolveFontResult & {
-    provider?: T
+export interface Unifont<T extends Provider[]> {
+  resolveFont: (fontFamily: string, options?: Partial<ResolveFontOptions>, providers?: T[number]['_name'][]) => Promise<ResolveFontResult & {
+    provider?: T[number]['_name']
   }>
-  listFonts: (providers?: T[]) => Promise<string[] | undefined>
+  listFonts: (providers?: T[number]['_name'][]) => Promise<string[] | undefined>
 }
 
 export const defaultResolveOptions: ResolveFontOptions = {
@@ -32,7 +32,7 @@ export const defaultResolveOptions: ResolveFontOptions = {
   ],
 }
 
-export async function createUnifont<T extends Provider[]>(providers: T, unifontOptions?: UnifontOptions): Promise<Unifont<T[number]['_name']>> {
+export async function createUnifont<T extends [Provider, ...Provider[]]>(providers: T, unifontOptions?: UnifontOptions): Promise<Unifont<T>> {
   const stack: Record<string, InitializedProvider> = {}
   const unifontContext = {
     storage: createAsyncStorage(unifontOptions?.storage ?? memoryStorage()),
@@ -65,7 +65,15 @@ export async function createUnifont<T extends Provider[]>(providers: T, unifontO
 
   const allProviders = Object.keys(stack)
 
-  async function resolveFont(fontFamily: string, options?: Partial<ResolveFontOptions>, providers = allProviders) {
+  async function resolveFont(
+    fontFamily: string,
+    options: Partial<ResolveFontOptions> = {},
+    providers: T[number]['_name'][] = allProviders,
+  ): Promise<
+    ResolveFontResult & {
+      provider?: T[number]['_name']
+    }
+  > {
     const mergedOptions = { ...defaultResolveOptions, ...options }
     for (const id of providers) {
       const provider = stack[id]
@@ -90,7 +98,7 @@ export async function createUnifont<T extends Provider[]>(providers: T, unifontO
     return { fonts: [] }
   }
 
-  async function listFonts(providers = allProviders): Promise<string[] | undefined> {
+  async function listFonts(providers: T[number]['_name'][] = allProviders): Promise<string[] | undefined> {
     let names: string[] | undefined
     for (const id of providers) {
       const provider = stack[id]
