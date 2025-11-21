@@ -38,10 +38,10 @@ interface CachedStorageOptions {
    * // Results in cache keys like: 'google-fonts:hash_of_options:actual_key'
    * ```
    */
-  namespace?: any[]
+  namespace?: unknown[]
 }
 
-export function createCachedAsyncStorage(storage: Storage, options: CachedStorageOptions = {}) {
+export function createAsyncStorage(storage: Storage, options: CachedStorageOptions = {}) {
   function resolveKey(key: string): string {
     if (!options?.namespace || options.namespace.length === 0) {
       return key
@@ -71,7 +71,7 @@ export function createCachedAsyncStorage(storage: Storage, options: CachedStorag
   }
 }
 
-function createCacheKey(...fragments: any[]): string {
+function createCacheKey(...fragments: unknown[]): string {
   const parts = fragments.map((f) => {
     // Don't hash string values to maintain readability.
     const part = typeof f === 'string' ? f : hash(f)

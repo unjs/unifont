@@ -1,7 +1,7 @@
 import { createStorage } from 'unstorage'
 import { describe, expect, it, vi } from 'vitest'
 
-import { createCachedAsyncStorage, memoryStorage } from '../src/cache'
+import { createAsyncStorage, memoryStorage } from '../src/cache'
 import { createUnifont, defineFontProvider } from '../src/index'
 
 describe('cache storage', () => {
@@ -15,7 +15,7 @@ describe('cache storage', () => {
   const storageTypes = { unstorage: createStorage(), memoryStorage: memoryStorage() }
 
   it.each(Object.entries(storageTypes))('createAsyncStorage works with %s', async (name, storage) => {
-    const asyncStorage = createCachedAsyncStorage(storage)
+    const asyncStorage = createAsyncStorage(storage)
 
     await asyncStorage.setItem('key', 'value')
     expect(await asyncStorage.getItem('key')).toBe('value')
@@ -64,7 +64,7 @@ describe('cache storage', () => {
         getItem: vi.fn(),
         setItem: vi.fn(),
       }
-      const cached = createCachedAsyncStorage(storage, {
+      const cached = createAsyncStorage(storage, {
         namespace: ['provider-name', { a: 1 }, 'variant-a'],
       })
       await cached.setItem('test-key', 'data')
@@ -80,10 +80,10 @@ describe('cache storage', () => {
         setItem: vi.fn(),
       }
 
-      const cachedA = createCachedAsyncStorage(storage, {
+      const cachedA = createAsyncStorage(storage, {
         namespace: [{ variant: 'A' }],
       })
-      const cachedB = createCachedAsyncStorage(storage, {
+      const cachedB = createAsyncStorage(storage, {
         namespace: [{ variant: 'B' }],
       })
       await cachedA.setItem('key', 'data')
@@ -108,7 +108,7 @@ describe('cache storage', () => {
         getItem: vi.fn(),
         setItem: vi.fn(),
       }
-      const cached = createCachedAsyncStorage(storage, {
+      const cached = createAsyncStorage(storage, {
         namespace: [input],
       })
 
