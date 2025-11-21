@@ -1,10 +1,5 @@
 import type { Storage } from './cache'
-import type {
-  InitializedProvider,
-  Provider,
-  ResolveFontOptions,
-  ResolveFontResult,
-} from './types'
+import type { InitializedProvider, Provider, ResolveFontOptions, ResolveFontResult } from './types'
 import { createAsyncStorage, memoryStorage } from './cache'
 
 export interface UnifontOptions {
