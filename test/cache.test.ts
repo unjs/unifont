@@ -58,7 +58,7 @@ describe('cache storage', () => {
     )
   })
 
-  describe('keyFragments option', () => {
+  describe('namespace option', () => {
     it('preserves string fragments in cache key', async () => {
       const storage = {
         getItem: vi.fn(),
