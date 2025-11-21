@@ -17,7 +17,7 @@ describe('unifont', () => {
     const unifont = await createUnifont([providers.google()])
     // @ts-expect-error invalid provider
     await unifont.resolveFont({ fontFamily: 'Poppins', provider: 'non-existent' })
-    expect(console.error).not.toHaveBeenCalled()
+    expect(console.error).toHaveBeenCalled()
     error.mockRestore()
   })
 
@@ -113,7 +113,7 @@ describe('unifont', () => {
       ],
       { throwOnError: true },
     )
-    await expect(() => unifont.resolveFont('test')).rejects.toThrow()
+    await expect(() => unifont.resolveFont({ fontFamily: 'test', provider: 'bad-provider' })).rejects.toThrow()
   })
 
   describe('listFonts', () => {
@@ -182,7 +182,7 @@ describe('unifont', () => {
         ],
         { throwOnError: true },
       )
-      await expect(() => unifont.listFonts()).rejects.toThrow()
+      await expect(() => unifont.listFonts({ provider: 'bad-provider' })).rejects.toThrow()
     })
   })
 })
