@@ -17,9 +17,13 @@ type ExtractFamilyOptions<T extends Provider> = Exclude<
 >
 
 export interface Unifont<T extends Provider[]> {
-  resolveFont: (fontFamily: string, options?: Partial<ResolveFontOptions<{
-    [K in T[number] as K['_name']]?: ExtractFamilyOptions<K>;
-  }>>, providers?: T[number]['_name'][]) => Promise<ResolveFontResult & { provider?: T[number]['_name'] }>
+  resolveFont: (
+    fontFamily: string,
+    options?: Partial<ResolveFontOptions<{
+      [K in T[number] as K['_name']]?: ExtractFamilyOptions<K>;
+    }>>,
+    providers?: T[number]['_name'][],
+  ) => Promise<ResolveFontResult & { provider?: T[number]['_name'] }>
   listFonts: (providers?: T[number]['_name'][]) => Promise<string[] | undefined>
 }
 
