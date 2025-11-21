@@ -12,4 +12,4 @@ const storage = createStorage({
 
 const unifont = await createUnifont([providers.google()], { storage })
 
-console.log(await unifont.resolveFont('Poppins'))
+console.log(await unifont.resolveFont({ fontFamily: 'Poppins', provider: 'google' }))

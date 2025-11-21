@@ -5,9 +5,9 @@ import { getOptimizerIdentityFromUrl, groupBy, sanitizeFontSource } from '../uti
 describe('googleicons', () => {
   it('works', async () => {
     const unifont = await createUnifont([providers.googleicons()])
-    expect(await unifont.resolveFont('Poppins').then(r => r.fonts)).toMatchInlineSnapshot(`[]`)
-    const { fonts } = await unifont.resolveFont('Material Symbols Outlined')
-    const { fonts: legacy } = await unifont.resolveFont('Material Icons Outlined')
+    expect(await unifont.resolveFont({ fontFamily: 'Poppins', provider: 'googleicons' }).then(r => r.fonts)).toMatchInlineSnapshot(`[]`)
+    const { fonts } = await unifont.resolveFont({ fontFamily: 'Material Symbols Outlined', provider: 'googleicons' })
+    const { fonts: legacy } = await unifont.resolveFont({ fontFamily: 'Material Icons Outlined', provider: 'googleicons' })
     expect(sanitizeFontSource(fonts)).toMatchInlineSnapshot(`
       [
         {
@@ -370,7 +370,7 @@ describe('googleicons', () => {
 
   it('handles listFonts correctly', async () => {
     const unifont = await createUnifont([providers.googleicons()])
-    const names = await unifont.listFonts()
+    const names = await unifont.listFonts({ provider: 'googleicons' })
     expect(names!.length > 0).toEqual(true)
   })
 
@@ -381,7 +381,9 @@ describe('googleicons', () => {
       } },
     })])
 
-    const { fonts } = await unifont.resolveFont('Material Symbols Outlined', {
+    const { fonts } = await unifont.resolveFont({
+      fontFamily: 'Material Symbols Outlined',
+      provider: 'googleicons',
       styles: ['normal'],
       weights: ['400'],
       subsets: [],
