@@ -23,6 +23,12 @@ interface ProviderOptions {
     glyphs?: {
       [fontFamily: string]: string[]
     }
+    /**
+     * Experimental: include only modern font format without fallback for old browsers
+     */
+    modernFormatsOnly?: boolean | {
+      [fontFamily: string]: boolean
+    }
   }
 }
 
@@ -113,7 +119,18 @@ export default defineFontProvider('google', async (_options: ProviderOptions = {
     let priority = 0
     const resolvedFontFaceData: FontFaceData[] = []
 
-    for (const extension in userAgents) {
+    let formats = Object.keys(userAgents)
+    const modernFormatsOnly = _options.experimental?.modernFormatsOnly
+    if (
+      modernFormatsOnly === true
+      || (modernFormatsOnly
+        && typeof modernFormatsOnly === 'object'
+        && modernFormatsOnly?.[family] === true)
+    ) {
+      formats = formats.slice(0, 1) // keep only 1st user agent
+    }
+
+    for (const extension of formats) {
       const rawCss = await $fetch<string>('/css2', {
         baseURL: 'https://fonts.googleapis.com',
         headers: {
