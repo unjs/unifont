@@ -97,7 +97,7 @@ export interface Provider<TName extends string = string, TFamilyOptions extends 
   (ctx: ProviderContext): Awaitable<InitializedProvider<TFamilyOptions> | undefined>
 }
 
-export type ProviderFactory<TName extends string, TOptions extends Record<string, any>, TFamilyOptions extends Record<string, any>>
+export type ProviderFactory<TName extends string, TOptions extends Record<string, any> = never, TFamilyOptions extends Record<string, any> = never>
   = [TOptions] extends [never]
     ? () => Provider<TName, TFamilyOptions>
     : Partial<TOptions> extends TOptions
