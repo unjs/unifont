@@ -9,10 +9,10 @@ import { defineFontProvider, prepareWeights } from '../utils'
 type VariableAxis = 'opsz' | 'slnt' | 'wdth' | (string & {})
 
 export interface GoogleFamilyOptions {
-  /**
-   * Experimental: Setting variable axis configuration on a per-font basis.
-   */
   experimental?: {
+    /**
+     * Experimental: Setting variable axis configuration on a per-font basis.
+     */
     variableAxis?: Partial<Record<VariableAxis, ([string, string] | string)[]>>
     /**
      * Experimental: Specifying a list of glyphs to be included in the font for each font family.
