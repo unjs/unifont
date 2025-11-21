@@ -3,6 +3,9 @@ import type { InitializedProvider, Provider, ResolveFontOptions, ResolveFontResu
 import { createAsyncStorage, memoryStorage } from './cache'
 
 export * as providers from './providers'
+export type { AdobeProviderOptions } from './providers/adobe'
+export type { GoogleFamilyOptions } from './providers/google'
+export type { GoogleiconsFamilyOptions } from './providers/googleicons'
 export type { FontFaceData, FontFaceMeta, FontStyles, LocalFontSource, Provider, ProviderContext, ProviderDefinition, ProviderFactory, RemoteFontSource, ResolveFontOptions } from './types'
 export { defineFontProvider } from './utils'
 

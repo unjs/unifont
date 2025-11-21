@@ -4,7 +4,7 @@ import { extractFontFaceData } from '../css/parse'
 import { $fetch } from '../fetch'
 import { defineFontProvider } from '../utils'
 
-interface GoogleiconsFamilyOptions {
+export interface GoogleiconsFamilyOptions {
   experimental?: {
     /**
      * Experimental: Specifying a list of icons to be included in the font for each font family.
