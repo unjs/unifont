@@ -457,11 +457,7 @@ export interface MyProviderOptions {
   foo?: string
 }
 
-export interface MyProviderFamilyOptions {
-  foo?: string
-}
-
-export const myProvider = defineFontProvider<MyProviderFamilyOptions>()('my-provider', async (options: MyProviderOptions, ctx) => {
+export const myProvider = defineFontProvider('my-provider', async (options: MyProviderOptions, ctx) => {
   // ...
 })
 ```
@@ -475,7 +471,11 @@ export interface MyProviderOptions {
   foo?: string
 }
 
-export const myProvider = defineFontProvider('my-provider', async (options: MyProviderOptions, ctx) => {
+export interface MyProviderFamilyOptions {
+  foo?: string
+}
+
+export const myProvider = defineFontProvider<MyProviderFamilyOptions>()('my-provider', async (options: MyProviderOptions, ctx) => {
   // ...
 })
 ```
