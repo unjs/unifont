@@ -352,7 +352,7 @@ const { fonts } = await unifont.resolveFont('Poppins', {
 
 ###### `options`
 
-- Type: `{ [key: string]?: Record<string, any>`
+- Type: `{ [key: string]?: Record<string, any> }`
 
 A provider can define options to provide on a font family basis. Types will be automatically inferred:
 
