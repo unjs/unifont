@@ -38,8 +38,9 @@ const unifont = await createUnifont([
   providers.google(),
 ])
 
-const availableFonts = await unifont.listFonts()
-const { fonts } = await unifont.resolveFont('Poppins')
+const availableProviders = unifont.providers
+const availableFonts = await unifont.listFonts({ provider: 'google' })
+const { fonts } = await unifont.resolveFont({ fontFamily: 'Poppins', provider: 'google' })
 ```
 
 ## Built-in providers
@@ -227,7 +228,7 @@ const unifont = await createUnifont([
 ], { storage })
 
 // cached data is stored in `node_modules/.cache/unifont`
-await unifont.resolveFont('Poppins')
+await unifont.resolveFont({ fontFamily: 'Poppins', provider: 'google' })
 ```
 
 #### `throwOnError`
@@ -254,7 +255,7 @@ const unifont = await createUnifont([
 
 #### `resolveFont()`
 
-- Type: `(fontFamily: string, options?: Partial<ResolveFontOptions>, providers?: T[]) => Promise<ResolveFontResult & { provider?: T }>`
+- Type: `(options: Partial<ResolveFontOptions> & { fontFamily: string, provider: string }) => Promise<ResolveFontResult>`
 
 Retrieves font face data from available providers:
 
@@ -266,14 +267,28 @@ const unifont = await createUnifont([
   providers.fontsource(),
 ])
 
-const { fonts } = await unifont.resolveFont('Poppins')
+const { fonts } = await unifont.resolveFont({ fontFamily: 'Poppins', provider: 'google' })
 ```
 
 It loops through all providers and returns the result of the first provider that can return some data.
 
 ##### Options
 
-It accepts options as the 2nd parameter. Each provider chooses to support them or not.
+Each provider chooses to support options or not.
+
+###### `fontFamily`
+
+- Type: `string`
+- Required
+
+Which font family to retrieve.
+
+###### `provider`
+
+- Type: `string`
+- Required
+
+Which provider to query.
 
 ###### `weights`
 
@@ -289,7 +304,9 @@ const unifont = await createUnifont([
   providers.google(),
 ])
 
-const { fonts } = await unifont.resolveFont('Poppins', {
+const { fonts } = await unifont.resolveFont({
+  fontFamily: 'Poppins',
+  provider: 'google',
   weights: ['300', '500 900']
 })
 ```
@@ -308,7 +325,9 @@ const unifont = await createUnifont([
   providers.google(),
 ])
 
-const { fonts } = await unifont.resolveFont('Poppins', {
+const { fonts } = await unifont.resolveFont({
+  fontFamily: 'Poppins',
+  provider: 'google',
   styles: ['normal']
 })
 ```
@@ -327,33 +346,18 @@ const unifont = await createUnifont([
   providers.google(),
 ])
 
-const { fonts } = await unifont.resolveFont('Poppins', {
+const { fonts } = await unifont.resolveFont({
+  fontFamily: 'Poppins',
+  provider: 'google',
   subsets: ['latin']
 })
 ```
 
-##### Providers
-
-- Type: `string[]`
-
-By default it uses all the providers provided to `createUnifont()`. However you can restrict usage to only a subset:
-
-```js
-import { createUnifont, providers } from 'unifont'
-
-const unifont = await createUnifont([
-  providers.google(),
-  providers.fontsource(),
-])
-
-const { fonts } = await unifont.resolveFont('Poppins', {}, ['google'])
-```
-
 #### `listFonts()`
 
-- Type: `(providers?: T[]) => Promise<string[] | undefined>`
+- Type: `(options: { provider: string }) => Promise<string[] | undefined>`
 
-Retrieves font names available for all providers:
+Retrieves font names available for the specified provider:
 
 ```js
 import { createUnifont, providers } from 'unifont'
@@ -362,27 +366,19 @@ const unifont = await createUnifont([
   providers.google(),
 ])
 
-const availableFonts = await unifont.listFont()
+const availableFonts = await unifont.listFonts({ provider: 'google' })
 ```
 
 It may return `undefined` if no provider is able to return names.
 
-##### Providers
+##### Options
 
-- Type: `string[]`
+###### `provider`
 
-By default it uses all the providers provided to `createUnifont()`. However you can restrict usage to only a subset:
+- Type: `string`
+- Required
 
-```js
-import { createUnifont, providers } from 'unifont'
-
-const unifont = await createUnifont([
-  providers.google(),
-  providers.fontsource(),
-])
-
-const availableFonts = await unifont.listFont(['google'])
-```
+Which provider to query.
 
 ## Building your own provider
 
