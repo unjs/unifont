@@ -65,7 +65,7 @@ describe('cache storage', () => {
         setItem: vi.fn(),
       }
       const cached = createAsyncStorage(storage, {
-        namespace: ['provider-name', { a: 1 }, 'variant-a'],
+        cachedBy: ['provider-name', { a: 1 }, 'variant-a'],
       })
       await cached.setItem('test-key', 'data')
 
@@ -81,10 +81,10 @@ describe('cache storage', () => {
       }
 
       const cachedA = createAsyncStorage(storage, {
-        namespace: [{ variant: 'A' }],
+        cachedBy: [{ variant: 'A' }],
       })
       const cachedB = createAsyncStorage(storage, {
-        namespace: [{ variant: 'B' }],
+        cachedBy: [{ variant: 'B' }],
       })
       await cachedA.setItem('key', 'data')
       await cachedB.setItem('key', 'data')
@@ -109,7 +109,7 @@ describe('cache storage', () => {
         setItem: vi.fn(),
       }
       const cached = createAsyncStorage(storage, {
-        namespace: [input],
+        cachedBy: [input],
       })
 
       await cached.setItem('test-key', 'data')

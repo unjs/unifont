@@ -32,23 +32,18 @@ interface CachedStorageOptions {
    * ```ts
    * const providerName = 'google-fonts'
    * const providerOptions = { apiKey: 'xxx', subset: 'latin' }
-   * createCachedAsyncStorage(storage, {
-   *   namespace: [providerName, providerOptions]
+   * createAsyncStorage(storage, {
+   *   cachedBy: [providerName, providerOptions]
    * })
    * // Results in cache keys like: 'google-fonts:hash_of_options:actual_key'
    * ```
    */
-  namespace?: unknown[]
+  cachedBy?: unknown[]
 }
 
 export function createAsyncStorage(storage: Storage, options: CachedStorageOptions = {}) {
-  function resolveKey(key: string): string {
-    if (!options?.namespace || options.namespace.length === 0) {
-      return key
-    }
-
-    return `${createCacheKey(...options.namespace)}:${key}`
-  }
+  const prefix = options?.cachedBy?.length ? `${createCacheKey(...options.cachedBy)}:` : ''
+  const resolveKey = (key: string) => `${prefix}${key}`
 
   return {
     async getItem<T = unknown>(key: string, init?: () => T | Promise<T>) {

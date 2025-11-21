@@ -43,7 +43,7 @@ export async function createUnifont<T extends [Provider, ...Provider[]]>(provide
   await Promise.all(providers.map(async (provider) => {
     const context: ProviderContext = {
       storage: createAsyncStorage(storage, {
-        namespace: [provider._name, provider._options],
+        cachedBy: [provider._name, provider._options],
       }),
     }
     try {
