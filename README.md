@@ -114,25 +114,31 @@ import { providers } from 'unifont'
 providers.google()
 ```
 
-#### Options
+#### Family options
 
 ##### `experimental.variableAxis`
 
-- Type: `{ [key: string]: Partial<Record<VariableAxis, ([string, string] | string)[]>> }`
+- Type: `Partial<Record<VariableAxis, ([string, string] | string)[]>>`
 
 Allows setting variable axis configuration on a per-font basis:
 
 ```js
-import { providers } from 'unifont'
+import { createUnifont, providers } from 'unifont'
 
-providers.google({
-  experimental: {
-    variableAxis: {
-      Poppins: {
-        slnt: [['-15', '0']],
-        CASL: [['0', '1']],
-        CRSV: ['1'],
-        MONO: [['0', '1']],
+const unifont = await createUnifont([
+  providers.google(),
+])
+
+const { fonts } = await unifont.resolveFont('Poppins', {
+  options: {
+    google: {
+      experimental: {
+        variableAxis: {
+          slnt: [['-15', '0']],
+          CASL: [['0', '1']],
+          CRSV: ['1'],
+          MONO: [['0', '1']],
+        },
       },
     },
   },
@@ -141,17 +147,23 @@ providers.google({
 
 ##### `experimental.glyphs`
 
-- Type: `{ [fontFamily: string]: string[] }`
+- Type: `string[]`
 
 Allows specifying a list of glyphs to be included in the font for each font family. This can reduce the size of the font file:
 
 ```js
-import { providers } from 'unifont'
+import { createUnifont, providers } from 'unifont'
 
-providers.google({
-  experimental: {
-    variableAxis: {
-      Poppins: ['Hello', 'World']
+const unifont = await createUnifont([
+  providers.google(),
+])
+
+const { fonts } = await unifont.resolveFont('Poppins', {
+  options: {
+    google: {
+      experimental: {
+        glyphs: ['Hello', 'World'],
+      },
     },
   },
 })
@@ -167,21 +179,27 @@ import { providers } from 'unifont'
 providers.googleicons()
 ```
 
-#### Options
+#### Family options
 
 ##### `experimental.glyphs`
 
-- Type: `{ [fontFamily: string]: string[] }`
+- Type: `string[]`
 
 Allows specifying a list of glyphs to be included in the font for each font family. This can reduce the size of the font file:
 
 ```js
-import { providers } from 'unifont'
+import { createUnifont, providers } from 'unifont'
 
-providers.googleicons({
-  experimental: {
-    variableAxis: {
-      Poppins: ['Hello', 'World']
+const unifont = await createUnifont([
+  providers.googleicons(),
+])
+
+const { fonts } = await unifont.resolveFont('Poppins', {
+  options: {
+    googleicons: {
+      experimental: {
+        glyphs: ['Hello', 'World'],
+      },
     },
   },
 })
@@ -407,6 +425,24 @@ export const myProvider = defineFontProvider('my-provider', async (options, ctx)
 ```
 
 If you use options, you can simply annotate it:
+
+```ts
+import { defineFontProvider } from 'unifont'
+
+export interface MyProviderOptions {
+  foo?: string
+}
+
+export interface MyProviderFamilyOptions {
+  foo?: string
+}
+
+export const myProvider = defineFontProvider<MyProviderFamilyOptions>()('my-provider', async (options: MyProviderOptions, ctx) => {
+  // ...
+})
+```
+
+If you use family options, use currying to pass the types and keep inference:
 
 ```ts
 import { defineFontProvider } from 'unifont'
