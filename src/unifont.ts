@@ -1,5 +1,5 @@
 import type { Storage } from './cache'
-import type { InitializedProvider, Provider, ResolveFontOptions, ResolveFontResult } from './types'
+import type { InitializedProvider, Provider, ProviderContext, ResolveFontOptions, ResolveFontResult } from './types'
 import { createAsyncStorage, memoryStorage } from './cache'
 
 export interface UnifontOptions {
@@ -30,9 +30,8 @@ export const defaultResolveOptions: ResolveFontOptions = {
 
 export async function createUnifont<T extends [Provider, ...Provider[]]>(providers: T, unifontOptions?: UnifontOptions): Promise<Unifont<T>> {
   const stack: Record<string, InitializedProvider> = {}
-  const unifontContext = {
-    storage: createAsyncStorage(unifontOptions?.storage ?? memoryStorage()),
-  }
+
+  const storage = unifontOptions?.storage ?? memoryStorage()
 
   // preserve provider order
   for (const provider of providers) {
@@ -42,8 +41,13 @@ export async function createUnifont<T extends [Provider, ...Provider[]]>(provide
 
   // initialize all providers in parallel
   await Promise.all(providers.map(async (provider) => {
+    const context: ProviderContext = {
+      storage: createAsyncStorage(storage, {
+        cachedBy: [provider._name, provider._options],
+      }),
+    }
     try {
-      const initializedProvider = await provider(unifontContext)
+      const initializedProvider = await provider(context)
       if (initializedProvider)
         stack[provider._name] = initializedProvider
     }

@@ -1,3 +1,4 @@
+import { hash } from 'ohash'
 import { version } from '../package.json'
 
 type Awaitable<T> = T | Promise<T>
@@ -22,11 +23,33 @@ export function memoryStorage() {
 
 const ONE_WEEK = 1000 * 60 * 60 * 24 * 7
 
-export function createAsyncStorage(storage: Storage) {
+interface CachedStorageOptions {
+  /**
+   * Array of values used to create an isolated cache key namespace.
+   * Each element is stringified or hashed to form a unique cache key prefix.
+   *
+   * @example
+   * ```ts
+   * const providerName = 'google-fonts'
+   * const providerOptions = { apiKey: 'xxx', subset: 'latin' }
+   * createAsyncStorage(storage, {
+   *   cachedBy: [providerName, providerOptions]
+   * })
+   * // Results in cache keys like: 'google-fonts:hash_of_options:actual_key'
+   * ```
+   */
+  cachedBy?: unknown[]
+}
+
+export function createAsyncStorage(storage: Storage, options: CachedStorageOptions = {}) {
+  const prefix = options?.cachedBy?.length ? `${createCacheKey(...options.cachedBy)}:` : ''
+  const resolveKey = (key: string) => `${prefix}${key}`
+
   return {
     async getItem<T = unknown>(key: string, init?: () => T | Promise<T>) {
+      const resolvedKey = resolveKey(key)
       const now = Date.now()
-      const res = await storage.getItem(key)
+      const res = await storage.getItem(resolvedKey)
       if (res && res.expires > now && res.version === version) {
         return res.data
       }
@@ -34,11 +57,28 @@ export function createAsyncStorage(storage: Storage) {
         return null
       }
       const data = await init()
-      await storage.setItem(key, { expires: now + ONE_WEEK, version, data })
+      await storage.setItem(resolvedKey, { expires: now + ONE_WEEK, version, data })
       return data
     },
     async setItem(key: string, data: unknown) {
-      await storage.setItem(key, { expires: Date.now() + ONE_WEEK, version, data })
+      await storage.setItem(resolveKey(key), { expires: Date.now() + ONE_WEEK, version, data })
     },
   }
+}
+
+function createCacheKey(...fragments: unknown[]): string {
+  const parts = fragments.map((f) => {
+    // Don't hash string values to maintain readability.
+    const part = typeof f === 'string' ? f : hash(f)
+    return sanitize(part)
+  })
+
+  return parts.join(':')
+}
+
+function sanitize(input: string): string {
+  if (!input)
+    return ''
+
+  return input.replace(/[^\w.-]/g, '_')
 }
