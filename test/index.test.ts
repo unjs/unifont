@@ -12,6 +12,15 @@ describe('unifont', () => {
     error.mockRestore()
   })
 
+  it('works with a non existent provider', async () => {
+    const error = vi.spyOn(console, 'error').mockImplementation(() => {})
+    const unifont = await createUnifont([providers.google()])
+    // @ts-expect-error invalid provider
+    await unifont.resolveFont({ fontFamily: 'Poppins', provider: 'non-existent' })
+    expect(console.error).not.toHaveBeenCalled()
+    error.mockRestore()
+  })
+
   it('sanitizes providers that do not return a valid provider', async () => {
     const error = vi.spyOn(console, 'error').mockImplementation(() => {})
     const unifont = await createUnifont([
@@ -85,6 +94,28 @@ describe('unifont', () => {
     expect(unifont.providers).toStrictEqual(['foo', 'bar'])
   })
 
+  it('throws if a provider fails to initialize and throwOnError is enabled', async () => {
+    await expect(() => createUnifont([
+      defineFontProvider('bad-provider', () => { throw new Error('test') })(),
+    ], { throwOnError: true })).rejects.toThrow()
+  })
+
+  it('throws if a provider resolveFont fails and throwOnError is enabled', async () => {
+    const unifont = await createUnifont(
+      [
+        defineFontProvider('bad-provider', () => {
+          return {
+            resolveFont() {
+              throw new Error('test')
+            },
+          }
+        })(),
+      ],
+      { throwOnError: true },
+    )
+    await expect(() => unifont.resolveFont('test')).rejects.toThrow()
+  })
+
   describe('listFonts', () => {
     it('works with no providers', async () => {
       const error = vi.spyOn(console, 'error').mockImplementation(() => {})
@@ -133,6 +164,25 @@ describe('unifont', () => {
         expect.objectContaining({}),
       )
       error.mockRestore()
+    })
+
+    it('throws if it fails and throwOnError is enabled', async () => {
+      const unifont = await createUnifont(
+        [
+          defineFontProvider('bad-provider', () => {
+            return {
+              resolveFont() {
+                return { fonts: [] }
+              },
+              listFonts() {
+                throw new Error('test')
+              },
+            }
+          })(),
+        ],
+        { throwOnError: true },
+      )
+      await expect(() => unifont.listFonts()).rejects.toThrow()
     })
   })
 })

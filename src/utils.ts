@@ -1,6 +1,6 @@
 import type { ProviderDefinition, ProviderFactory } from './types'
 
-export function defineFontProvider<TName extends string, TOptions = unknown>(name: TName, provider: ProviderDefinition<TOptions>): ProviderFactory<TName, TOptions> {
+export function defineFontProvider<TName extends string, TOptions extends Record<string, any> = never>(name: TName, provider: ProviderDefinition<TOptions>): ProviderFactory<TName, TOptions> {
   return ((options: TOptions) => Object.assign(provider.bind(null, options || {} as TOptions), { _name: name })) as ProviderFactory<TName, TOptions>
 }
 
