@@ -21,6 +21,12 @@ describe('unifont', () => {
     error.mockRestore()
   })
 
+  it('throws if provider does not exist and throwOnError is enabled', async () => {
+    const unifont = await createUnifont([providers.google()], { throwOnError: true })
+    // @ts-expect-error invalid provider
+    await expect(() => unifont.resolveFont({ fontFamily: 'Poppins', provider: 'bad-provider' })).rejects.toThrow()
+  })
+
   it('sanitizes providers that do not return a valid provider', async () => {
     const error = vi.spyOn(console, 'error').mockImplementation(() => {})
     const unifont = await createUnifont([
