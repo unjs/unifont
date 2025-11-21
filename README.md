@@ -350,6 +350,30 @@ const { fonts } = await unifont.resolveFont('Poppins', {
 })
 ```
 
+###### `options`
+
+- Type: `{ [key: string]?: Record<string, any>`
+
+A provider can define options to provide on a font family basis. Types will be automatically inferred:
+
+```js
+import { createUnifont, providers } from 'unifont'
+
+const unifont = await createUnifont([
+  providers.google(),
+])
+
+const { fonts } = await unifont.resolveFont('Poppins', {
+  options: {
+    google: {
+      experimental: {
+        glyphs: ['Hello', 'World']
+      }
+    }
+  }
+})
+```
+
 ##### Providers
 
 - Type: `string[]`
