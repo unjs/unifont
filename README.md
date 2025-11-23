@@ -150,7 +150,7 @@ import { providers } from 'unifont'
 
 providers.google({
   experimental: {
-    variableAxis: {
+    glyphs: {
       Poppins: ['Hello', 'World']
     },
   },
