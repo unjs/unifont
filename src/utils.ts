@@ -15,6 +15,7 @@ function defineFontProviderImpl<
   return ((options: TOptions) =>
     Object.assign(provider.bind(null, options || ({} as TOptions)), {
       _name: name,
+      _options: options,
     })) as ProviderFactory<TName, TOptions, TFamilyOptions>
 }
 

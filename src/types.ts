@@ -94,6 +94,7 @@ export interface ProviderDefinition<TOptions extends Record<string, any> = never
 
 export interface Provider<TName extends string = string, TFamilyOptions extends Record<string, any> = never> {
   _name: TName
+  _options: unknown
   (ctx: ProviderContext): Awaitable<InitializedProvider<TFamilyOptions> | undefined>
 }
 
