@@ -1,4 +1,4 @@
-import type { FontFaceData, ResolveFontOptions } from '../types'
+import type { FontFaceData, FontFormat, ResolveFontOptions } from '../types'
 
 import { hash } from 'ohash'
 import { $fetch } from '../fetch'
@@ -57,7 +57,7 @@ export default defineFontProvider('fontsource', async (_options, ctx) => {
           fontFaceData.push({
             style,
             weight,
-            src: Object.entries(variantUrl).map(([format, url]) => ({ url, format })),
+            src: Object.entries(variantUrl).filter(([format]) => options.formats.includes(format as FontFormat)).map(([format, url]) => ({ url, format })),
             unicodeRange: fontDetail.unicodeRange[subset]?.split(','),
             meta: { subset },
           })

@@ -17,7 +17,7 @@ describe('google', () => {
 
     const { fonts } = await unifont.resolveFont('Poppins')
 
-    expect(fonts).toHaveLength(6)
+    expect(fonts).toHaveLength(4)
     expect(fonts[0]?.meta).toMatchInlineSnapshot(`
       {
         "priority": 0,
@@ -39,7 +39,7 @@ describe('google', () => {
     const resolvedStyles = pickUniqueBy(fonts, fnt => fnt.style)
     const resolvedWeights = pickUniqueBy(fonts, fnt => String(fnt.weight))
 
-    expect(fonts).toHaveLength(3)
+    expect(fonts).toHaveLength(2)
     expect(resolvedStyles).toMatchObject(styles)
     expect(resolvedWeights).toMatchObject(weights)
   })
@@ -68,22 +68,14 @@ describe('google', () => {
     const resolvedWeights = pickUniqueBy(fonts, fnt => String(fnt.weight))
     const resolvedPriorities = pickUniqueBy(fonts, fnt => fnt.meta?.priority)
 
-    const styles = [
-      'oblique 0deg 15deg',
-      'normal',
-    ] as ResolveFontOptions['styles']
+    const styles = ['oblique 0deg 15deg']
 
     // Variable wght and separate weights from 300 to 1000
-    const weights = [
-      '300,1000',
-      ...[...Array.from({ length: 7 }).keys()].map(i =>
-        String(i * 100 + 300),
-      ),
-    ]
+    const weights = ['300,1000']
 
-    const priorities = [0, 1]
+    const priorities = [0]
 
-    expect(fonts).toHaveLength(11)
+    expect(fonts).toHaveLength(4)
     expect(resolvedStyles).toMatchObject(styles)
     expect(resolvedWeights).toMatchObject(weights)
     expect(resolvedPriorities).toMatchObject(priorities)
@@ -130,15 +122,6 @@ describe('google', () => {
 
     expect(identifiersByFormat).toMatchInlineSnapshot(`
       {
-        "woff": [
-          {
-            "format": "woff",
-            "identifier": {
-              "kit": "pxiEyp8kv8JHgFVrFJPMcBMSdJLnJzs",
-              "skey": "87759fb096548f6d",
-            },
-          },
-        ],
         "woff2": [
           {
             "format": "woff2",
@@ -156,7 +139,7 @@ describe('google', () => {
     const unifont = await createUnifont([providers.google()])
 
     const { fonts } = await unifont.resolveFont('Roboto', { subsets: ['latin'] })
-    expect(fonts.length).toEqual(4)
+    expect(fonts.length).toEqual(2)
   })
 
   describe('splitCssIntoSubsets()', () => {
@@ -213,6 +196,6 @@ body {
     const { fonts } = await unifont.resolveFont('Lato', {
       weights: ['400 1100'],
     })
-    expect(fonts.length).toBe(18)
+    expect(fonts.length).toBe(12)
   })
 })
