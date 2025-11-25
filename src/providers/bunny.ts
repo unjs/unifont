@@ -1,4 +1,4 @@
-import type { ResolveFontOptions } from '../types'
+import type { FontFaceData, FontFormat, ResolveFontOptions } from '../types'
 
 import { hash } from 'ohash'
 import { extractFontFaceData } from '../css/parse'
@@ -40,8 +40,19 @@ export default defineFontProvider('bunny', async (_options, ctx) => {
       },
     })
 
+    const fontFaceData: FontFaceData[] = []
     // TODO: support subsets
-    return extractFontFaceData(css)
+    for (const fontData of extractFontFaceData(css)) {
+      const src = fontData.src.filter(source => 'name' in source || !source.format || options.formats.includes(source.format as FontFormat))
+      if (src.length > 0) {
+        fontFaceData.push({
+          ...fontData,
+          src,
+        })
+      }
+    }
+
+    return fontFaceData
   }
 
   return {
