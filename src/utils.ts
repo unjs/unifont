@@ -65,15 +65,17 @@ export function cleanFontFaces(fonts: FontFaceData[], _formats: FontFormat[]): F
   const result: FontFaceData[] = []
   const hashToIndex = new Map<string, number>()
 
-  for (const { src: _src, ...font } of fonts) {
+  for (const { src: _src, meta, ...font } of fonts) {
     const key = hash(font)
     const index = hashToIndex.get(key)
     const src = _src.map(source => 'name' in source
       ? source
-      : ({ ...source, format: source.format
-          // The format may be already correct
-          ? formatMap[source.format as FontFormat] ?? source.format
-          : undefined }))
+      : ({ ...source, ...(source.format
+          ? {
+              // The format may be already correct
+              format: formatMap[source.format as FontFormat] ?? source.format,
+            }
+          : {}) }))
       .filter(source => 'name' in source || !source.format || formats.includes(source.format as FontFormat))
 
     if (src.length === 0) {
@@ -81,7 +83,11 @@ export function cleanFontFaces(fonts: FontFaceData[], _formats: FontFormat[]): F
     }
 
     if (index === undefined) {
-      hashToIndex.set(key, result.push({ ...font, src }) - 1)
+      hashToIndex.set(key, result.push({
+        ...font,
+        ...(meta ? { meta } : {}),
+        src,
+      }) - 1)
       continue
     }
 

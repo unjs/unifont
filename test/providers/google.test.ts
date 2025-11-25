@@ -267,7 +267,7 @@ body {
         subsets: ['latin'],
         weights: ['400'],
       })
-      expect(fonts.length).toBe(4)
+      expect(fonts.length).toBe(2)
       expect(fonts.flatMap(font => font.src.map(source => 'name' in source ? source.name : source.format))).toStrictEqual(['woff2', 'woff', 'truetype', undefined])
     })
   })

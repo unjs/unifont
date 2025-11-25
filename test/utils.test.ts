@@ -126,7 +126,6 @@ describe('utils', () => {
         "name": "foo",
       },
       {
-        "format": undefined,
         "url": "bar",
       },
     ],
@@ -149,11 +148,9 @@ describe('utils', () => {
   {
     "src": [
       {
-        "format": undefined,
         "url": "foo",
       },
       {
-        "format": undefined,
         "url": "bar",
       },
     ],
