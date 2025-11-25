@@ -150,7 +150,7 @@ import { providers } from 'unifont'
 
 providers.google({
   experimental: {
-    variableAxis: {
+    glyphs: {
       Poppins: ['Hello', 'World']
     },
   },
@@ -180,8 +180,8 @@ import { providers } from 'unifont'
 
 providers.googleicons({
   experimental: {
-    variableAxis: {
-      Poppins: ['Hello', 'World']
+    glyphs: {
+      'Material Symbols Outlined': ['arrow_right', 'favorite', 'arrow_drop_down']
     },
   },
 })
