@@ -21,14 +21,6 @@ describe('fontshare', () => {
               "format": "woff2",
               "url": "//cdn.fontshare.com/font",
             },
-            {
-              "format": "woff",
-              "url": "//cdn.fontshare.com/font",
-            },
-            {
-              "format": "truetype",
-              "url": "//cdn.fontshare.com/font",
-            },
           ],
           "style": "normal",
           "weight": 400,
@@ -51,14 +43,6 @@ describe('fontshare', () => {
               "format": "woff2",
               "url": "//cdn.fontshare.com/font",
             },
-            {
-              "format": "woff",
-              "url": "//cdn.fontshare.com/font",
-            },
-            {
-              "format": "truetype",
-              "url": "//cdn.fontshare.com/font",
-            },
           ],
           "style": "italic",
           "weight": 400,
@@ -79,5 +63,76 @@ describe('fontshare', () => {
       weights: ['400 1100'],
     })
     expect(fonts.length).toBe(1)
+  })
+
+  describe('formats', () => {
+    it('woff2', async () => {
+      const unifont = await createUnifont([providers.fontshare()])
+      const { fonts } = await unifont.resolveFont('Tanker', {
+        formats: ['woff2'],
+        styles: ['normal'],
+        subsets: ['latin'],
+        weights: ['400'],
+      })
+      expect(fonts.length).toBe(1)
+      expect(fonts.flatMap(font => font.src.map(source => 'name' in source ? source.name : source.format))).toStrictEqual(['woff2'])
+    })
+
+    it('woff', async () => {
+      const unifont = await createUnifont([providers.fontshare()])
+      const { fonts } = await unifont.resolveFont('Tanker', {
+        formats: ['woff'],
+        styles: ['normal'],
+        subsets: ['latin'],
+        weights: ['400'],
+      })
+      expect(fonts.length).toBe(1)
+      expect(fonts.flatMap(font => font.src.map(source => 'name' in source ? source.name : source.format))).toStrictEqual(['woff'])
+    })
+
+    it('ttf', async () => {
+      const unifont = await createUnifont([providers.fontshare()])
+      const { fonts } = await unifont.resolveFont('Tanker', {
+        formats: ['ttf'],
+        styles: ['normal'],
+        subsets: ['latin'],
+        weights: ['400'],
+      })
+      expect(fonts.length).toBe(0)
+    })
+
+    it('eot', async () => {
+      const unifont = await createUnifont([providers.fontshare()])
+      const { fonts } = await unifont.resolveFont('Tanker', {
+        formats: ['eot'],
+        styles: ['normal'],
+        subsets: ['latin'],
+        weights: ['400'],
+      })
+      expect(fonts.length).toBe(0)
+    })
+
+    it('otf', async () => {
+      const unifont = await createUnifont([providers.fontshare()])
+      const { fonts } = await unifont.resolveFont('Tanker', {
+        formats: ['otf'],
+        styles: ['normal'],
+        subsets: ['latin'],
+        weights: ['400'],
+      })
+      expect(fonts.length).toBe(0)
+    })
+
+    it('several', async () => {
+      const unifont = await createUnifont([providers.fontshare()])
+      const { fonts } = await unifont.resolveFont('Tanker', {
+        formats: ['woff2', 'woff', 'ttf'],
+        styles: ['normal'],
+        subsets: ['latin'],
+        weights: ['400'],
+      })
+      expect(fonts.length).toBe(1)
+      expect(fonts.flatMap(font => font.src.map(source => 'name' in source ? source.name : source.format))).toStrictEqual(['woff2', 'woff'])
+    })
   })
 })
