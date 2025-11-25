@@ -67,7 +67,7 @@ describe('bunny', () => {
         subsets: ['latin'],
         weights: ['400'],
       })
-      expect(fonts.length).toBe(7)
+      expect(fonts.length).toBe(9)
       expect(Array.from(new Set(fonts.flatMap(font => font.src.map(source => 'name' in source ? source.name : source.format))))).toStrictEqual(['woff2'])
     })
 
@@ -79,7 +79,7 @@ describe('bunny', () => {
         subsets: ['latin'],
         weights: ['400'],
       })
-      expect(fonts.length).toBe(7)
+      expect(fonts.length).toBe(9)
       expect(Array.from(new Set(fonts.flatMap(font => font.src.map(source => 'name' in source ? source.name : source.format))))).toStrictEqual(['woff'])
     })
 
@@ -124,7 +124,7 @@ describe('bunny', () => {
         subsets: ['latin'],
         weights: ['400'],
       })
-      expect(fonts.length).toBe(7)
+      expect(fonts.length).toBe(9)
       expect(Array.from(new Set(fonts.flatMap(font => font.src.map(source => 'name' in source ? source.name : source.format))))).toStrictEqual(['woff2', 'woff'])
     })
   })
