@@ -1,9 +1,9 @@
-import type { FontFaceData, FontFormat, ResolveFontOptions } from '../types'
+import type { ResolveFontOptions } from '../types'
 
 import { hash } from 'ohash'
 import { extractFontFaceData } from '../css/parse'
 import { $fetch } from '../fetch'
-import { defineFontProvider, prepareWeights } from '../utils'
+import { cleanFontFaces, defineFontProvider, prepareWeights } from '../utils'
 
 const fontAPI = $fetch.create({ baseURL: 'https://api.fontshare.com/v2' })
 export default defineFontProvider('fontshare', async (_options, ctx) => {
@@ -60,19 +60,8 @@ export default defineFontProvider('fontshare', async (_options, ctx) => {
 
     const css = await fontAPI<string>(`/css?f[]=${`${font.slug}@${numbers.join(',')}`}`)
 
-    const fontFaceData: FontFaceData[] = []
     // TODO: support subsets and axes
-    for (const fontData of extractFontFaceData(css)) {
-      const src = fontData.src.filter(source => 'name' in source || !source.format || options.formats.includes(source.format as FontFormat))
-      if (src.length > 0) {
-        fontFaceData.push({
-          ...fontData,
-          src,
-        })
-      }
-    }
-
-    return fontFaceData
+    return cleanFontFaces(extractFontFaceData(css), options.formats)
   }
 
   return {

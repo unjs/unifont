@@ -2,7 +2,7 @@ import type { ResolveFontOptions } from '../types'
 import { hash } from 'ohash'
 import { extractFontFaceData } from '../css/parse'
 import { $fetch } from '../fetch'
-import { defineFontProvider } from '../utils'
+import { cleanFontFaces, defineFontProvider } from '../utils'
 import { userAgents } from './google'
 
 interface ProviderOptions {
@@ -62,7 +62,7 @@ export default defineFontProvider('googleicons', async (_options: ProviderOption
       }
     }
 
-    return extractFontFaceData(css)
+    return cleanFontFaces(extractFontFaceData(css), options.formats)
   }
 
   return {

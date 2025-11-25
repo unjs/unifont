@@ -98,7 +98,8 @@ describe('fontshare', () => {
         subsets: ['latin'],
         weights: ['400'],
       })
-      expect(fonts.length).toBe(0)
+      expect(fonts.length).toBe(1)
+      expect(fonts.flatMap(font => font.src.map(source => 'name' in source ? source.name : source.format))).toStrictEqual(['truetype'])
     })
 
     it('eot', async () => {
@@ -132,7 +133,7 @@ describe('fontshare', () => {
         weights: ['400'],
       })
       expect(fonts.length).toBe(1)
-      expect(fonts.flatMap(font => font.src.map(source => 'name' in source ? source.name : source.format))).toStrictEqual(['woff2', 'woff'])
+      expect(fonts.flatMap(font => font.src.map(source => 'name' in source ? source.name : source.format))).toStrictEqual(['woff2', 'woff', 'truetype'])
     })
   })
 })

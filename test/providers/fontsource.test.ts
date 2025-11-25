@@ -479,7 +479,7 @@ describe('fontsource', () => {
         weights: ['400'],
       })
       expect(fonts.length).toBe(1)
-      expect(fonts.flatMap(font => font.src.map(source => 'name' in source ? source.name : source.format))).toStrictEqual(['ttf'])
+      expect(fonts.flatMap(font => font.src.map(source => 'name' in source ? source.name : source.format))).toStrictEqual(['truetype'])
     })
 
     it('eot', async () => {
@@ -513,7 +513,7 @@ describe('fontsource', () => {
         weights: ['400'],
       })
       expect(fonts.length).toBe(1)
-      expect(fonts.flatMap(font => font.src.map(source => 'name' in source ? source.name : source.format))).toStrictEqual(['woff2', 'woff', 'ttf'])
+      expect(fonts.flatMap(font => font.src.map(source => 'name' in source ? source.name : source.format))).toStrictEqual(['woff2', 'woff', 'truetype'])
     })
   })
 })

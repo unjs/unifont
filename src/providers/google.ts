@@ -4,7 +4,7 @@ import { findAll, generate, parse } from 'css-tree'
 import { hash } from 'ohash'
 import { extractFontFaceData } from '../css/parse'
 import { $fetch } from '../fetch'
-import { defineFontProvider, prepareWeights } from '../utils'
+import { cleanFontFaces, defineFontProvider, prepareWeights } from '../utils'
 
 type VariableAxis = 'opsz' | 'slnt' | 'wdth' | (string & {})
 
@@ -146,7 +146,7 @@ export default defineFontProvider('google', async (_options: ProviderOptions = {
       priority++
     }
 
-    return resolvedFontFaceData
+    return cleanFontFaces(resolvedFontFaceData, options.formats)
   }
 
   return {

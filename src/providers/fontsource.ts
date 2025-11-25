@@ -1,8 +1,8 @@
-import type { FontFaceData, FontFormat, ResolveFontOptions } from '../types'
+import type { FontFaceData, ResolveFontOptions } from '../types'
 
 import { hash } from 'ohash'
 import { $fetch } from '../fetch'
-import { defineFontProvider, prepareWeights } from '../utils'
+import { cleanFontFaces, defineFontProvider, prepareWeights } from '../utils'
 
 const fontAPI = $fetch.create({ baseURL: 'https://api.fontsource.org/v1' })
 
@@ -54,21 +54,18 @@ export default defineFontProvider('fontsource', async (_options, ctx) => {
           }
 
           const variantUrl = fontDetail.variants[weight]![style]![subset]!.url
-          const src = Object.entries(variantUrl).filter(([format]) => options.formats.includes(format as FontFormat)).map(([format, url]) => ({ url, format }))
-          if (src.length > 0) {
-            fontFaceData.push({
-              style,
-              weight,
-              src,
-              unicodeRange: fontDetail.unicodeRange[subset]?.split(','),
-              meta: { subset },
-            })
-          }
+          fontFaceData.push({
+            style,
+            weight,
+            src: Object.entries(variantUrl).map(([format, url]) => ({ url, format })),
+            unicodeRange: fontDetail.unicodeRange[subset]?.split(','),
+            meta: { subset },
+          })
         }
       }
     }
 
-    return fontFaceData
+    return cleanFontFaces(fontFaceData, options.formats)
   }
 
   return {

@@ -1,9 +1,9 @@
-import type { FontFaceData, FontFormat, ResolveFontOptions } from '../types'
+import type { ResolveFontOptions } from '../types'
 
 import { hash } from 'ohash'
 import { extractFontFaceData } from '../css/parse'
 import { $fetch } from '../fetch'
-import { defineFontProvider, prepareWeights } from '../utils'
+import { cleanFontFaces, defineFontProvider, prepareWeights } from '../utils'
 
 const fontAPI = $fetch.create({ baseURL: 'https://fonts.bunny.net' })
 
@@ -40,19 +40,8 @@ export default defineFontProvider('bunny', async (_options, ctx) => {
       },
     })
 
-    const fontFaceData: FontFaceData[] = []
     // TODO: support subsets
-    for (const fontData of extractFontFaceData(css)) {
-      const src = fontData.src.filter(source => 'name' in source || !source.format || options.formats.includes(source.format as FontFormat))
-      if (src.length > 0) {
-        fontFaceData.push({
-          ...fontData,
-          src,
-        })
-      }
-    }
-
-    return fontFaceData
+    return cleanFontFaces(extractFontFaceData(css), options.formats)
   }
 
   return {

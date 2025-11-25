@@ -56,7 +56,7 @@ describe('utils', () => {
     })
   })
 
-  describe('dedupeFontFaces()', () => {
+  describe('cleanFontFaces()', () => {
     it('does not merge unrelated faces', () => {
       expect(cleanFontFaces([], [])).toMatchInlineSnapshot(`[]`)
       expect(cleanFontFaces([
