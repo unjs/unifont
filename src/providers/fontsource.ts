@@ -54,13 +54,16 @@ export default defineFontProvider('fontsource', async (_options, ctx) => {
           }
 
           const variantUrl = fontDetail.variants[weight]![style]![subset]!.url
-          fontFaceData.push({
-            style,
-            weight,
-            src: Object.entries(variantUrl).filter(([format]) => options.formats.includes(format as FontFormat)).map(([format, url]) => ({ url, format })),
-            unicodeRange: fontDetail.unicodeRange[subset]?.split(','),
-            meta: { subset },
-          })
+          const src = Object.entries(variantUrl).filter(([format]) => options.formats.includes(format as FontFormat)).map(([format, url]) => ({ url, format }))
+          if (src.length > 0) {
+            fontFaceData.push({
+              style,
+              weight,
+              src,
+              unicodeRange: fontDetail.unicodeRange[subset]?.split(','),
+              meta: { subset },
+            })
+          }
         }
       }
     }

@@ -444,4 +444,76 @@ describe('fontsource', () => {
     })
     expect(fonts.length).toBe(14)
   })
+
+  describe('formats', () => {
+    it('woff2', async () => {
+      const unifont = await createUnifont([providers.fontsource()])
+      const { fonts } = await unifont.resolveFont('Roboto', {
+        formats: ['woff2'],
+        styles: ['normal'],
+        subsets: ['latin'],
+        weights: ['400'],
+      })
+      expect(fonts.length).toBe(1)
+      expect(fonts.flatMap(font => font.src.map(source => 'name' in source ? source.name : source.format))).toStrictEqual(['woff2'])
+    })
+
+    it('woff', async () => {
+      const unifont = await createUnifont([providers.fontsource()])
+      const { fonts } = await unifont.resolveFont('Roboto', {
+        formats: ['woff'],
+        styles: ['normal'],
+        subsets: ['latin'],
+        weights: ['400'],
+      })
+      expect(fonts.length).toBe(1)
+      expect(fonts.flatMap(font => font.src.map(source => 'name' in source ? source.name : source.format))).toStrictEqual(['woff'])
+    })
+
+    it('ttf', async () => {
+      const unifont = await createUnifont([providers.fontsource()])
+      const { fonts } = await unifont.resolveFont('Roboto', {
+        formats: ['ttf'],
+        styles: ['normal'],
+        subsets: ['latin'],
+        weights: ['400'],
+      })
+      expect(fonts.length).toBe(1)
+      expect(fonts.flatMap(font => font.src.map(source => 'name' in source ? source.name : source.format))).toStrictEqual(['ttf'])
+    })
+
+    it('eot', async () => {
+      const unifont = await createUnifont([providers.fontsource()])
+      const { fonts } = await unifont.resolveFont('Roboto', {
+        formats: ['eot'],
+        styles: ['normal'],
+        subsets: ['latin'],
+        weights: ['400'],
+      })
+      expect(fonts.length).toBe(0)
+    })
+
+    it('otf', async () => {
+      const unifont = await createUnifont([providers.fontsource()])
+      const { fonts } = await unifont.resolveFont('Roboto', {
+        formats: ['otf'],
+        styles: ['normal'],
+        subsets: ['latin'],
+        weights: ['400'],
+      })
+      expect(fonts.length).toBe(0)
+    })
+
+    it('several', async () => {
+      const unifont = await createUnifont([providers.fontsource()])
+      const { fonts } = await unifont.resolveFont('Roboto', {
+        formats: ['woff2', 'woff', 'ttf'],
+        styles: ['normal'],
+        subsets: ['latin'],
+        weights: ['400'],
+      })
+      expect(fonts.length).toBe(1)
+      expect(fonts.flatMap(font => font.src.map(source => 'name' in source ? source.name : source.format))).toStrictEqual(['woff2', 'woff', 'ttf'])
+    })
+  })
 })
