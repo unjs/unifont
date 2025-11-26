@@ -198,7 +198,7 @@ const { fonts } = await unifont.resolveFont('Poppins', {
   options: {
     googleicons: {
       experimental: {
-        glyphs: ['Hello', 'World'],
+        'Material Symbols Outlined': ['arrow_right', 'favorite', 'arrow_drop_down']
       },
     },
   },
