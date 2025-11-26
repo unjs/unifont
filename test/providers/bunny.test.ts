@@ -10,6 +10,9 @@ describe('bunny', () => {
     expect(fonts).toMatchInlineSnapshot(`
       [
         {
+          "meta": {
+            "subset": "latin",
+          },
           "src": [
             {
               "format": "woff2",
@@ -59,6 +62,18 @@ describe('bunny', () => {
     const { fonts } = await unifont.resolveFont('Alef', {
       weights: ['400 1100'],
     })
-    expect(fonts.length).toBe(6)
+    expect(fonts.length).toBe(4)
+  })
+
+  it('filters subsets correctly', async () => {
+    const unifont = await createUnifont([providers.google()])
+
+    const { fonts: fonts0 } = await unifont.resolveFont('Roboto', {})
+    expect(fonts0.length).toEqual(16)
+
+    const { fonts: fonts1 } = await unifont.resolveFont('Roboto', {
+      subsets: ['latin'],
+    })
+    expect(fonts1.length).toEqual(4)
   })
 })

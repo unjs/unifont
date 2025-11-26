@@ -1,10 +1,9 @@
 import type { FontFaceData, ResolveFontOptions } from '../types'
 
-import { findAll, generate, parse } from 'css-tree'
 import { hash } from 'ohash'
 import { extractFontFaceData } from '../css/parse'
 import { $fetch } from '../fetch'
-import { defineFontProvider, prepareWeights } from '../utils'
+import { defineFontProvider, prepareWeights, splitCssIntoSubsets } from '../utils'
 
 type VariableAxis = 'opsz' | 'slnt' | 'wdth' | (string & {})
 
@@ -24,37 +23,6 @@ interface ProviderOptions {
       [fontFamily: string]: string[]
     }
   }
-}
-
-export function splitCssIntoSubsets(input: string): { subset: string | null, css: string }[] {
-  const data: { subset: string | null, css: string }[] = []
-
-  const comments: { value: string, endLine: number }[] = []
-  const nodes = findAll(
-    parse(input, {
-      positions: true,
-      // Comments are not part of the tree. We rely on the positions to infer the subset
-      onComment(value, loc) {
-        comments.push({ value: value.trim(), endLine: loc.end.line })
-      },
-    }),
-    node => node.type === 'Atrule' && node.name === 'font-face',
-  )
-
-  // If there are no comments, we don't associate subsets because we can't
-  if (comments.length === 0) {
-    return [{ subset: null, css: input }]
-  }
-
-  for (const node of nodes) {
-    const comment = comments.filter(comment => comment.endLine < node.loc!.start.line).at(-1)
-    if (!comment)
-      continue
-
-    data.push({ subset: comment.value, css: generate(node) })
-  }
-
-  return data
 }
 
 export default defineFontProvider('google', async (_options: ProviderOptions = {}, ctx) => {
