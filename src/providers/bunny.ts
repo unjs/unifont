@@ -1,9 +1,9 @@
-import type { ResolveFontOptions } from '../types'
+import type { FontFaceData, ResolveFontOptions } from '../types'
 
 import { hash } from 'ohash'
 import { extractFontFaceData } from '../css/parse'
 import { $fetch } from '../fetch'
-import { cleanFontFaces, defineFontProvider, prepareWeights } from '../utils'
+import { cleanFontFaces, defineFontProvider, prepareWeights, splitCssIntoSubsets } from '../utils'
 
 const fontAPI = $fetch.create({ baseURL: 'https://fonts.bunny.net' })
 
@@ -40,8 +40,22 @@ export default defineFontProvider('bunny', async (_options, ctx) => {
       },
     })
 
-    // TODO: support subsets
-    return cleanFontFaces(extractFontFaceData(css), options.formats)
+    const resolvedFontFaceData: FontFaceData[] = []
+
+    const groups = splitCssIntoSubsets(css).filter(group => group.subset ? options.subsets.includes(group.subset) : true)
+    for (const group of groups) {
+      const data = extractFontFaceData(group.css)
+      data.map((f) => {
+        f.meta ??= {}
+        if (group.subset) {
+          f.meta.subset = group.subset
+        }
+        return f
+      })
+      resolvedFontFaceData.push(...data)
+    }
+
+    return cleanFontFaces(resolvedFontFaceData, options.formats)
   }
 
   return {

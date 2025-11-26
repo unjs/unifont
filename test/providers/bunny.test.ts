@@ -10,6 +10,9 @@ describe('bunny', () => {
     expect(fonts).toMatchInlineSnapshot(`
       [
         {
+          "meta": {
+            "subset": "latin",
+          },
           "src": [
             {
               "format": "woff2",
@@ -55,7 +58,19 @@ describe('bunny', () => {
     const { fonts } = await unifont.resolveFont('Alef', {
       weights: ['400 1100'],
     })
-    expect(fonts.length).toBe(6)
+    expect(fonts.length).toBe(4)
+  })
+
+  it('filters subsets correctly', async () => {
+    const unifont = await createUnifont([providers.google()])
+
+    const { fonts: fonts0 } = await unifont.resolveFont('Roboto', {})
+    expect(fonts0.length).toEqual(14)
+
+    const { fonts: fonts1 } = await unifont.resolveFont('Roboto', {
+      subsets: ['latin'],
+    })
+    expect(fonts1.length).toEqual(2)
   })
 
   describe('formats', () => {
@@ -67,7 +82,7 @@ describe('bunny', () => {
         subsets: ['latin'],
         weights: ['400'],
       })
-      expect(fonts.length).toBe(9)
+      expect(fonts.length).toBe(1)
       expect(Array.from(new Set(fonts.flatMap(font => font.src.map(source => 'name' in source ? source.name : source.format))))).toStrictEqual(['woff2'])
     })
 
@@ -79,7 +94,7 @@ describe('bunny', () => {
         subsets: ['latin'],
         weights: ['400'],
       })
-      expect(fonts.length).toBe(9)
+      expect(fonts.length).toBe(1)
       expect(Array.from(new Set(fonts.flatMap(font => font.src.map(source => 'name' in source ? source.name : source.format))))).toStrictEqual(['woff'])
     })
 
@@ -124,7 +139,7 @@ describe('bunny', () => {
         subsets: ['latin'],
         weights: ['400'],
       })
-      expect(fonts.length).toBe(9)
+      expect(fonts.length).toBe(1)
       expect(Array.from(new Set(fonts.flatMap(font => font.src.map(source => 'name' in source ? source.name : source.format))))).toStrictEqual(['woff2', 'woff'])
     })
   })

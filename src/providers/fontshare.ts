@@ -60,7 +60,7 @@ export default defineFontProvider('fontshare', async (_options, ctx) => {
 
     const css = await fontAPI<string>(`/css?f[]=${`${font.slug}@${numbers.join(',')}`}`)
 
-    // TODO: support subsets and axes
+    // TODO: support axes
     return cleanFontFaces(extractFontFaceData(css), options.formats)
   }
 
