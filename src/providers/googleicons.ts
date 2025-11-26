@@ -4,6 +4,20 @@ import { extractFontFaceData } from '../css/parse'
 import { $fetch } from '../fetch'
 import { defineFontProvider } from '../utils'
 
+export interface GoogleiconsOptions {
+  experimental?: {
+    /**
+     * Experimental: Specifying a list of icons to be included in the font for each font family.
+     * This can reduce the size of the font file.
+     *
+     * **Only available when resolving the new `Material Symbols` icons.**
+     */
+    glyphs?: {
+      [fontFamily: string]: string[]
+    }
+  }
+}
+
 export interface GoogleiconsFamilyOptions {
   experimental?: {
     /**
@@ -16,7 +30,7 @@ export interface GoogleiconsFamilyOptions {
   }
 }
 
-export default defineFontProvider<GoogleiconsFamilyOptions>()('googleicons', async (_options, ctx) => {
+export default defineFontProvider<GoogleiconsFamilyOptions>()('googleicons', async (providerOptions: GoogleiconsOptions, ctx) => {
   const googleIcons = await ctx.storage.getItem('googleicons:meta.json', async () => {
     const response: { families: string[] } = JSON.parse((await $fetch<string>(
       'https://fonts.google.com/metadata/icons?key=material_symbols&incomplete=true',
@@ -38,7 +52,7 @@ export default defineFontProvider<GoogleiconsFamilyOptions>()('googleicons', asy
     options: ResolveFontOptions<GoogleiconsFamilyOptions>,
   ) {
     // Google Icons require sorted icon names, or we will see a 400 error
-    const iconNames = options.options?.experimental?.glyphs?.sort().join(',')
+    const iconNames = (options.options?.experimental?.glyphs ?? providerOptions.experimental?.glyphs?.[family])?.join('')
 
     let css = ''
 

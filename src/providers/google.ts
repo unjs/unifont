@@ -8,6 +8,24 @@ import { defineFontProvider, prepareWeights } from '../utils'
 
 type VariableAxis = 'opsz' | 'slnt' | 'wdth' | (string & {})
 
+export interface GoogleOptions {
+  experimental?: {
+    /**
+     * Experimental: Setting variable axis configuration on a per-font basis.
+     */
+    variableAxis?: {
+      [fontFamily: string]: Partial<Record<VariableAxis, ([string, string] | string)[]>>
+    }
+    /**
+     * Experimental: Specifying a list of glyphs to be included in the font for each font family.
+     * This can reduce the size of the font file.
+     */
+    glyphs?: {
+      [fontFamily: string]: string[]
+    }
+  }
+}
+
 export interface GoogleFamilyOptions {
   experimental?: {
     /**
@@ -53,7 +71,7 @@ export function splitCssIntoSubsets(input: string): { subset: string | null, css
   return data
 }
 
-export default defineFontProvider<GoogleFamilyOptions>()('google', async (_options, ctx) => {
+export default defineFontProvider<GoogleFamilyOptions>()('google', async (providerOptions: GoogleOptions, ctx) => {
   const googleFonts = await ctx.storage.getItem('google:meta.json', () => $fetch<{ familyMetadataList: FontIndexMeta[] }>('https://fonts.google.com/metadata/fonts', { responseType: 'json' }).then(r => r.familyMetadataList))
 
   const styleMap = {
@@ -73,7 +91,7 @@ export default defineFontProvider<GoogleFamilyOptions>()('google', async (_optio
   async function getFontDetails(family: string, options: ResolveFontOptions<GoogleFamilyOptions>) {
     const font = googleFonts.find(font => font.family === family)!
     const styles = [...new Set(options.styles.map(i => styleMap[i]))].sort()
-    const glyphs = options.options?.experimental?.glyphs?.join('')
+    const glyphs = (options.options?.experimental?.glyphs ?? providerOptions.experimental?.glyphs?.[family])?.join('')
     const weights = prepareWeights({
       inputWeights: options.weights,
       hasVariableWeights: font.axes.some(a => a.tag === 'wght'),
@@ -90,12 +108,18 @@ export default defineFontProvider<GoogleFamilyOptions>()('google', async (_optio
 
     const resolvedAxes = []
     let resolvedVariants: string[] = []
+    const variableAxis = options.options?.experimental?.variableAxis ?? providerOptions.experimental?.variableAxis?.[family]
+    const candidateAxes = [
+      'wght',
+      'ital',
+      ...Object.keys(variableAxis ?? {}),
+    ].sort(googleFlavoredSorting)
 
-    for (const axis of ['wght', 'ital', ...Object.keys(options.options?.experimental?.variableAxis ?? {})].sort(googleFlavoredSorting)) {
+    for (const axis of candidateAxes) {
       const axisValue = ({
         wght: weights.map(v => v.weight),
         ital: styles,
-      })[axis] ?? options!.options!.experimental!.variableAxis![axis]!.map(v => Array.isArray(v) ? `${v[0]}..${v[1]}` : v)
+      })[axis] ?? variableAxis![axis]!.map(v => Array.isArray(v) ? `${v[0]}..${v[1]}` : v)
 
       if (resolvedVariants.length === 0) {
         resolvedVariants = axisValue

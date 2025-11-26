@@ -114,6 +114,53 @@ import { providers } from 'unifont'
 providers.google()
 ```
 
+#### Options
+
+##### `experimental.variableAxis`
+
+- Type: `{ [fontFamily: string]: Partial<Record<VariableAxis, ([string, string] | string)[]>> }`
+
+Allows setting variable axis configuration on a per-font basis:
+
+```js
+import { providers } from 'unifont'
+
+providers.google({
+  experimental: {
+    variableAxis: {
+      Poppins: {
+        slnt: [['-15', '0']],
+        CASL: [['0', '1']],
+        CRSV: ['1'],
+        MONO: [['0', '1']],
+      },
+    },
+  },
+})
+```
+
+Overriden by the `experimental.variableAxis` family option.
+
+##### `experimental.glyphs`
+
+- Type: `{ [fontFamily: string]: string[] }`
+
+Allows specifying a list of glyphs to be included in the font for each font family. This can reduce the size of the font file:
+
+```js
+import { providers } from 'unifont'
+
+providers.google({
+  experimental: {
+    glyphs: {
+      Poppins: ['Hello', 'World']
+    },
+  },
+})
+```
+
+Overriden by the `experimental.glyphs` family option.
+
 #### Family options
 
 ##### `experimental.variableAxis`
@@ -178,6 +225,28 @@ import { providers } from 'unifont'
 
 providers.googleicons()
 ```
+
+#### Options
+
+##### `experimental.glyphs`
+
+- Type: `{ [fontFamily: string]: string[] }`
+
+Allows specifying a list of glyphs to be included in the font for each font family. This can reduce the size of the font file:
+
+```js
+import { providers } from 'unifont'
+
+providers.googleicons({
+  experimental: {
+    glyphs: {
+      'Material Symbols Outlined': ['arrow_right', 'favorite', 'arrow_drop_down']
+    },
+  },
+})
+```
+
+Only available when resolving the new `Material Symbols` icons. Overriden by the `experimental.glyphs` family option.
 
 #### Family options
 
