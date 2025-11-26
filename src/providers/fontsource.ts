@@ -2,7 +2,7 @@ import type { FontFaceData, ResolveFontOptions } from '../types'
 
 import { hash } from 'ohash'
 import { $fetch } from '../fetch'
-import { defineFontProvider, prepareWeights } from '../utils'
+import { cleanFontFaces, defineFontProvider, prepareWeights } from '../utils'
 
 const fontAPI = $fetch.create({ baseURL: 'https://api.fontsource.org/v1' })
 
@@ -65,7 +65,7 @@ export default defineFontProvider('fontsource', async (_options, ctx) => {
       }
     }
 
-    return fontFaceData
+    return cleanFontFaces(fontFaceData, options.formats)
   }
 
   return {
