@@ -103,5 +103,15 @@ body {
 
       expect(splitCssIntoSubsets(input)).toEqual([{ subset: null, css: input }])
     })
+
+    it('it does not associate subsets if comment is not in the right place', () => {
+      expect(splitCssIntoSubsets(`
+@font-face {
+  font-family: 'A';
+}
+/* latin */
+
+`)).toEqual([{ subset: null, css: '@font-face{font-family:"A"}' }])
+    })
   })
 })

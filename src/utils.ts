@@ -69,10 +69,8 @@ export function splitCssIntoSubsets(input: string): { subset: string | null, css
 
   for (const node of nodes) {
     const comment = comments.filter(comment => comment.endLine < node.loc!.start.line).at(-1)
-    if (!comment)
-      continue
 
-    data.push({ subset: comment.value, css: generate(node) })
+    data.push({ subset: comment?.value ?? null, css: generate(node) })
   }
 
   return data
