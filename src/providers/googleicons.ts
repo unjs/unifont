@@ -19,9 +19,12 @@ interface ProviderOptions {
 
 export default defineFontProvider('googleicons', async (_options: ProviderOptions, ctx) => {
   const googleIcons = await ctx.storage.getItem('googleicons:meta.json', async () => {
-    const response: { families: string[] } = JSON.parse((await $fetch<string>(
+    const data = await $fetch<string>(
       'https://fonts.google.com/metadata/icons?key=material_symbols&incomplete=true',
-    )).split('\n').slice(1).join('\n')) // remove the first line which makes it an invalid JSON
+    )
+    const response: { families: string[] } = JSON.parse(
+      data.substring(data.indexOf('\n') + 1), // remove the first line which makes it an invalid JSON
+    )
 
     return response.families
   })
