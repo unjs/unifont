@@ -165,4 +165,32 @@ describe('google', () => {
     })
     expect(fonts.length).toBe(18)
   })
+
+  it('experimental.modernFormatsOnly', async () => {
+    const unifont = await createUnifont([
+      providers.google({
+        experimental: {
+          modernFormatsOnly: {
+            Poppins: true,
+          },
+        },
+      }),
+    ])
+    {
+      const { fonts } = await unifont.resolveFont('Poppins', {})
+      const remoteFontSources = fonts.flatMap(fnt =>
+        fnt.src.flatMap(src => ('url' in src ? src : [])),
+      )
+      expect(remoteFontSources).not.toEqual([])
+      expect(remoteFontSources.filter(s => s.format !== 'woff2')).toEqual([])
+    }
+    {
+      const { fonts } = await unifont.resolveFont('Geist', {})
+      const remoteFontSources = fonts.flatMap(fnt =>
+        fnt.src.flatMap(src => ('url' in src ? src : [])),
+      )
+      expect(remoteFontSources).not.toEqual([])
+      expect(remoteFontSources.filter(s => s.format !== 'woff2')).not.toEqual([])
+    }
+  })
 })
