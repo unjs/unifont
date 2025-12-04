@@ -23,328 +23,6 @@ describe('googleicons', () => {
             700,
           ],
         },
-        {
-          "src": [
-            {
-              "format": "woff",
-              "url": "https://fonts.gstatic.com/font",
-            },
-            {
-              "format": "woff",
-              "url": "https://fonts.gstatic.com/font",
-            },
-            {
-              "format": "woff",
-              "url": "https://fonts.gstatic.com/font",
-            },
-            {
-              "format": "woff",
-              "url": "https://fonts.gstatic.com/font",
-            },
-            {
-              "format": "woff",
-              "url": "https://fonts.gstatic.com/font",
-            },
-            {
-              "format": "woff",
-              "url": "https://fonts.gstatic.com/font",
-            },
-            {
-              "format": "woff",
-              "url": "https://fonts.gstatic.com/font",
-            },
-            {
-              "format": "woff",
-              "url": "https://fonts.gstatic.com/font",
-            },
-            {
-              "format": "woff",
-              "url": "https://fonts.gstatic.com/font",
-            },
-            {
-              "format": "woff",
-              "url": "https://fonts.gstatic.com/font",
-            },
-          ],
-          "style": "normal",
-          "weight": 100,
-        },
-        {
-          "src": [
-            {
-              "format": "woff",
-              "url": "https://fonts.gstatic.com/font",
-            },
-            {
-              "format": "woff",
-              "url": "https://fonts.gstatic.com/font",
-            },
-            {
-              "format": "woff",
-              "url": "https://fonts.gstatic.com/font",
-            },
-            {
-              "format": "woff",
-              "url": "https://fonts.gstatic.com/font",
-            },
-            {
-              "format": "woff",
-              "url": "https://fonts.gstatic.com/font",
-            },
-            {
-              "format": "woff",
-              "url": "https://fonts.gstatic.com/font",
-            },
-            {
-              "format": "woff",
-              "url": "https://fonts.gstatic.com/font",
-            },
-            {
-              "format": "woff",
-              "url": "https://fonts.gstatic.com/font",
-            },
-            {
-              "format": "woff",
-              "url": "https://fonts.gstatic.com/font",
-            },
-            {
-              "format": "woff",
-              "url": "https://fonts.gstatic.com/font",
-            },
-          ],
-          "style": "normal",
-          "weight": 200,
-        },
-        {
-          "src": [
-            {
-              "format": "woff",
-              "url": "https://fonts.gstatic.com/font",
-            },
-            {
-              "format": "woff",
-              "url": "https://fonts.gstatic.com/font",
-            },
-            {
-              "format": "woff",
-              "url": "https://fonts.gstatic.com/font",
-            },
-            {
-              "format": "woff",
-              "url": "https://fonts.gstatic.com/font",
-            },
-            {
-              "format": "woff",
-              "url": "https://fonts.gstatic.com/font",
-            },
-            {
-              "format": "woff",
-              "url": "https://fonts.gstatic.com/font",
-            },
-            {
-              "format": "woff",
-              "url": "https://fonts.gstatic.com/font",
-            },
-            {
-              "format": "woff",
-              "url": "https://fonts.gstatic.com/font",
-            },
-            {
-              "format": "woff",
-              "url": "https://fonts.gstatic.com/font",
-            },
-            {
-              "format": "woff",
-              "url": "https://fonts.gstatic.com/font",
-            },
-          ],
-          "style": "normal",
-          "weight": 300,
-        },
-        {
-          "src": [
-            {
-              "format": "woff",
-              "url": "https://fonts.gstatic.com/font",
-            },
-            {
-              "format": "woff",
-              "url": "https://fonts.gstatic.com/font",
-            },
-            {
-              "format": "woff",
-              "url": "https://fonts.gstatic.com/font",
-            },
-            {
-              "format": "woff",
-              "url": "https://fonts.gstatic.com/font",
-            },
-            {
-              "format": "woff",
-              "url": "https://fonts.gstatic.com/font",
-            },
-            {
-              "format": "woff",
-              "url": "https://fonts.gstatic.com/font",
-            },
-            {
-              "format": "woff",
-              "url": "https://fonts.gstatic.com/font",
-            },
-            {
-              "format": "woff",
-              "url": "https://fonts.gstatic.com/font",
-            },
-            {
-              "format": "woff",
-              "url": "https://fonts.gstatic.com/font",
-            },
-            {
-              "format": "woff",
-              "url": "https://fonts.gstatic.com/font",
-            },
-          ],
-          "style": "normal",
-          "weight": 400,
-        },
-        {
-          "src": [
-            {
-              "format": "woff",
-              "url": "https://fonts.gstatic.com/font",
-            },
-            {
-              "format": "woff",
-              "url": "https://fonts.gstatic.com/font",
-            },
-            {
-              "format": "woff",
-              "url": "https://fonts.gstatic.com/font",
-            },
-            {
-              "format": "woff",
-              "url": "https://fonts.gstatic.com/font",
-            },
-            {
-              "format": "woff",
-              "url": "https://fonts.gstatic.com/font",
-            },
-            {
-              "format": "woff",
-              "url": "https://fonts.gstatic.com/font",
-            },
-            {
-              "format": "woff",
-              "url": "https://fonts.gstatic.com/font",
-            },
-            {
-              "format": "woff",
-              "url": "https://fonts.gstatic.com/font",
-            },
-            {
-              "format": "woff",
-              "url": "https://fonts.gstatic.com/font",
-            },
-            {
-              "format": "woff",
-              "url": "https://fonts.gstatic.com/font",
-            },
-          ],
-          "style": "normal",
-          "weight": 500,
-        },
-        {
-          "src": [
-            {
-              "format": "woff",
-              "url": "https://fonts.gstatic.com/font",
-            },
-            {
-              "format": "woff",
-              "url": "https://fonts.gstatic.com/font",
-            },
-            {
-              "format": "woff",
-              "url": "https://fonts.gstatic.com/font",
-            },
-            {
-              "format": "woff",
-              "url": "https://fonts.gstatic.com/font",
-            },
-            {
-              "format": "woff",
-              "url": "https://fonts.gstatic.com/font",
-            },
-            {
-              "format": "woff",
-              "url": "https://fonts.gstatic.com/font",
-            },
-            {
-              "format": "woff",
-              "url": "https://fonts.gstatic.com/font",
-            },
-            {
-              "format": "woff",
-              "url": "https://fonts.gstatic.com/font",
-            },
-            {
-              "format": "woff",
-              "url": "https://fonts.gstatic.com/font",
-            },
-            {
-              "format": "woff",
-              "url": "https://fonts.gstatic.com/font",
-            },
-          ],
-          "style": "normal",
-          "weight": 600,
-        },
-        {
-          "src": [
-            {
-              "format": "woff",
-              "url": "https://fonts.gstatic.com/font",
-            },
-            {
-              "format": "woff",
-              "url": "https://fonts.gstatic.com/font",
-            },
-            {
-              "format": "woff",
-              "url": "https://fonts.gstatic.com/font",
-            },
-            {
-              "format": "woff",
-              "url": "https://fonts.gstatic.com/font",
-            },
-            {
-              "format": "woff",
-              "url": "https://fonts.gstatic.com/font",
-            },
-            {
-              "format": "woff",
-              "url": "https://fonts.gstatic.com/font",
-            },
-            {
-              "format": "woff",
-              "url": "https://fonts.gstatic.com/font",
-            },
-            {
-              "format": "woff",
-              "url": "https://fonts.gstatic.com/font",
-            },
-            {
-              "format": "woff",
-              "url": "https://fonts.gstatic.com/font",
-            },
-            {
-              "format": "woff",
-              "url": "https://fonts.gstatic.com/font",
-            },
-          ],
-          "style": "normal",
-          "weight": 700,
-        },
       ]
     `)
 
@@ -354,10 +32,6 @@ describe('googleicons', () => {
           "src": [
             {
               "format": "woff2",
-              "url": "https://fonts.gstatic.com/font",
-            },
-            {
-              "format": "woff",
               "url": "https://fonts.gstatic.com/font",
             },
           ],
@@ -398,498 +72,6 @@ describe('googleicons', () => {
 
     expect(identifiersByFormat).toMatchInlineSnapshot(`
       {
-        "woff": [
-          {
-            "format": "woff",
-            "identifier": {
-              "kit": "kJF1BvYX7BgnkSrUwT8OhrdQw4oELdPIeeII9v6oDMzByHX9rA6RzaxHMPdY43zj-jCxv3fzvRNU22ZXGJpEpjC_1p-p_4MrImHCIJIZrDCvHeelddUkzURJv7Jw9tqS79ylFPsyCBNbKzzyVvz7iw",
-              "skey": "b8dc2088854b122f",
-            },
-          },
-          {
-            "format": "woff",
-            "identifier": {
-              "kit": "kJF1BvYX7BgnkSrUwT8OhrdQw4oELdPIeeII9v6oDMzByHX9rA6RzaxHMPdY43zj-jCxv3fzvRNU22ZXGJpEpjC_1v-p_4MrImHCIJIZrDCvHeelddUkzURJv7Jw9tqS79ylFPsyCBNbKzzyVvz7iw",
-              "skey": "b8dc2088854b122f",
-            },
-          },
-          {
-            "format": "woff",
-            "identifier": {
-              "kit": "kJF1BvYX7BgnkSrUwT8OhrdQw4oELdPIeeII9v6oDMzByHX9rA6RzaxHMPdY43zj-jCxv3fzvRNU22ZXGJpEpjC_1t-p_4MrImHCIJIZrDCvHeelddUkzURJv7Jw9tqS79ylFPsyCBNbKzzyVvz7iw",
-              "skey": "b8dc2088854b122f",
-            },
-          },
-          {
-            "format": "woff",
-            "identifier": {
-              "kit": "kJF1BvYX7BgnkSrUwT8OhrdQw4oELdPIeeII9v6oDMzByHX9rA6RzaxHMPdY43zj-jCxv3fzvRNU22ZXGJpEpjC_1i-q_4MrImHCIJIZrDCvHeelddUkzURJv7Jw9tqS79ylFPsyCBNbKzzyVvz7iw",
-              "skey": "b8dc2088854b122f",
-            },
-          },
-          {
-            "format": "woff",
-            "identifier": {
-              "kit": "kJF1BvYX7BgnkSrUwT8OhrdQw4oELdPIeeII9v6oDMzByHX9rA6RzaxHMPdY43zj-jCxv3fzvRNU22ZXGJpEpjC_1n-q_4MrImHCIJIZrDCvHeelddUkzURJv7Jw9tqS79ylFPsyCBNbKzzyVvz7iw",
-              "skey": "b8dc2088854b122f",
-            },
-          },
-          {
-            "format": "woff",
-            "identifier": {
-              "kit": "kJF1BvYX7BgnkSrUwT8OhrdQw4oELdPIeeII9v6oDMzByHX9rA6RzazHD_dY43zj-jCxv3fzvRNU22ZXGJpEpjC_1p-p_4MrImHCIJIZrDCvHeelddUkzURJv7Jw9tqS79ylFPsyCBNbKzzyVvz7iw",
-              "skey": "b8dc2088854b122f",
-            },
-          },
-          {
-            "format": "woff",
-            "identifier": {
-              "kit": "kJF1BvYX7BgnkSrUwT8OhrdQw4oELdPIeeII9v6oDMzByHX9rA6RzazHD_dY43zj-jCxv3fzvRNU22ZXGJpEpjC_1v-p_4MrImHCIJIZrDCvHeelddUkzURJv7Jw9tqS79ylFPsyCBNbKzzyVvz7iw",
-              "skey": "b8dc2088854b122f",
-            },
-          },
-          {
-            "format": "woff",
-            "identifier": {
-              "kit": "kJF1BvYX7BgnkSrUwT8OhrdQw4oELdPIeeII9v6oDMzByHX9rA6RzazHD_dY43zj-jCxv3fzvRNU22ZXGJpEpjC_1t-p_4MrImHCIJIZrDCvHeelddUkzURJv7Jw9tqS79ylFPsyCBNbKzzyVvz7iw",
-              "skey": "b8dc2088854b122f",
-            },
-          },
-          {
-            "format": "woff",
-            "identifier": {
-              "kit": "kJF1BvYX7BgnkSrUwT8OhrdQw4oELdPIeeII9v6oDMzByHX9rA6RzazHD_dY43zj-jCxv3fzvRNU22ZXGJpEpjC_1i-q_4MrImHCIJIZrDCvHeelddUkzURJv7Jw9tqS79ylFPsyCBNbKzzyVvz7iw",
-              "skey": "b8dc2088854b122f",
-            },
-          },
-          {
-            "format": "woff",
-            "identifier": {
-              "kit": "kJF1BvYX7BgnkSrUwT8OhrdQw4oELdPIeeII9v6oDMzByHX9rA6RzazHD_dY43zj-jCxv3fzvRNU22ZXGJpEpjC_1n-q_4MrImHCIJIZrDCvHeelddUkzURJv7Jw9tqS79ylFPsyCBNbKzzyVvz7iw",
-              "skey": "b8dc2088854b122f",
-            },
-          },
-          {
-            "format": "woff",
-            "identifier": {
-              "kit": "kJF1BvYX7BgnkSrUwT8OhrdQw4oELdPIeeII9v6oDMzByHX9rA6RzaxHMPdY43zj-jCxv3fzvRNU22ZXGJpEpjC_1p-p_4MrImHCIJIZrDAvHOelddUkzURJv7Jw9tqS79ylFPsyCBNbKzzyVvz7iw",
-              "skey": "b8dc2088854b122f",
-            },
-          },
-          {
-            "format": "woff",
-            "identifier": {
-              "kit": "kJF1BvYX7BgnkSrUwT8OhrdQw4oELdPIeeII9v6oDMzByHX9rA6RzaxHMPdY43zj-jCxv3fzvRNU22ZXGJpEpjC_1v-p_4MrImHCIJIZrDAvHOelddUkzURJv7Jw9tqS79ylFPsyCBNbKzzyVvz7iw",
-              "skey": "b8dc2088854b122f",
-            },
-          },
-          {
-            "format": "woff",
-            "identifier": {
-              "kit": "kJF1BvYX7BgnkSrUwT8OhrdQw4oELdPIeeII9v6oDMzByHX9rA6RzaxHMPdY43zj-jCxv3fzvRNU22ZXGJpEpjC_1t-p_4MrImHCIJIZrDAvHOelddUkzURJv7Jw9tqS79ylFPsyCBNbKzzyVvz7iw",
-              "skey": "b8dc2088854b122f",
-            },
-          },
-          {
-            "format": "woff",
-            "identifier": {
-              "kit": "kJF1BvYX7BgnkSrUwT8OhrdQw4oELdPIeeII9v6oDMzByHX9rA6RzaxHMPdY43zj-jCxv3fzvRNU22ZXGJpEpjC_1i-q_4MrImHCIJIZrDAvHOelddUkzURJv7Jw9tqS79ylFPsyCBNbKzzyVvz7iw",
-              "skey": "b8dc2088854b122f",
-            },
-          },
-          {
-            "format": "woff",
-            "identifier": {
-              "kit": "kJF1BvYX7BgnkSrUwT8OhrdQw4oELdPIeeII9v6oDMzByHX9rA6RzaxHMPdY43zj-jCxv3fzvRNU22ZXGJpEpjC_1n-q_4MrImHCIJIZrDAvHOelddUkzURJv7Jw9tqS79ylFPsyCBNbKzzyVvz7iw",
-              "skey": "b8dc2088854b122f",
-            },
-          },
-          {
-            "format": "woff",
-            "identifier": {
-              "kit": "kJF1BvYX7BgnkSrUwT8OhrdQw4oELdPIeeII9v6oDMzByHX9rA6RzazHD_dY43zj-jCxv3fzvRNU22ZXGJpEpjC_1p-p_4MrImHCIJIZrDAvHOelddUkzURJv7Jw9tqS79ylFPsyCBNbKzzyVvz7iw",
-              "skey": "b8dc2088854b122f",
-            },
-          },
-          {
-            "format": "woff",
-            "identifier": {
-              "kit": "kJF1BvYX7BgnkSrUwT8OhrdQw4oELdPIeeII9v6oDMzByHX9rA6RzazHD_dY43zj-jCxv3fzvRNU22ZXGJpEpjC_1v-p_4MrImHCIJIZrDAvHOelddUkzURJv7Jw9tqS79ylFPsyCBNbKzzyVvz7iw",
-              "skey": "b8dc2088854b122f",
-            },
-          },
-          {
-            "format": "woff",
-            "identifier": {
-              "kit": "kJF1BvYX7BgnkSrUwT8OhrdQw4oELdPIeeII9v6oDMzByHX9rA6RzazHD_dY43zj-jCxv3fzvRNU22ZXGJpEpjC_1t-p_4MrImHCIJIZrDAvHOelddUkzURJv7Jw9tqS79ylFPsyCBNbKzzyVvz7iw",
-              "skey": "b8dc2088854b122f",
-            },
-          },
-          {
-            "format": "woff",
-            "identifier": {
-              "kit": "kJF1BvYX7BgnkSrUwT8OhrdQw4oELdPIeeII9v6oDMzByHX9rA6RzazHD_dY43zj-jCxv3fzvRNU22ZXGJpEpjC_1i-q_4MrImHCIJIZrDAvHOelddUkzURJv7Jw9tqS79ylFPsyCBNbKzzyVvz7iw",
-              "skey": "b8dc2088854b122f",
-            },
-          },
-          {
-            "format": "woff",
-            "identifier": {
-              "kit": "kJF1BvYX7BgnkSrUwT8OhrdQw4oELdPIeeII9v6oDMzByHX9rA6RzazHD_dY43zj-jCxv3fzvRNU22ZXGJpEpjC_1n-q_4MrImHCIJIZrDAvHOelddUkzURJv7Jw9tqS79ylFPsyCBNbKzzyVvz7iw",
-              "skey": "b8dc2088854b122f",
-            },
-          },
-          {
-            "format": "woff",
-            "identifier": {
-              "kit": "kJF1BvYX7BgnkSrUwT8OhrdQw4oELdPIeeII9v6oDMzByHX9rA6RzaxHMPdY43zj-jCxv3fzvRNU22ZXGJpEpjC_1p-p_4MrImHCIJIZrDDxHOelddUkzURJv7Jw9tqS79ylFPsyCBNbKzzyVvz7iw",
-              "skey": "b8dc2088854b122f",
-            },
-          },
-          {
-            "format": "woff",
-            "identifier": {
-              "kit": "kJF1BvYX7BgnkSrUwT8OhrdQw4oELdPIeeII9v6oDMzByHX9rA6RzaxHMPdY43zj-jCxv3fzvRNU22ZXGJpEpjC_1v-p_4MrImHCIJIZrDDxHOelddUkzURJv7Jw9tqS79ylFPsyCBNbKzzyVvz7iw",
-              "skey": "b8dc2088854b122f",
-            },
-          },
-          {
-            "format": "woff",
-            "identifier": {
-              "kit": "kJF1BvYX7BgnkSrUwT8OhrdQw4oELdPIeeII9v6oDMzByHX9rA6RzaxHMPdY43zj-jCxv3fzvRNU22ZXGJpEpjC_1t-p_4MrImHCIJIZrDDxHOelddUkzURJv7Jw9tqS79ylFPsyCBNbKzzyVvz7iw",
-              "skey": "b8dc2088854b122f",
-            },
-          },
-          {
-            "format": "woff",
-            "identifier": {
-              "kit": "kJF1BvYX7BgnkSrUwT8OhrdQw4oELdPIeeII9v6oDMzByHX9rA6RzaxHMPdY43zj-jCxv3fzvRNU22ZXGJpEpjC_1i-q_4MrImHCIJIZrDDxHOelddUkzURJv7Jw9tqS79ylFPsyCBNbKzzyVvz7iw",
-              "skey": "b8dc2088854b122f",
-            },
-          },
-          {
-            "format": "woff",
-            "identifier": {
-              "kit": "kJF1BvYX7BgnkSrUwT8OhrdQw4oELdPIeeII9v6oDMzByHX9rA6RzaxHMPdY43zj-jCxv3fzvRNU22ZXGJpEpjC_1n-q_4MrImHCIJIZrDDxHOelddUkzURJv7Jw9tqS79ylFPsyCBNbKzzyVvz7iw",
-              "skey": "b8dc2088854b122f",
-            },
-          },
-          {
-            "format": "woff",
-            "identifier": {
-              "kit": "kJF1BvYX7BgnkSrUwT8OhrdQw4oELdPIeeII9v6oDMzByHX9rA6RzazHD_dY43zj-jCxv3fzvRNU22ZXGJpEpjC_1p-p_4MrImHCIJIZrDDxHOelddUkzURJv7Jw9tqS79ylFPsyCBNbKzzyVvz7iw",
-              "skey": "b8dc2088854b122f",
-            },
-          },
-          {
-            "format": "woff",
-            "identifier": {
-              "kit": "kJF1BvYX7BgnkSrUwT8OhrdQw4oELdPIeeII9v6oDMzByHX9rA6RzazHD_dY43zj-jCxv3fzvRNU22ZXGJpEpjC_1v-p_4MrImHCIJIZrDDxHOelddUkzURJv7Jw9tqS79ylFPsyCBNbKzzyVvz7iw",
-              "skey": "b8dc2088854b122f",
-            },
-          },
-          {
-            "format": "woff",
-            "identifier": {
-              "kit": "kJF1BvYX7BgnkSrUwT8OhrdQw4oELdPIeeII9v6oDMzByHX9rA6RzazHD_dY43zj-jCxv3fzvRNU22ZXGJpEpjC_1t-p_4MrImHCIJIZrDDxHOelddUkzURJv7Jw9tqS79ylFPsyCBNbKzzyVvz7iw",
-              "skey": "b8dc2088854b122f",
-            },
-          },
-          {
-            "format": "woff",
-            "identifier": {
-              "kit": "kJF1BvYX7BgnkSrUwT8OhrdQw4oELdPIeeII9v6oDMzByHX9rA6RzazHD_dY43zj-jCxv3fzvRNU22ZXGJpEpjC_1i-q_4MrImHCIJIZrDDxHOelddUkzURJv7Jw9tqS79ylFPsyCBNbKzzyVvz7iw",
-              "skey": "b8dc2088854b122f",
-            },
-          },
-          {
-            "format": "woff",
-            "identifier": {
-              "kit": "kJF1BvYX7BgnkSrUwT8OhrdQw4oELdPIeeII9v6oDMzByHX9rA6RzazHD_dY43zj-jCxv3fzvRNU22ZXGJpEpjC_1n-q_4MrImHCIJIZrDDxHOelddUkzURJv7Jw9tqS79ylFPsyCBNbKzzyVvz7iw",
-              "skey": "b8dc2088854b122f",
-            },
-          },
-          {
-            "format": "woff",
-            "identifier": {
-              "kit": "kJF1BvYX7BgnkSrUwT8OhrdQw4oELdPIeeII9v6oDMzByHX9rA6RzaxHMPdY43zj-jCxv3fzvRNU22ZXGJpEpjC_1p-p_4MrImHCIJIZrDCvHOelddUkzURJv7Jw9tqS79ylFPsyCBNbKzzyVvz7iw",
-              "skey": "b8dc2088854b122f",
-            },
-          },
-          {
-            "format": "woff",
-            "identifier": {
-              "kit": "kJF1BvYX7BgnkSrUwT8OhrdQw4oELdPIeeII9v6oDMzByHX9rA6RzaxHMPdY43zj-jCxv3fzvRNU22ZXGJpEpjC_1v-p_4MrImHCIJIZrDCvHOelddUkzURJv7Jw9tqS79ylFPsyCBNbKzzyVvz7iw",
-              "skey": "b8dc2088854b122f",
-            },
-          },
-          {
-            "format": "woff",
-            "identifier": {
-              "kit": "kJF1BvYX7BgnkSrUwT8OhrdQw4oELdPIeeII9v6oDMzByHX9rA6RzaxHMPdY43zj-jCxv3fzvRNU22ZXGJpEpjC_1t-p_4MrImHCIJIZrDCvHOelddUkzURJv7Jw9tqS79ylFPsyCBNbKzzyVvz7iw",
-              "skey": "b8dc2088854b122f",
-            },
-          },
-          {
-            "format": "woff",
-            "identifier": {
-              "kit": "kJF1BvYX7BgnkSrUwT8OhrdQw4oELdPIeeII9v6oDMzByHX9rA6RzaxHMPdY43zj-jCxv3fzvRNU22ZXGJpEpjC_1i-q_4MrImHCIJIZrDCvHOelddUkzURJv7Jw9tqS79ylFPsyCBNbKzzyVvz7iw",
-              "skey": "b8dc2088854b122f",
-            },
-          },
-          {
-            "format": "woff",
-            "identifier": {
-              "kit": "kJF1BvYX7BgnkSrUwT8OhrdQw4oELdPIeeII9v6oDMzByHX9rA6RzaxHMPdY43zj-jCxv3fzvRNU22ZXGJpEpjC_1n-q_4MrImHCIJIZrDCvHOelddUkzURJv7Jw9tqS79ylFPsyCBNbKzzyVvz7iw",
-              "skey": "b8dc2088854b122f",
-            },
-          },
-          {
-            "format": "woff",
-            "identifier": {
-              "kit": "kJF1BvYX7BgnkSrUwT8OhrdQw4oELdPIeeII9v6oDMzByHX9rA6RzazHD_dY43zj-jCxv3fzvRNU22ZXGJpEpjC_1p-p_4MrImHCIJIZrDCvHOelddUkzURJv7Jw9tqS79ylFPsyCBNbKzzyVvz7iw",
-              "skey": "b8dc2088854b122f",
-            },
-          },
-          {
-            "format": "woff",
-            "identifier": {
-              "kit": "kJF1BvYX7BgnkSrUwT8OhrdQw4oELdPIeeII9v6oDMzByHX9rA6RzazHD_dY43zj-jCxv3fzvRNU22ZXGJpEpjC_1v-p_4MrImHCIJIZrDCvHOelddUkzURJv7Jw9tqS79ylFPsyCBNbKzzyVvz7iw",
-              "skey": "b8dc2088854b122f",
-            },
-          },
-          {
-            "format": "woff",
-            "identifier": {
-              "kit": "kJF1BvYX7BgnkSrUwT8OhrdQw4oELdPIeeII9v6oDMzByHX9rA6RzazHD_dY43zj-jCxv3fzvRNU22ZXGJpEpjC_1t-p_4MrImHCIJIZrDCvHOelddUkzURJv7Jw9tqS79ylFPsyCBNbKzzyVvz7iw",
-              "skey": "b8dc2088854b122f",
-            },
-          },
-          {
-            "format": "woff",
-            "identifier": {
-              "kit": "kJF1BvYX7BgnkSrUwT8OhrdQw4oELdPIeeII9v6oDMzByHX9rA6RzazHD_dY43zj-jCxv3fzvRNU22ZXGJpEpjC_1i-q_4MrImHCIJIZrDCvHOelddUkzURJv7Jw9tqS79ylFPsyCBNbKzzyVvz7iw",
-              "skey": "b8dc2088854b122f",
-            },
-          },
-          {
-            "format": "woff",
-            "identifier": {
-              "kit": "kJF1BvYX7BgnkSrUwT8OhrdQw4oELdPIeeII9v6oDMzByHX9rA6RzazHD_dY43zj-jCxv3fzvRNU22ZXGJpEpjC_1n-q_4MrImHCIJIZrDCvHOelddUkzURJv7Jw9tqS79ylFPsyCBNbKzzyVvz7iw",
-              "skey": "b8dc2088854b122f",
-            },
-          },
-          {
-            "format": "woff",
-            "identifier": {
-              "kit": "kJF1BvYX7BgnkSrUwT8OhrdQw4oELdPIeeII9v6oDMzByHX9rA6RzaxHMPdY43zj-jCxv3fzvRNU22ZXGJpEpjC_1p-p_4MrImHCIJIZrDCdHOelddUkzURJv7Jw9tqS79ylFPsyCBNbKzzyVvz7iw",
-              "skey": "b8dc2088854b122f",
-            },
-          },
-          {
-            "format": "woff",
-            "identifier": {
-              "kit": "kJF1BvYX7BgnkSrUwT8OhrdQw4oELdPIeeII9v6oDMzByHX9rA6RzaxHMPdY43zj-jCxv3fzvRNU22ZXGJpEpjC_1v-p_4MrImHCIJIZrDCdHOelddUkzURJv7Jw9tqS79ylFPsyCBNbKzzyVvz7iw",
-              "skey": "b8dc2088854b122f",
-            },
-          },
-          {
-            "format": "woff",
-            "identifier": {
-              "kit": "kJF1BvYX7BgnkSrUwT8OhrdQw4oELdPIeeII9v6oDMzByHX9rA6RzaxHMPdY43zj-jCxv3fzvRNU22ZXGJpEpjC_1t-p_4MrImHCIJIZrDCdHOelddUkzURJv7Jw9tqS79ylFPsyCBNbKzzyVvz7iw",
-              "skey": "b8dc2088854b122f",
-            },
-          },
-          {
-            "format": "woff",
-            "identifier": {
-              "kit": "kJF1BvYX7BgnkSrUwT8OhrdQw4oELdPIeeII9v6oDMzByHX9rA6RzaxHMPdY43zj-jCxv3fzvRNU22ZXGJpEpjC_1i-q_4MrImHCIJIZrDCdHOelddUkzURJv7Jw9tqS79ylFPsyCBNbKzzyVvz7iw",
-              "skey": "b8dc2088854b122f",
-            },
-          },
-          {
-            "format": "woff",
-            "identifier": {
-              "kit": "kJF1BvYX7BgnkSrUwT8OhrdQw4oELdPIeeII9v6oDMzByHX9rA6RzaxHMPdY43zj-jCxv3fzvRNU22ZXGJpEpjC_1n-q_4MrImHCIJIZrDCdHOelddUkzURJv7Jw9tqS79ylFPsyCBNbKzzyVvz7iw",
-              "skey": "b8dc2088854b122f",
-            },
-          },
-          {
-            "format": "woff",
-            "identifier": {
-              "kit": "kJF1BvYX7BgnkSrUwT8OhrdQw4oELdPIeeII9v6oDMzByHX9rA6RzazHD_dY43zj-jCxv3fzvRNU22ZXGJpEpjC_1p-p_4MrImHCIJIZrDCdHOelddUkzURJv7Jw9tqS79ylFPsyCBNbKzzyVvz7iw",
-              "skey": "b8dc2088854b122f",
-            },
-          },
-          {
-            "format": "woff",
-            "identifier": {
-              "kit": "kJF1BvYX7BgnkSrUwT8OhrdQw4oELdPIeeII9v6oDMzByHX9rA6RzazHD_dY43zj-jCxv3fzvRNU22ZXGJpEpjC_1v-p_4MrImHCIJIZrDCdHOelddUkzURJv7Jw9tqS79ylFPsyCBNbKzzyVvz7iw",
-              "skey": "b8dc2088854b122f",
-            },
-          },
-          {
-            "format": "woff",
-            "identifier": {
-              "kit": "kJF1BvYX7BgnkSrUwT8OhrdQw4oELdPIeeII9v6oDMzByHX9rA6RzazHD_dY43zj-jCxv3fzvRNU22ZXGJpEpjC_1t-p_4MrImHCIJIZrDCdHOelddUkzURJv7Jw9tqS79ylFPsyCBNbKzzyVvz7iw",
-              "skey": "b8dc2088854b122f",
-            },
-          },
-          {
-            "format": "woff",
-            "identifier": {
-              "kit": "kJF1BvYX7BgnkSrUwT8OhrdQw4oELdPIeeII9v6oDMzByHX9rA6RzazHD_dY43zj-jCxv3fzvRNU22ZXGJpEpjC_1i-q_4MrImHCIJIZrDCdHOelddUkzURJv7Jw9tqS79ylFPsyCBNbKzzyVvz7iw",
-              "skey": "b8dc2088854b122f",
-            },
-          },
-          {
-            "format": "woff",
-            "identifier": {
-              "kit": "kJF1BvYX7BgnkSrUwT8OhrdQw4oELdPIeeII9v6oDMzByHX9rA6RzazHD_dY43zj-jCxv3fzvRNU22ZXGJpEpjC_1n-q_4MrImHCIJIZrDCdHOelddUkzURJv7Jw9tqS79ylFPsyCBNbKzzyVvz7iw",
-              "skey": "b8dc2088854b122f",
-            },
-          },
-          {
-            "format": "woff",
-            "identifier": {
-              "kit": "kJF1BvYX7BgnkSrUwT8OhrdQw4oELdPIeeII9v6oDMzByHX9rA6RzaxHMPdY43zj-jCxv3fzvRNU22ZXGJpEpjC_1p-p_4MrImHCIJIZrDBxG-elddUkzURJv7Jw9tqS79ylFPsyCBNbKzzyVvz7iw",
-              "skey": "b8dc2088854b122f",
-            },
-          },
-          {
-            "format": "woff",
-            "identifier": {
-              "kit": "kJF1BvYX7BgnkSrUwT8OhrdQw4oELdPIeeII9v6oDMzByHX9rA6RzaxHMPdY43zj-jCxv3fzvRNU22ZXGJpEpjC_1v-p_4MrImHCIJIZrDBxG-elddUkzURJv7Jw9tqS79ylFPsyCBNbKzzyVvz7iw",
-              "skey": "b8dc2088854b122f",
-            },
-          },
-          {
-            "format": "woff",
-            "identifier": {
-              "kit": "kJF1BvYX7BgnkSrUwT8OhrdQw4oELdPIeeII9v6oDMzByHX9rA6RzaxHMPdY43zj-jCxv3fzvRNU22ZXGJpEpjC_1t-p_4MrImHCIJIZrDBxG-elddUkzURJv7Jw9tqS79ylFPsyCBNbKzzyVvz7iw",
-              "skey": "b8dc2088854b122f",
-            },
-          },
-          {
-            "format": "woff",
-            "identifier": {
-              "kit": "kJF1BvYX7BgnkSrUwT8OhrdQw4oELdPIeeII9v6oDMzByHX9rA6RzaxHMPdY43zj-jCxv3fzvRNU22ZXGJpEpjC_1i-q_4MrImHCIJIZrDBxG-elddUkzURJv7Jw9tqS79ylFPsyCBNbKzzyVvz7iw",
-              "skey": "b8dc2088854b122f",
-            },
-          },
-          {
-            "format": "woff",
-            "identifier": {
-              "kit": "kJF1BvYX7BgnkSrUwT8OhrdQw4oELdPIeeII9v6oDMzByHX9rA6RzaxHMPdY43zj-jCxv3fzvRNU22ZXGJpEpjC_1n-q_4MrImHCIJIZrDBxG-elddUkzURJv7Jw9tqS79ylFPsyCBNbKzzyVvz7iw",
-              "skey": "b8dc2088854b122f",
-            },
-          },
-          {
-            "format": "woff",
-            "identifier": {
-              "kit": "kJF1BvYX7BgnkSrUwT8OhrdQw4oELdPIeeII9v6oDMzByHX9rA6RzazHD_dY43zj-jCxv3fzvRNU22ZXGJpEpjC_1p-p_4MrImHCIJIZrDBxG-elddUkzURJv7Jw9tqS79ylFPsyCBNbKzzyVvz7iw",
-              "skey": "b8dc2088854b122f",
-            },
-          },
-          {
-            "format": "woff",
-            "identifier": {
-              "kit": "kJF1BvYX7BgnkSrUwT8OhrdQw4oELdPIeeII9v6oDMzByHX9rA6RzazHD_dY43zj-jCxv3fzvRNU22ZXGJpEpjC_1v-p_4MrImHCIJIZrDBxG-elddUkzURJv7Jw9tqS79ylFPsyCBNbKzzyVvz7iw",
-              "skey": "b8dc2088854b122f",
-            },
-          },
-          {
-            "format": "woff",
-            "identifier": {
-              "kit": "kJF1BvYX7BgnkSrUwT8OhrdQw4oELdPIeeII9v6oDMzByHX9rA6RzazHD_dY43zj-jCxv3fzvRNU22ZXGJpEpjC_1t-p_4MrImHCIJIZrDBxG-elddUkzURJv7Jw9tqS79ylFPsyCBNbKzzyVvz7iw",
-              "skey": "b8dc2088854b122f",
-            },
-          },
-          {
-            "format": "woff",
-            "identifier": {
-              "kit": "kJF1BvYX7BgnkSrUwT8OhrdQw4oELdPIeeII9v6oDMzByHX9rA6RzazHD_dY43zj-jCxv3fzvRNU22ZXGJpEpjC_1i-q_4MrImHCIJIZrDBxG-elddUkzURJv7Jw9tqS79ylFPsyCBNbKzzyVvz7iw",
-              "skey": "b8dc2088854b122f",
-            },
-          },
-          {
-            "format": "woff",
-            "identifier": {
-              "kit": "kJF1BvYX7BgnkSrUwT8OhrdQw4oELdPIeeII9v6oDMzByHX9rA6RzazHD_dY43zj-jCxv3fzvRNU22ZXGJpEpjC_1n-q_4MrImHCIJIZrDBxG-elddUkzURJv7Jw9tqS79ylFPsyCBNbKzzyVvz7iw",
-              "skey": "b8dc2088854b122f",
-            },
-          },
-          {
-            "format": "woff",
-            "identifier": {
-              "kit": "kJF1BvYX7BgnkSrUwT8OhrdQw4oELdPIeeII9v6oDMzByHX9rA6RzaxHMPdY43zj-jCxv3fzvRNU22ZXGJpEpjC_1p-p_4MrImHCIJIZrDBIG-elddUkzURJv7Jw9tqS79ylFPsyCBNbKzzyVvz7iw",
-              "skey": "b8dc2088854b122f",
-            },
-          },
-          {
-            "format": "woff",
-            "identifier": {
-              "kit": "kJF1BvYX7BgnkSrUwT8OhrdQw4oELdPIeeII9v6oDMzByHX9rA6RzaxHMPdY43zj-jCxv3fzvRNU22ZXGJpEpjC_1v-p_4MrImHCIJIZrDBIG-elddUkzURJv7Jw9tqS79ylFPsyCBNbKzzyVvz7iw",
-              "skey": "b8dc2088854b122f",
-            },
-          },
-          {
-            "format": "woff",
-            "identifier": {
-              "kit": "kJF1BvYX7BgnkSrUwT8OhrdQw4oELdPIeeII9v6oDMzByHX9rA6RzaxHMPdY43zj-jCxv3fzvRNU22ZXGJpEpjC_1t-p_4MrImHCIJIZrDBIG-elddUkzURJv7Jw9tqS79ylFPsyCBNbKzzyVvz7iw",
-              "skey": "b8dc2088854b122f",
-            },
-          },
-          {
-            "format": "woff",
-            "identifier": {
-              "kit": "kJF1BvYX7BgnkSrUwT8OhrdQw4oELdPIeeII9v6oDMzByHX9rA6RzaxHMPdY43zj-jCxv3fzvRNU22ZXGJpEpjC_1i-q_4MrImHCIJIZrDBIG-elddUkzURJv7Jw9tqS79ylFPsyCBNbKzzyVvz7iw",
-              "skey": "b8dc2088854b122f",
-            },
-          },
-          {
-            "format": "woff",
-            "identifier": {
-              "kit": "kJF1BvYX7BgnkSrUwT8OhrdQw4oELdPIeeII9v6oDMzByHX9rA6RzaxHMPdY43zj-jCxv3fzvRNU22ZXGJpEpjC_1n-q_4MrImHCIJIZrDBIG-elddUkzURJv7Jw9tqS79ylFPsyCBNbKzzyVvz7iw",
-              "skey": "b8dc2088854b122f",
-            },
-          },
-          {
-            "format": "woff",
-            "identifier": {
-              "kit": "kJF1BvYX7BgnkSrUwT8OhrdQw4oELdPIeeII9v6oDMzByHX9rA6RzazHD_dY43zj-jCxv3fzvRNU22ZXGJpEpjC_1p-p_4MrImHCIJIZrDBIG-elddUkzURJv7Jw9tqS79ylFPsyCBNbKzzyVvz7iw",
-              "skey": "b8dc2088854b122f",
-            },
-          },
-          {
-            "format": "woff",
-            "identifier": {
-              "kit": "kJF1BvYX7BgnkSrUwT8OhrdQw4oELdPIeeII9v6oDMzByHX9rA6RzazHD_dY43zj-jCxv3fzvRNU22ZXGJpEpjC_1v-p_4MrImHCIJIZrDBIG-elddUkzURJv7Jw9tqS79ylFPsyCBNbKzzyVvz7iw",
-              "skey": "b8dc2088854b122f",
-            },
-          },
-          {
-            "format": "woff",
-            "identifier": {
-              "kit": "kJF1BvYX7BgnkSrUwT8OhrdQw4oELdPIeeII9v6oDMzByHX9rA6RzazHD_dY43zj-jCxv3fzvRNU22ZXGJpEpjC_1t-p_4MrImHCIJIZrDBIG-elddUkzURJv7Jw9tqS79ylFPsyCBNbKzzyVvz7iw",
-              "skey": "b8dc2088854b122f",
-            },
-          },
-          {
-            "format": "woff",
-            "identifier": {
-              "kit": "kJF1BvYX7BgnkSrUwT8OhrdQw4oELdPIeeII9v6oDMzByHX9rA6RzazHD_dY43zj-jCxv3fzvRNU22ZXGJpEpjC_1i-q_4MrImHCIJIZrDBIG-elddUkzURJv7Jw9tqS79ylFPsyCBNbKzzyVvz7iw",
-              "skey": "b8dc2088854b122f",
-            },
-          },
-          {
-            "format": "woff",
-            "identifier": {
-              "kit": "kJF1BvYX7BgnkSrUwT8OhrdQw4oELdPIeeII9v6oDMzByHX9rA6RzazHD_dY43zj-jCxv3fzvRNU22ZXGJpEpjC_1n-q_4MrImHCIJIZrDBIG-elddUkzURJv7Jw9tqS79ylFPsyCBNbKzzyVvz7iw",
-              "skey": "b8dc2088854b122f",
-            },
-          },
-        ],
         "woff2": [
           {
             "format": "woff2",
@@ -901,5 +83,78 @@ describe('googleicons', () => {
         ],
       }
     `)
+  })
+
+  describe('formats', () => {
+    it('woff2', async () => {
+      const unifont = await createUnifont([providers.googleicons()])
+      const { fonts } = await unifont.resolveFont('Material Symbols Outlined', {
+        formats: ['woff2'],
+        styles: ['normal'],
+        subsets: ['latin'],
+        weights: ['400'],
+      })
+      expect(fonts.length).toBe(1)
+      expect(fonts.flatMap(font => font.src.map(source => 'name' in source ? source.name : source.format))).toStrictEqual(['woff2'])
+    })
+
+    it('woff', async () => {
+      const unifont = await createUnifont([providers.googleicons()])
+      const { fonts } = await unifont.resolveFont('Material Symbols Outlined', {
+        formats: ['woff'],
+        styles: ['normal'],
+        subsets: ['latin'],
+        weights: ['400'],
+      })
+      expect(fonts.length).toBe(7)
+      expect(Array.from(new Set(fonts.flatMap(font => font.src.map(source => 'name' in source ? source.name : source.format))))).toStrictEqual(['woff'])
+    })
+
+    it('ttf', async () => {
+      const unifont = await createUnifont([providers.googleicons()])
+      const { fonts } = await unifont.resolveFont('Material Symbols Outlined', {
+        formats: ['ttf'],
+        styles: ['normal'],
+        subsets: ['latin'],
+        weights: ['400'],
+      })
+      expect(fonts.length).toBe(7)
+      expect(Array.from(new Set(fonts.flatMap(font => font.src.map(source => 'name' in source ? source.name : source.format))))).toStrictEqual(['truetype'])
+    })
+
+    it('eot', async () => {
+      const unifont = await createUnifont([providers.googleicons()])
+      const { fonts } = await unifont.resolveFont('Material Symbols Outlined', {
+        formats: ['eot'],
+        styles: ['normal'],
+        subsets: ['latin'],
+        weights: ['400'],
+      })
+      expect(fonts.length).toBe(7)
+      expect(Array.from(new Set(fonts.flatMap(font => font.src.map(source => 'name' in source ? source.name : source.format))))).toStrictEqual([undefined])
+    })
+
+    it('otf', async () => {
+      const unifont = await createUnifont([providers.googleicons()])
+      const { fonts } = await unifont.resolveFont('Material Symbols Outlined', {
+        formats: ['otf'],
+        styles: ['normal'],
+        subsets: ['latin'],
+        weights: ['400'],
+      })
+      expect(fonts.length).toBe(0)
+    })
+
+    it('several', async () => {
+      const unifont = await createUnifont([providers.googleicons()])
+      const { fonts } = await unifont.resolveFont('Material Symbols Outlined', {
+        formats: ['woff2', 'woff', 'ttf', 'eot'],
+        styles: ['normal'],
+        subsets: ['latin'],
+        weights: ['400'],
+      })
+      expect(fonts.length).toBe(8)
+      expect(Array.from(new Set(fonts.flatMap(font => font.src.map(source => 'name' in source ? source.name : source.format))))).toStrictEqual(['woff2', undefined, 'woff', 'truetype'])
+    })
   })
 })

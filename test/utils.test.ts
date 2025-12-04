@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { prepareWeights, splitCssIntoSubsets } from '../src/utils'
+import { cleanFontFaces, prepareWeights, splitCssIntoSubsets } from '../src/utils'
 
 describe('utils', () => {
   describe('prepareWeights()', () => {
@@ -56,6 +56,165 @@ describe('utils', () => {
     })
   })
 
+  describe('cleanFontFaces()', () => {
+    it('does not merge unrelated faces', () => {
+      expect(cleanFontFaces([], [])).toMatchInlineSnapshot(`[]`)
+      expect(cleanFontFaces([
+        {
+          src: [],
+          style: 'normal',
+        },
+      ], [])).toMatchInlineSnapshot(`[]`)
+      expect(cleanFontFaces([
+        {
+          src: [{ name: 'foo' }],
+          style: 'normal',
+        },
+      ], [])).toMatchInlineSnapshot(`[
+  {
+    "src": [
+      {
+        "name": "foo",
+      },
+    ],
+    "style": "normal",
+  },
+]`)
+      expect(cleanFontFaces([
+        {
+          src: [{ name: 'foo' }],
+          style: 'normal',
+        },
+        {
+          src: [{ name: 'foo' }],
+          weight: '400',
+        },
+      ], [])).toMatchInlineSnapshot(`[
+  {
+    "src": [
+      {
+        "name": "foo",
+      },
+    ],
+    "style": "normal",
+  },
+  {
+    "src": [
+      {
+        "name": "foo",
+      },
+    ],
+    "weight": "400",
+  },
+]`)
+    })
+
+    it('merges related faces', () => {
+      expect(cleanFontFaces([
+        {
+          src: [{ name: 'foo' }],
+          style: 'normal',
+        },
+        {
+          src: [{ url: 'bar' }],
+          style: 'normal',
+        },
+      ], [])).toMatchInlineSnapshot(`[
+  {
+    "src": [
+      {
+        "name": "foo",
+      },
+      {
+        "url": "bar",
+      },
+    ],
+    "style": "normal",
+  },
+]`)
+    })
+
+    it('dedupes sources', () => {
+      expect(cleanFontFaces([
+        {
+          src: [{ url: 'foo' }, { url: 'bar' }],
+          style: 'normal',
+        },
+        {
+          src: [{ url: 'bar' }],
+          style: 'normal',
+        },
+      ], [])).toMatchInlineSnapshot(`[
+  {
+    "src": [
+      {
+        "url": "foo",
+      },
+      {
+        "url": "bar",
+      },
+    ],
+    "style": "normal",
+  },
+]`)
+    })
+
+    it('normalizes sources formats', () => {
+      expect(cleanFontFaces([
+        {
+          src: [
+            { url: 'a', format: 'woff2' },
+            { url: 'b', format: 'woff' },
+            { url: 'c', format: 'otf' },
+            { url: 'd', format: 'ttf' },
+            { url: 'e', format: 'eot' },
+            { url: 'f', format: 'truetype' },
+            { url: 'g', format: 'opentype' },
+            { url: 'h', format: 'embedded-opentype' },
+          ],
+          style: 'normal',
+        },
+      ], ['woff2', 'woff', 'ttf', 'otf', 'eot'])).toMatchInlineSnapshot(`[
+  {
+    "src": [
+      {
+        "format": "woff2",
+        "url": "a",
+      },
+      {
+        "format": "woff",
+        "url": "b",
+      },
+      {
+        "format": "opentype",
+        "url": "c",
+      },
+      {
+        "format": "truetype",
+        "url": "d",
+      },
+      {
+        "format": "embedded-opentype",
+        "url": "e",
+      },
+      {
+        "format": "truetype",
+        "url": "f",
+      },
+      {
+        "format": "opentype",
+        "url": "g",
+      },
+      {
+        "format": "embedded-opentype",
+        "url": "h",
+      },
+    ],
+    "style": "normal",
+  },
+]`)
+    })
+  })
   describe('splitCssIntoSubsets()', () => {
     it('associates subsets and css correctly if there are comments', () => {
       expect(

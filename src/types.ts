@@ -1,3 +1,5 @@
+import type { formatMap } from './utils'
+
 type Awaitable<T> = T | Promise<T>
 
 export interface ProviderContext {
@@ -12,11 +14,14 @@ export interface ProviderContext {
 
 export type FontStyles = 'normal' | 'italic' | 'oblique'
 
+export type FontFormat = keyof typeof formatMap
+
 export interface ResolveFontOptions {
   weights: string[]
   styles: FontStyles[]
   // TODO: improve support and support unicode range
   subsets: string[]
+  formats: FontFormat[]
 }
 
 export interface RemoteFontSource {
