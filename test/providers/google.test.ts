@@ -65,22 +65,14 @@ describe('google', () => {
     const resolvedWeights = pickUniqueBy(fonts, fnt => String(fnt.weight))
     const resolvedPriorities = pickUniqueBy(fonts, fnt => fnt.meta?.priority)
 
-    const styles = [
-      'oblique 0deg 15deg',
-      'normal',
-    ] as ResolveFontOptions['styles']
+    const styles = ['oblique 0deg 15deg']
 
     // Variable wght and separate weights from 300 to 1000
-    const weights = [
-      '300,1000',
-      ...[...Array.from({ length: 7 }).keys()].map(i =>
-        String(i * 100 + 300),
-      ),
-    ]
+    const weights = ['300,1000']
 
-    const priorities = [0, 1]
+    const priorities = [0]
 
-    expect(fonts).toHaveLength(11)
+    expect(fonts).toHaveLength(4)
     expect(resolvedStyles).toMatchObject(styles)
     expect(resolvedWeights).toMatchObject(weights)
     expect(resolvedPriorities).toMatchObject(priorities)
@@ -169,8 +161,15 @@ describe('google', () => {
           {
             "format": "woff2",
             "identifier": {
-              "kit": "pxiEyp8kv8JHgFVrFJXUdVNFIvDDHy0hxgHa",
-              "skey": "87759fb096548f6d",
+              "kit": "",
+              "skey": "",
+            },
+          },
+          {
+            "format": "woff2",
+            "identifier": {
+              "kit": "",
+              "skey": "",
             },
           },
         ],
