@@ -40,7 +40,7 @@
     "@antfu/eslint-config": "6.2.0",
     "@types/css-tree": "2.3.11",
     "@types/node": "24.10.0",
-    "@vitest/coverage-v8": "4.0.13",
+    "@vitest/coverage-v8": "4.0.14",
     "bumpp": "10.3.1",
     "eslint": "9.39.1",
     "lint-staged": "16.2.6",
@@ -48,8 +48,8 @@
     "tsdown": "0.15.12",
     "typescript": "5.9.3",
     "unstorage": "1.17.2",
-    "vite": "7.2.4",
-    "vitest": "4.0.13"
+    "vite": "7.2.6",
+    "vitest": "4.0.14"
   },
   "resolutions": {
     "unifont": "link:."

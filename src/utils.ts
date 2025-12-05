@@ -1,4 +1,6 @@
-import type { ProviderDefinition, ProviderFactory } from './types'
+import type { FontFaceData, FontFormat, LocalFontSource, ProviderDefinition, ProviderFactory, RemoteFontSource } from './types'
+import { findAll, generate, parse } from 'css-tree'
+import { hash } from 'ohash'
 
 interface DefineFontProvider {
   <TName extends string, TOptions extends Record<string, any> = never>(name: TName,
@@ -64,4 +66,92 @@ export function prepareWeights({
     weight,
     variable: weight.includes(' '),
   }))
+}
+
+export function splitCssIntoSubsets(input: string): { subset: string | null, css: string }[] {
+  const data: { subset: string | null, css: string }[] = []
+
+  const comments: { value: string, endLine: number }[] = []
+  const nodes = findAll(
+    parse(input, {
+      positions: true,
+      // Comments are not part of the tree. We rely on the positions to infer the subset
+      onComment(value, loc) {
+        comments.push({ value: value.trim(), endLine: loc.end.line })
+      },
+    }),
+    node => node.type === 'Atrule' && node.name === 'font-face',
+  )
+
+  // If there are no comments, we don't associate subsets because we can't
+  if (comments.length === 0) {
+    return [{ subset: null, css: input }]
+  }
+
+  for (const node of nodes) {
+    const comment = comments.filter(comment => comment.endLine < node.loc!.start.line).at(-1)
+
+    data.push({ subset: comment?.value ?? null, css: generate(node) })
+  }
+
+  return data
+}
+
+// https://developer.mozilla.org/en-US/docs/Web/CSS/Reference/At-rules/@font-face/src#font_formats
+export const formatMap = {
+  woff2: 'woff2',
+  woff: 'woff',
+  otf: 'opentype',
+  ttf: 'truetype',
+  eot: 'embedded-opentype',
+} satisfies Record<string, string>
+
+function computeIdFromSource(source: LocalFontSource | RemoteFontSource): string {
+  return 'name' in source ? source.name : source.url
+}
+
+export function cleanFontFaces(fonts: FontFaceData[], _formats: FontFormat[]): FontFaceData[] {
+  const formats = _formats.map(format => formatMap[format])
+  const result: FontFaceData[] = []
+  const hashToIndex = new Map<string, number>()
+
+  for (const { src: _src, meta, ...font } of fonts) {
+    const key = hash(font)
+    const index = hashToIndex.get(key)
+    const src = _src.map(source => 'name' in source
+      ? source
+      : ({ ...source, ...(source.format
+          ? {
+              // The format may be already correct
+              format: formatMap[source.format as FontFormat] ?? source.format,
+            }
+          : {}) }))
+      .filter(source => 'name' in source || !source.format || formats.includes(source.format as FontFormat))
+
+    if (src.length === 0) {
+      continue
+    }
+
+    if (index === undefined) {
+      hashToIndex.set(key, result.push({
+        ...font,
+        ...(meta ? { meta } : {}),
+        src,
+      }) - 1)
+      continue
+    }
+
+    const existing = result[index]!
+
+    const ids = new Set(existing.src.map(source => computeIdFromSource(source)))
+
+    existing.src.push(
+      ...src.filter((source) => {
+        const id = computeIdFromSource(source)
+        return !ids.has(id) && ids.add(id)
+      }),
+    )
+  }
+
+  return result
 }

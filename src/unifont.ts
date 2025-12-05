@@ -35,6 +35,7 @@ export const defaultResolveOptions: ResolveFontOptions = {
     'latin-ext',
     'latin',
   ],
+  formats: ['woff2'],
 }
 
 export async function createUnifont<T extends [Provider, ...Provider[]]>(providers: T, unifontOptions?: UnifontOptions): Promise<Unifont<T>> {

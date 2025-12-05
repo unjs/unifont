@@ -439,7 +439,26 @@ const { fonts } = await unifont.resolveFont('Poppins', {
         glyphs: ['Hello', 'World']
       }
     }
-  }
+  },
+})
+```
+
+###### `formats`
+
+- Type: `('woff2' | 'woff' | 'otf' | 'ttf' | 'eot')[]`
+- Default: `['woff2']`
+
+Specifies what font formats to retrieve:
+
+```js
+import { createUnifont, providers } from 'unifont'
+
+const unifont = await createUnifont([
+  providers.google(),
+])
+
+const { fonts } = await unifont.resolveFont('Poppins', {
+  formats: ['woff2', 'woff2']
 })
 ```
 
