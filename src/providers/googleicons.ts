@@ -43,10 +43,7 @@ export default defineFontProvider<GoogleiconsFamilyOptions>()('googleicons', asy
     return response.families
   })
 
-  async function getFontDetails(
-    family: string,
-    options: ResolveFontOptions<GoogleiconsFamilyOptions>,
-  ) {
+  async function getFontDetails(family: string, options: ResolveFontOptions<GoogleiconsFamilyOptions>) {
     // Google Icons require sorted icon names, or we will see a 400 error
     const iconNames = (options.options?.experimental?.glyphs ?? providerOptions.experimental?.glyphs?.[family])?.join('')
 
@@ -73,9 +70,7 @@ export default defineFontProvider<GoogleiconsFamilyOptions>()('googleicons', asy
           baseURL: 'https://fonts.googleapis.com',
           headers: { 'user-agent': userAgent },
           query: {
-            family:
-              `${family}:`
-              + `opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200`,
+            family: `${family}:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200`,
             ...(iconNames && { icon_names: iconNames }),
           },
         })
