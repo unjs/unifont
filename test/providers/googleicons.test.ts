@@ -48,11 +48,13 @@ describe('googleicons', () => {
     expect(names!.length > 0).toEqual(true)
   })
 
-  it('respects glyphs option and resolves optimized Material Symbols', async () => {
+  it('respects provider glyphs option and resolves optimized Material Symbols', async () => {
     const unifont = await createUnifont([providers.googleicons({
-      experimental: { glyphs: {
-        'Material Symbols Outlined': ['arrow_right', 'favorite', 'arrow_drop_down'],
-      } },
+      experimental: {
+        glyphs: {
+          'Material Symbols Outlined': ['arrow_right', 'favorite', 'arrow_drop_down'],
+        },
+      },
     })])
 
     const { fonts } = await unifont.resolveFont('Material Symbols Outlined', {
@@ -76,8 +78,48 @@ describe('googleicons', () => {
           {
             "format": "woff2",
             "identifier": {
-              "kit": "kJEhBvYX7BgnkSrUwT8OhrdQw4oELdPIeeII9v6oFsLjBuVYLAXbrMgiVqo7gtYOQ_jB3ACZtFMEi_fEkPHZig",
-              "skey": "b8dc2088854b122f",
+              "kit": "",
+              "skey": "",
+            },
+          },
+        ],
+      }
+    `)
+  })
+
+  it('respects family glyphs option and resolves optimized Material Symbols', async () => {
+    const unifont = await createUnifont([providers.googleicons()])
+
+    const { fonts } = await unifont.resolveFont('Material Symbols Outlined', {
+      styles: ['normal'],
+      weights: ['400'],
+      subsets: [],
+      options: {
+        googleicons: {
+          experimental: {
+            glyphs: ['arrow_right', 'favorite', 'arrow_drop_down'],
+          },
+        },
+      },
+    })
+
+    // Do not use sanitizeFontSource here, as we must test the optimizer identity in url params
+    const remoteFontSources = fonts.flatMap(fnt => fnt.src.flatMap(src => 'url' in src ? src : []))
+    const identities = remoteFontSources.map(src => ({
+      format: src.format,
+      identifier: getOptimizerIdentityFromUrl('googleicons', src.url),
+    }),
+    )
+    const identifiersByFormat = groupBy(identities, src => src.format ?? 'unknown')
+
+    expect(identifiersByFormat).toMatchInlineSnapshot(`
+      {
+        "woff2": [
+          {
+            "format": "woff2",
+            "identifier": {
+              "kit": "",
+              "skey": "",
             },
           },
         ],
