@@ -617,7 +617,7 @@ export const myProvider = defineFontProvider('my-provider', async (options, ctx)
 })
 ```
 
-If you use family options, you can override the type of `options` type and it will be inferred:
+If you use family options, you can override the type of `options` and it will be inferred:
 
 ```ts
 import type { ResolveFontOptions } from 'unifont'
