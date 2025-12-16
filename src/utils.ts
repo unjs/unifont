@@ -2,29 +2,23 @@ import type { FontFaceData, FontFormat, LocalFontSource, ProviderDefinition, Pro
 import { findAll, generate, parse } from 'css-tree'
 import { hash } from 'ohash'
 
-interface DefineFontProvider {
-  <TName extends string, TOptions extends Record<string, any> = never>(name: TName,
-    provider: ProviderDefinition<TOptions>,): ProviderFactory<TName, TOptions, never>
-
-  <TFamilyOptions extends Record<string, any> = never>(): <TName extends string, TOptions extends Record<string, any> = never>(name: TName, provider: ProviderDefinition<TOptions, TFamilyOptions>) => ProviderFactory<TName, TOptions, TFamilyOptions>
-}
-
-function defineFontProviderImpl<
+export function defineFontProvider<
   TName extends string,
-  TOptions extends Record<string, any>,
-  TFamilyOptions extends Record<string, any>,
->(name: TName, provider: ProviderDefinition<TOptions, TFamilyOptions>) {
-  return ((options: TOptions) =>
-    Object.assign(provider.bind(null, options || ({} as TOptions)), {
+  TProvider extends ProviderDefinition<never, never>,
+>(
+  name: TName,
+  provider: TProvider,
+): TProvider extends ProviderDefinition<infer Options, infer FamilyOptions> ? ProviderFactory<
+  TName,
+  Options,
+  FamilyOptions
+> : never {
+  return ((options: Parameters<TProvider>[0]) =>
+    Object.assign(provider.bind(null, options || ({} as Parameters<TProvider>[0])), {
       _name: name,
       _options: options,
-    })) as ProviderFactory<TName, TOptions, TFamilyOptions>
+    })) as any
 }
-
-export const defineFontProvider = ((name, provider) =>
-  name
-    ? defineFontProviderImpl(name, provider)
-    : defineFontProviderImpl) as DefineFontProvider
 
 export function prepareWeights({
   inputWeights,

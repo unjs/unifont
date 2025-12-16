@@ -550,24 +550,6 @@ export const myProvider = defineFontProvider('my-provider', async (options: MyPr
 })
 ```
 
-If you use family options, use currying to pass the types and keep inference:
-
-```ts
-import { defineFontProvider } from 'unifont'
-
-export interface MyProviderOptions {
-  foo?: string
-}
-
-export interface MyProviderFamilyOptions {
-  foo?: string
-}
-
-export const myProvider = defineFontProvider<MyProviderFamilyOptions>()('my-provider', async (options: MyProviderOptions, ctx) => {
-  // ...
-})
-```
-
 The context (`ctx`) gives access to the [`storage`](#storage), allowing you to cache results. We'll see how below.
 
 ### Initialization
@@ -630,6 +612,29 @@ export const myProvider = defineFontProvider('my-provider', async (options, ctx)
           return [/* ... */]
         })
       }
+    }
+  }
+})
+```
+
+If you use family options, you can override the type of `options` type and it will be inferred:
+
+```ts
+import type { ResolveFontOptions } from 'unifont'
+import { hash } from 'ohash'
+import { defineFontProvider } from 'unifont'
+
+export interface MyProviderFamilyOptions {
+  foo?: string
+}
+
+export const myProvider = defineFontProvider('my-provider', async (options, ctx) => {
+  // ...
+
+  return {
+    // ...
+    async resolveFont(fontFamily, options: ResolveFontOptions<MyProviderFamilyOptions>) {
+      // ...
     }
   }
 })

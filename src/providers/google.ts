@@ -47,7 +47,7 @@ export const userAgents: Partial<Record<FontFormat, string>> = {
   eot: 'Mozilla/4.0 (compatible; MSIE 8.0; Windows NT 6.1; Trident/4.0)',
 }
 
-export default defineFontProvider<GoogleFamilyOptions>()('google', async (providerOptions: GoogleOptions, ctx) => {
+export default defineFontProvider('google', async (providerOptions: GoogleOptions, ctx) => {
   const googleFonts = await ctx.storage.getItem('google:meta.json', () => $fetch<{ familyMetadataList: FontIndexMeta[] }>('https://fonts.google.com/metadata/fonts', { responseType: 'json' }).then(r => r.familyMetadataList))
 
   const styleMap = {
@@ -141,7 +141,7 @@ export default defineFontProvider<GoogleFamilyOptions>()('google', async (provid
     listFonts() {
       return googleFonts.map(font => font.family)
     },
-    async resolveFont(fontFamily, options) {
+    async resolveFont(fontFamily, options: ResolveFontOptions<GoogleFamilyOptions>) {
       if (!googleFonts.some(font => font.family === fontFamily)) {
         return
       }

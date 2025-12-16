@@ -31,7 +31,7 @@ export interface GoogleiconsFamilyOptions {
   }
 }
 
-export default defineFontProvider<GoogleiconsFamilyOptions>()('googleicons', async (providerOptions: GoogleiconsOptions, ctx) => {
+export default defineFontProvider('googleicons', async (providerOptions: GoogleiconsOptions, ctx) => {
   const googleIcons = await ctx.storage.getItem('googleicons:meta.json', async () => {
     const data = await $fetch<string>(
       'https://fonts.google.com/metadata/icons?key=material_symbols&incomplete=true',
@@ -84,7 +84,7 @@ export default defineFontProvider<GoogleiconsFamilyOptions>()('googleicons', asy
     listFonts() {
       return googleIcons
     },
-    async resolveFont(fontFamily, options) {
+    async resolveFont(fontFamily, options: ResolveFontOptions<GoogleiconsFamilyOptions>) {
       if (!googleIcons.includes(fontFamily)) {
         return
       }
