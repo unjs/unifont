@@ -5,8 +5,6 @@ export default antfu().append({
   rules: {
     'antfu/no-top-level-await': 'off',
     'no-console': 'off',
-    'pnpm/json-enforce-catalog': 'off',
-    'pnpm/yaml-enforce-settings': 'off',
   },
 }, {
   rules: {
@@ -14,5 +12,7 @@ export default antfu().append({
       ImportDeclaration: 'never',
       ExportDeclaration: 'never',
     }],
+    'pnpm/json-enforce-catalog': 'off',
+    'pnpm/yaml-enforce-settings': 'off',
   },
 })
