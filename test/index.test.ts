@@ -107,6 +107,21 @@ describe('unifont', () => {
     await expect(() => unifont.resolveFont('test')).rejects.toThrow()
   })
 
+  it('infers provider options correctly', async () => {
+    const bunny = await createUnifont([providers.bunny(), providers.fontsource()])
+    const google = await createUnifont([providers.google()])
+
+    const _resolves = [
+      () => bunny.resolveFont('Poppins', {
+        options: {
+          // @ts-expect-error google options are not valid for bunny provider
+          google: {},
+        },
+      }),
+      () => google.resolveFont('Poppins', { options: { google: {} } }),
+    ]
+  })
+
   describe('listFonts', () => {
     it('works with no providers', async () => {
       const error = vi.spyOn(console, 'error').mockImplementation(() => {})
