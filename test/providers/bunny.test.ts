@@ -62,7 +62,7 @@ describe('bunny', () => {
   })
 
   it('filters subsets correctly', async () => {
-    const unifont = await createUnifont([providers.google()])
+    const unifont = await createUnifont([providers.bunny()])
 
     const { fonts: fonts0 } = await unifont.resolveFont('Roboto', {})
     expect(fonts0.length).toEqual(14)

@@ -5,7 +5,7 @@ import { extractFontFaceData } from '../css/parse'
 import { $fetch } from '../fetch'
 import { defineFontProvider, prepareWeights } from '../utils'
 
-interface ProviderOptions {
+export interface AdobeProviderOptions {
   id: string[] | string
 }
 
@@ -18,7 +18,7 @@ async function getAdobeFontMeta(id: string): Promise<AdobeFontKit> {
 
 const KIT_REFRESH_TIMEOUT = 5 * 60 * 1000
 
-export default defineFontProvider('adobe', async (options: ProviderOptions, ctx) => {
+export default defineFontProvider('adobe', async (options: AdobeProviderOptions, ctx) => {
   if (!options.id) {
     return
   }
