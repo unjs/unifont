@@ -265,11 +265,11 @@ const unifont = await createUnifont([
 ])
 
 const { fonts } = await unifont.resolveFont({
-  fontFamily: 'Poppins',
+  fontFamily: 'Material Symbols Outlined',
   provider: 'googleicons',
   options: {
     experimental: {
-      'Material Symbols Outlined': ['arrow_right', 'favorite', 'arrow_drop_down']
+      glyphs: ['arrow_right', 'favorite', 'arrow_drop_down']
     },
   },
 })
