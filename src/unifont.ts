@@ -7,20 +7,20 @@ export interface UnifontOptions {
   throwOnError?: boolean
 }
 
+type ExtractProviderFromName<T extends Provider[], U extends T[number]['_name']> = Extract<T[number], { _name: U }>
+
 type ExtractFamilyOptions<T extends Provider> = Exclude<
   Parameters<NonNullable<Awaited<ReturnType<T>>>['resolveFont']>[1]['options'],
   undefined
 >
-
 export interface Unifont<T extends Provider[]> {
   providers: T[number]['_name'][]
-  // TODO: provider generic
-  resolveFont: (options: Partial<{
-    [K in T[number] as K['_name']]?: ExtractFamilyOptions<K>;
-  }> & {
-    fontFamily: string
-    provider: T[number]['_name']
-  }) => Promise<ResolveFontResult>
+  resolveFont: <U extends T[number]['_name']>(
+    options: {
+      fontFamily: string
+      provider: U
+    } & Partial<ResolveFontOptions<ExtractFamilyOptions<ExtractProviderFromName<T, U>>>>,
+  ) => Promise<ResolveFontResult & { provider?: T[number]['_name'] }>
   listFonts: (options: { provider: T[number]['_name'] }) => Promise<string[] | undefined>
 }
 
