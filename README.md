@@ -177,16 +177,16 @@ const unifont = await createUnifont([
   providers.google(),
 ])
 
-const { fonts } = await unifont.resolveFont('Poppins', {
+const { fonts } = await unifont.resolveFont({
+  fontFamily: 'Poppins',
+  provider: 'google',
   options: {
-    google: {
-      experimental: {
-        variableAxis: {
-          slnt: [['-15', '0']],
-          CASL: [['0', '1']],
-          CRSV: ['1'],
-          MONO: [['0', '1']],
-        },
+    experimental: {
+      variableAxis: {
+        slnt: [['-15', '0']],
+        CASL: [['0', '1']],
+        CRSV: ['1'],
+        MONO: [['0', '1']],
       },
     },
   },
@@ -206,12 +206,12 @@ const unifont = await createUnifont([
   providers.google(),
 ])
 
-const { fonts } = await unifont.resolveFont('Poppins', {
+const { fonts } = await unifont.resolveFont({
+  fontFamily: 'Poppins',
+  provider: 'google',
   options: {
-    google: {
-      experimental: {
-        glyphs: ['Hello', 'World'],
-      },
+    experimental: {
+      glyphs: ['Hello', 'World'],
     },
   },
 })
@@ -264,12 +264,12 @@ const unifont = await createUnifont([
   providers.googleicons(),
 ])
 
-const { fonts } = await unifont.resolveFont('Poppins', {
+const { fonts } = await unifont.resolveFont({
+  fontFamily: 'Poppins',
+  provider: 'googleicons',
   options: {
-    googleicons: {
-      experimental: {
-        'Material Symbols Outlined': ['arrow_right', 'favorite', 'arrow_drop_down']
-      },
+    experimental: {
+      'Material Symbols Outlined': ['arrow_right', 'favorite', 'arrow_drop_down']
     },
   },
 })
@@ -453,12 +453,12 @@ const unifont = await createUnifont([
   providers.google(),
 ])
 
-const { fonts } = await unifont.resolveFont('Poppins', {
+const { fonts } = await unifont.resolveFont({
+  fontFamily: 'Poppins',
+  provider: 'google',
   options: {
-    google: {
-      experimental: {
-        glyphs: ['Hello', 'World']
-      }
+    experimental: {
+      glyphs: ['Hello', 'World']
     }
   },
 })
@@ -478,26 +478,11 @@ const unifont = await createUnifont([
   providers.google(),
 ])
 
-const { fonts } = await unifont.resolveFont('Poppins', {
+const { fonts } = await unifont.resolveFont({
+  fontFamily: 'Poppins',
+  provider: 'google',
   formats: ['woff2', 'woff2']
 })
-```
-
-##### Providers
-
-- Type: `string[]`
-
-By default it uses all the providers provided to `createUnifont()`. However you can restrict usage to only a subset:
-
-```js
-import { createUnifont, providers } from 'unifont'
-
-const unifont = await createUnifont([
-  providers.google(),
-  providers.fontsource(),
-])
-
-const { fonts } = await unifont.resolveFont('Poppins', {}, ['google'])
 ```
 
 #### `listFonts()`
