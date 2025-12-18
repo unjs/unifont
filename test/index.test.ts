@@ -127,13 +127,13 @@ describe('unifont', () => {
     const google = await createUnifont([providers.google()])
 
     const _resolves = [
-      () => bunny.resolveFont('Poppins', {
-        options: {
-          // @ts-expect-error google options are not valid for bunny provider
-          google: {},
-        },
+      () => bunny.resolveFont({
+        fontFamily: 'Poppins',
+        provider: 'bunny',
+        // @ts-expect-error google options are not valid for bunny provider
+        options: {},
       }),
-      () => google.resolveFont('Poppins', { options: { google: {} } }),
+      () => google.resolveFont({ fontFamily: 'Poppins', provider: 'google', options: {} }),
     ]
   })
 
@@ -214,7 +214,7 @@ describe('unifont', () => {
         setItem: vi.fn(),
       }
 
-      const getProvider = (name: string) =>
+      const getProvider = <TName extends string>(name: TName) =>
         defineFontProvider(name, async (_options, ctx) => {
           return {
             async resolveFont() {
@@ -231,8 +231,8 @@ describe('unifont', () => {
         getProvider('provider-B'),
       ], { storage })
 
-      await unifontA.resolveFont('Poppins')
-      await unifontB.resolveFont('Poppins')
+      await unifontA.resolveFont({ fontFamily: 'Poppins', provider: 'provider-A' })
+      await unifontB.resolveFont({ fontFamily: 'Poppins', provider: 'provider-B' })
 
       const providerACacheKey = storage.setItem.mock.calls.at(0)?.at(0) as string | undefined
       const providerBCacheKey = storage.setItem.mock.calls.at(1)?.at(0) as string | undefined
@@ -266,8 +266,8 @@ describe('unifont', () => {
         getProvider({ variant: 'B' }),
       ], { storage })
 
-      await unifontA.resolveFont('Poppins')
-      await unifontB.resolveFont('Poppins')
+      await unifontA.resolveFont({ fontFamily: 'Poppins', provider: 'optioned-provider' })
+      await unifontB.resolveFont({ fontFamily: 'Poppins', provider: 'optioned-provider' })
 
       const variantACacheKey = storage.setItem.mock.calls.at(0)?.at(0) as string | undefined
       const variantBCacheKey = storage.setItem.mock.calls.at(1)?.at(0) as string | undefined

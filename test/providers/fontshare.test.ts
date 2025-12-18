@@ -72,7 +72,9 @@ describe('fontshare', () => {
   describe('formats', () => {
     it('woff2', async () => {
       const unifont = await createUnifont([providers.fontshare()])
-      const { fonts } = await unifont.resolveFont('Tanker', {
+      const { fonts } = await unifont.resolveFont({
+        fontFamily: 'Tanker',
+        provider: 'fontshare',
         formats: ['woff2'],
         styles: ['normal'],
         subsets: ['latin'],
@@ -84,7 +86,9 @@ describe('fontshare', () => {
 
     it('woff', async () => {
       const unifont = await createUnifont([providers.fontshare()])
-      const { fonts } = await unifont.resolveFont('Tanker', {
+      const { fonts } = await unifont.resolveFont({
+        fontFamily: 'Tanker',
+        provider: 'fontshare',
         formats: ['woff'],
         styles: ['normal'],
         subsets: ['latin'],
@@ -96,7 +100,9 @@ describe('fontshare', () => {
 
     it('ttf', async () => {
       const unifont = await createUnifont([providers.fontshare()])
-      const { fonts } = await unifont.resolveFont('Tanker', {
+      const { fonts } = await unifont.resolveFont({
+        fontFamily: 'Tanker',
+        provider: 'fontshare',
         formats: ['ttf'],
         styles: ['normal'],
         subsets: ['latin'],
@@ -108,7 +114,9 @@ describe('fontshare', () => {
 
     it('eot', async () => {
       const unifont = await createUnifont([providers.fontshare()])
-      const { fonts } = await unifont.resolveFont('Tanker', {
+      const { fonts } = await unifont.resolveFont({
+        fontFamily: 'Tanker',
+        provider: 'fontshare',
         formats: ['eot'],
         styles: ['normal'],
         subsets: ['latin'],
@@ -119,7 +127,9 @@ describe('fontshare', () => {
 
     it('otf', async () => {
       const unifont = await createUnifont([providers.fontshare()])
-      const { fonts } = await unifont.resolveFont('Tanker', {
+      const { fonts } = await unifont.resolveFont({
+        fontFamily: 'Tanker',
+        provider: 'fontshare',
         formats: ['otf'],
         styles: ['normal'],
         subsets: ['latin'],
@@ -130,7 +140,9 @@ describe('fontshare', () => {
 
     it('several', async () => {
       const unifont = await createUnifont([providers.fontshare()])
-      const { fonts } = await unifont.resolveFont('Tanker', {
+      const { fonts } = await unifont.resolveFont({
+        fontFamily: 'Tanker',
+        provider: 'fontshare',
         formats: ['woff2', 'woff', 'ttf'],
         styles: ['normal'],
         subsets: ['latin'],

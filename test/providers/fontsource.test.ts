@@ -453,7 +453,9 @@ describe('fontsource', () => {
   describe('formats', () => {
     it('woff2', async () => {
       const unifont = await createUnifont([providers.fontsource()])
-      const { fonts } = await unifont.resolveFont('Roboto', {
+      const { fonts } = await unifont.resolveFont({
+        fontFamily: 'Roboto',
+        provider: 'fontsource',
         formats: ['woff2'],
         styles: ['normal'],
         subsets: ['latin'],
@@ -465,7 +467,9 @@ describe('fontsource', () => {
 
     it('woff', async () => {
       const unifont = await createUnifont([providers.fontsource()])
-      const { fonts } = await unifont.resolveFont('Roboto', {
+      const { fonts } = await unifont.resolveFont({
+        fontFamily: 'Roboto',
+        provider: 'fontsource',
         formats: ['woff'],
         styles: ['normal'],
         subsets: ['latin'],
@@ -477,7 +481,9 @@ describe('fontsource', () => {
 
     it('ttf', async () => {
       const unifont = await createUnifont([providers.fontsource()])
-      const { fonts } = await unifont.resolveFont('Roboto', {
+      const { fonts } = await unifont.resolveFont({
+        fontFamily: 'Roboto',
+        provider: 'fontsource',
         formats: ['ttf'],
         styles: ['normal'],
         subsets: ['latin'],
@@ -489,7 +495,9 @@ describe('fontsource', () => {
 
     it('eot', async () => {
       const unifont = await createUnifont([providers.fontsource()])
-      const { fonts } = await unifont.resolveFont('Roboto', {
+      const { fonts } = await unifont.resolveFont({
+        fontFamily: 'Roboto',
+        provider: 'fontsource',
         formats: ['eot'],
         styles: ['normal'],
         subsets: ['latin'],
@@ -500,7 +508,9 @@ describe('fontsource', () => {
 
     it('otf', async () => {
       const unifont = await createUnifont([providers.fontsource()])
-      const { fonts } = await unifont.resolveFont('Roboto', {
+      const { fonts } = await unifont.resolveFont({
+        fontFamily: 'Roboto',
+        provider: 'fontsource',
         formats: ['otf'],
         styles: ['normal'],
         subsets: ['latin'],
@@ -511,7 +521,9 @@ describe('fontsource', () => {
 
     it('several', async () => {
       const unifont = await createUnifont([providers.fontsource()])
-      const { fonts } = await unifont.resolveFont('Roboto', {
+      const { fonts } = await unifont.resolveFont({
+        fontFamily: 'Roboto',
+        provider: 'fontsource',
         formats: ['woff2', 'woff', 'ttf'],
         styles: ['normal'],
         subsets: ['latin'],

@@ -85,17 +85,17 @@ describe('google', () => {
   it('supports family variable axes', async () => {
     const unifont = await createUnifont([providers.google()])
 
-    const { fonts } = await unifont.resolveFont('Recursive', {
+    const { fonts } = await unifont.resolveFont({
+      fontFamily: 'Recursive',
+      provider: 'google',
       weights: ['300 1000'],
       options: {
-        google: {
-          experimental: {
-            variableAxis: {
-              slnt: [['-15', '0']],
-              CASL: [['0', '1']],
-              CRSV: ['1'],
-              MONO: [['0', '1']],
-            },
+        experimental: {
+          variableAxis: {
+            slnt: [['-15', '0']],
+            CASL: [['0', '1']],
+            CRSV: ['1'],
+            MONO: [['0', '1']],
           },
         },
       },
@@ -186,15 +186,17 @@ describe('google', () => {
   it('respects family glyphs option and resolves optimized font', async () => {
     const unifont = await createUnifont([providers.google()])
 
-    const { fonts } = await unifont.resolveFont('Poppins', {
+    const { fonts } = await unifont.resolveFont({
+      fontFamily: 'Poppins',
+      provider: 'google',
       styles: ['normal'],
       weights: ['400'],
       options: {
-        google: {
-          experimental: {
-            glyphs: ['Hello', 'World'],
-          },
+
+        experimental: {
+          glyphs: ['Hello', 'World'],
         },
+
       },
     })
 
@@ -229,7 +231,11 @@ describe('google', () => {
   it('filters subsets correctly', async () => {
     const unifont = await createUnifont([providers.google()])
 
-    const { fonts } = await unifont.resolveFont('Roboto', { subsets: ['latin'] })
+    const { fonts } = await unifont.resolveFont({
+      fontFamily: 'Roboto',
+      provider: 'google',
+      subsets: ['latin'],
+    })
     expect(fonts.length).toEqual(2)
   })
 
@@ -246,7 +252,9 @@ describe('google', () => {
   describe('formats', () => {
     it('woff2', async () => {
       const unifont = await createUnifont([providers.google()])
-      const { fonts } = await unifont.resolveFont('Roboto', {
+      const { fonts } = await unifont.resolveFont({
+        fontFamily: 'Roboto',
+        provider: 'google',
         formats: ['woff2'],
         styles: ['normal'],
         subsets: ['latin'],
@@ -258,7 +266,9 @@ describe('google', () => {
 
     it('woff', async () => {
       const unifont = await createUnifont([providers.google()])
-      const { fonts } = await unifont.resolveFont('Roboto', {
+      const { fonts } = await unifont.resolveFont({
+        fontFamily: 'Roboto',
+        provider: 'google',
         formats: ['woff'],
         styles: ['normal'],
         subsets: ['latin'],
@@ -270,7 +280,9 @@ describe('google', () => {
 
     it('ttf', async () => {
       const unifont = await createUnifont([providers.google()])
-      const { fonts } = await unifont.resolveFont('Roboto', {
+      const { fonts } = await unifont.resolveFont({
+        fontFamily: 'Roboto',
+        provider: 'google',
         formats: ['ttf'],
         styles: ['normal'],
         subsets: ['latin'],
@@ -282,7 +294,9 @@ describe('google', () => {
 
     it('eot', async () => {
       const unifont = await createUnifont([providers.google()])
-      const { fonts } = await unifont.resolveFont('Roboto', {
+      const { fonts } = await unifont.resolveFont({
+        fontFamily: 'Roboto',
+        provider: 'google',
         formats: ['eot'],
         styles: ['normal'],
         subsets: ['latin'],
@@ -294,7 +308,9 @@ describe('google', () => {
 
     it('otf', async () => {
       const unifont = await createUnifont([providers.google()])
-      const { fonts } = await unifont.resolveFont('Roboto', {
+      const { fonts } = await unifont.resolveFont({
+        fontFamily: 'Roboto',
+        provider: 'google',
         formats: ['otf'],
         styles: ['normal'],
         subsets: ['latin'],
@@ -305,7 +321,9 @@ describe('google', () => {
 
     it('several', async () => {
       const unifont = await createUnifont([providers.google()])
-      const { fonts } = await unifont.resolveFont('Roboto', {
+      const { fonts } = await unifont.resolveFont({
+        fontFamily: 'Roboto',
+        provider: 'google',
         formats: ['woff2', 'woff', 'ttf', 'eot'],
         styles: ['normal'],
         subsets: ['latin'],

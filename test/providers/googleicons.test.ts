@@ -92,16 +92,18 @@ describe('googleicons', () => {
   it('respects family glyphs option and resolves optimized Material Symbols', async () => {
     const unifont = await createUnifont([providers.googleicons()])
 
-    const { fonts } = await unifont.resolveFont('Material Symbols Outlined', {
+    const { fonts } = await unifont.resolveFont({
+      fontFamily: 'Material Symbols Outlined',
+      provider: 'googleicons',
       styles: ['normal'],
       weights: ['400'],
       subsets: [],
       options: {
-        googleicons: {
-          experimental: {
-            glyphs: ['arrow_right', 'favorite', 'arrow_drop_down'],
-          },
+
+        experimental: {
+          glyphs: ['arrow_right', 'favorite', 'arrow_drop_down'],
         },
+
       },
     })
 
@@ -132,7 +134,9 @@ describe('googleicons', () => {
   describe('formats', () => {
     it('woff2', async () => {
       const unifont = await createUnifont([providers.googleicons()])
-      const { fonts } = await unifont.resolveFont('Material Symbols Outlined', {
+      const { fonts } = await unifont.resolveFont({
+        fontFamily: 'Material Symbols Outlined',
+        provider: 'googleicons',
         formats: ['woff2'],
         styles: ['normal'],
         subsets: ['latin'],
@@ -144,7 +148,9 @@ describe('googleicons', () => {
 
     it('woff', async () => {
       const unifont = await createUnifont([providers.googleicons()])
-      const { fonts } = await unifont.resolveFont('Material Symbols Outlined', {
+      const { fonts } = await unifont.resolveFont({
+        fontFamily: 'Material Symbols Outlined',
+        provider: 'googleicons',
         formats: ['woff'],
         styles: ['normal'],
         subsets: ['latin'],
@@ -156,7 +162,9 @@ describe('googleicons', () => {
 
     it('ttf', async () => {
       const unifont = await createUnifont([providers.googleicons()])
-      const { fonts } = await unifont.resolveFont('Material Symbols Outlined', {
+      const { fonts } = await unifont.resolveFont({
+        fontFamily: 'Material Symbols Outlined',
+        provider: 'googleicons',
         formats: ['ttf'],
         styles: ['normal'],
         subsets: ['latin'],
@@ -168,7 +176,9 @@ describe('googleicons', () => {
 
     it('eot', async () => {
       const unifont = await createUnifont([providers.googleicons()])
-      const { fonts } = await unifont.resolveFont('Material Symbols Outlined', {
+      const { fonts } = await unifont.resolveFont({
+        fontFamily: 'Material Symbols Outlined',
+        provider: 'googleicons',
         formats: ['eot'],
         styles: ['normal'],
         subsets: ['latin'],
@@ -180,7 +190,9 @@ describe('googleicons', () => {
 
     it('otf', async () => {
       const unifont = await createUnifont([providers.googleicons()])
-      const { fonts } = await unifont.resolveFont('Material Symbols Outlined', {
+      const { fonts } = await unifont.resolveFont({
+        fontFamily: 'Material Symbols Outlined',
+        provider: 'googleicons',
         formats: ['otf'],
         styles: ['normal'],
         subsets: ['latin'],
@@ -191,7 +203,9 @@ describe('googleicons', () => {
 
     it('several', async () => {
       const unifont = await createUnifont([providers.googleicons()])
-      const { fonts } = await unifont.resolveFont('Material Symbols Outlined', {
+      const { fonts } = await unifont.resolveFont({
+        fontFamily: 'Material Symbols Outlined',
+        provider: 'googleicons',
         formats: ['woff2', 'woff', 'ttf', 'eot'],
         styles: ['normal'],
         subsets: ['latin'],
