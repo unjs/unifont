@@ -12,5 +12,7 @@ export default antfu().append({
       ImportDeclaration: 'never',
       ExportDeclaration: 'never',
     }],
+    'pnpm/json-enforce-catalog': 'off',
+    'pnpm/yaml-enforce-settings': 'off',
   },
 })
