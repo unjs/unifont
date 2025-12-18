@@ -1,3 +1,5 @@
+import type { formatMap } from './utils'
+
 type Awaitable<T> = T | Promise<T>
 
 export interface ProviderContext {
@@ -12,11 +14,15 @@ export interface ProviderContext {
 
 export type FontStyles = 'normal' | 'italic' | 'oblique'
 
-export interface ResolveFontOptions {
+export type FontFormat = keyof typeof formatMap
+
+export interface ResolveFontOptions<FamilyOptions extends Record<string, any> | never = never> {
   weights: string[]
   styles: FontStyles[]
   // TODO: improve support and support unicode range
   subsets: string[]
+  formats: FontFormat[]
+  options?: [FamilyOptions] extends [never] ? undefined : FamilyOptions
 }
 
 export interface RemoteFontSource {
@@ -77,23 +83,29 @@ export interface ResolveFontResult {
   fonts: FontFaceData[]
 }
 
-export interface InitializedProvider {
-  resolveFont: (family: string, options: ResolveFontOptions) => Awaitable<ResolveFontResult | undefined>
+export interface InitializedProvider<
+  FamilyOptions extends Record<string, any> = never,
+> {
+  resolveFont: (
+    family: string,
+    options: ResolveFontOptions<FamilyOptions>,
+  ) => Awaitable<ResolveFontResult | undefined>
   listFonts?: (() => Awaitable<string[] | undefined>) | undefined
 }
 
-export interface ProviderDefinition<T = unknown> {
-  (options: T, ctx: ProviderContext): Awaitable<InitializedProvider | undefined>
+export interface ProviderDefinition<Options extends Record<string, any> = never, FamilyOptions extends Record<string, any> = never> {
+  (options: Options, ctx: ProviderContext): Awaitable<InitializedProvider<FamilyOptions> | undefined>
 }
 
-export interface Provider<TName extends string = string> {
-  _name: TName
-  (ctx: ProviderContext): Awaitable<InitializedProvider | undefined>
+export interface Provider<Name extends string = string, FamilyOptions extends Record<string, any> = never> {
+  _name: Name
+  _options: unknown
+  (ctx: ProviderContext): Awaitable<InitializedProvider<FamilyOptions> | undefined>
 }
 
-export type ProviderFactory<TName extends string, TOptions extends Record<string, any> = never>
-  = [TOptions] extends [never]
-    ? () => Provider<TName>
-    : Partial<TOptions> extends TOptions
-      ? (options?: TOptions) => Provider<TName>
-      : (options: TOptions) => Provider<TName>
+export type ProviderFactory<Name extends string, Options extends Record<string, any> = never, FamilyOptions extends Record<string, any> = never>
+  = [Options] extends [never]
+    ? () => Provider<Name, FamilyOptions>
+    : Partial<Options> extends Options
+      ? (options?: Options) => Provider<Name, FamilyOptions>
+      : (options: Options) => Provider<Name, FamilyOptions>

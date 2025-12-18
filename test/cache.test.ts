@@ -45,9 +45,77 @@ describe('cache storage', () => {
       }
     })
     const unifont = await createUnifont([provider()], { storage: customStorage })
-    await unifont.resolveFont({ fontFamily: 'Poppins', provider: 'custom-storage' })
-    expect(customStorage.getItem).toHaveBeenCalledWith('key')
-    expect(customStorage.setItem).toHaveBeenCalledWith('key', expect.objectContaining({ data: 'value' }))
-    expect(customStorage.setItem).toHaveBeenCalledWith('another-key', expect.objectContaining({ data: 'value' }))
+    await unifont.resolveFont('Poppins')
+
+    expect(customStorage.getItem).toHaveBeenCalledWith(expect.stringMatching(/key$/))
+    expect(customStorage.setItem).toHaveBeenCalledWith(
+      expect.stringMatching(/key$/),
+      expect.objectContaining({ data: 'value' }),
+    )
+    expect(customStorage.setItem).toHaveBeenCalledWith(
+      expect.stringMatching(/another-key$/),
+      expect.objectContaining({ data: 'value' }),
+    )
+  })
+
+  describe('namespace option', () => {
+    it('preserves string fragments in cache key', async () => {
+      const storage = {
+        getItem: vi.fn(),
+        setItem: vi.fn(),
+      }
+      const cached = createAsyncStorage(storage, {
+        cachedBy: ['provider-name', { a: 1 }, 'variant-a'],
+      })
+      await cached.setItem('test-key', 'data')
+
+      const cacheKey = storage.setItem.mock.calls.at(0)?.at(0) as string | undefined
+      expect(cacheKey).toContain('provider-name')
+      expect(cacheKey).toContain('variant-a')
+    })
+
+    it('generates different keys for different object fragments', async () => {
+      const storage = {
+        getItem: vi.fn(),
+        setItem: vi.fn(),
+      }
+
+      const cachedA = createAsyncStorage(storage, {
+        cachedBy: [{ variant: 'A' }],
+      })
+      const cachedB = createAsyncStorage(storage, {
+        cachedBy: [{ variant: 'B' }],
+      })
+      await cachedA.setItem('key', 'data')
+      await cachedB.setItem('key', 'data')
+
+      const keyA = storage.setItem.mock.calls.at(0)?.at(0) as string | undefined
+      const keyB = storage.setItem.mock.calls.at(1)?.at(0) as string | undefined
+
+      expect(storage.setItem).toHaveBeenCalledTimes(2)
+      expect(keyA).toBeDefined()
+      expect(keyB).toBeDefined()
+      expect(keyA).not.toBe(keyB)
+    })
+
+    it.each([
+      { input: 'provider/name' },
+      { input: 'provider@v2' },
+      { input: 'provider name' },
+      { input: 'provider:name' },
+    ])('sanitizes "$input" in fragments', async ({ input }) => {
+      const storage = {
+        getItem: vi.fn(),
+        setItem: vi.fn(),
+      }
+      const cached = createAsyncStorage(storage, {
+        cachedBy: [input],
+      })
+
+      await cached.setItem('test-key', 'data')
+
+      const cacheKey = storage.setItem.mock.calls.at(0)?.at(0) as string | undefined
+      expect(cacheKey).not.toContain(input)
+    })
   })
 })

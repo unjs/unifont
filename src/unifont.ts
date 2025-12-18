@@ -1,5 +1,5 @@
 import type { Storage } from './cache'
-import type { InitializedProvider, Provider, ResolveFontOptions, ResolveFontResult } from './types'
+import type { InitializedProvider, Provider, ProviderContext, ResolveFontOptions, ResolveFontResult } from './types'
 import { createAsyncStorage, memoryStorage } from './cache'
 
 export interface UnifontOptions {
@@ -7,9 +7,17 @@ export interface UnifontOptions {
   throwOnError?: boolean
 }
 
+type ExtractFamilyOptions<T extends Provider> = Exclude<
+  Parameters<NonNullable<Awaited<ReturnType<T>>>['resolveFont']>[1]['options'],
+  undefined
+>
+
 export interface Unifont<T extends Provider[]> {
   providers: T[number]['_name'][]
-  resolveFont: (options: Partial<ResolveFontOptions> & {
+  // TODO: provider generic
+  resolveFont: (options: Partial<{
+    [K in T[number] as K['_name']]?: ExtractFamilyOptions<K>;
+  }> & {
     fontFamily: string
     provider: T[number]['_name']
   }) => Promise<ResolveFontResult>
@@ -28,13 +36,13 @@ export const defaultResolveOptions: ResolveFontOptions = {
     'latin-ext',
     'latin',
   ],
+  formats: ['woff2'],
 }
 
 export async function createUnifont<T extends [Provider, ...Provider[]]>(providers: T, unifontOptions?: UnifontOptions): Promise<Unifont<T>> {
   const stack: Record<string, InitializedProvider> = {}
-  const unifontContext = {
-    storage: createAsyncStorage(unifontOptions?.storage ?? memoryStorage()),
-  }
+
+  const storage = unifontOptions?.storage ?? memoryStorage()
 
   // preserve provider order
   for (const provider of providers) {
@@ -44,8 +52,13 @@ export async function createUnifont<T extends [Provider, ...Provider[]]>(provide
 
   // initialize all providers in parallel
   await Promise.all(providers.map(async (provider) => {
+    const context: ProviderContext = {
+      storage: createAsyncStorage(storage, {
+        cachedBy: [provider._name, provider._options],
+      }),
+    }
     try {
-      const initializedProvider = await provider(unifontContext)
+      const initializedProvider = await provider(context)
       if (initializedProvider)
         stack[provider._name] = initializedProvider
     }

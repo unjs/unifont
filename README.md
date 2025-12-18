@@ -119,7 +119,7 @@ providers.google()
 
 ##### `experimental.variableAxis`
 
-- Type: `{ [key: string]: Partial<Record<VariableAxis, ([string, string] | string)[]>> }`
+- Type: `{ [fontFamily: string]: Partial<Record<VariableAxis, ([string, string] | string)[]>> }`
 
 Allows setting variable axis configuration on a per-font basis:
 
@@ -140,6 +140,8 @@ providers.google({
 })
 ```
 
+Overriden by the `experimental.variableAxis` family option.
+
 ##### `experimental.glyphs`
 
 - Type: `{ [fontFamily: string]: string[] }`
@@ -151,8 +153,65 @@ import { providers } from 'unifont'
 
 providers.google({
   experimental: {
-    variableAxis: {
+    glyphs: {
       Poppins: ['Hello', 'World']
+    },
+  },
+})
+```
+
+Overriden by the `experimental.glyphs` family option.
+
+#### Family options
+
+##### `experimental.variableAxis`
+
+- Type: `Partial<Record<VariableAxis, ([string, string] | string)[]>>`
+
+Allows setting variable axis configuration on a per-font basis:
+
+```js
+import { createUnifont, providers } from 'unifont'
+
+const unifont = await createUnifont([
+  providers.google(),
+])
+
+const { fonts } = await unifont.resolveFont('Poppins', {
+  options: {
+    google: {
+      experimental: {
+        variableAxis: {
+          slnt: [['-15', '0']],
+          CASL: [['0', '1']],
+          CRSV: ['1'],
+          MONO: [['0', '1']],
+        },
+      },
+    },
+  },
+})
+```
+
+##### `experimental.glyphs`
+
+- Type: `string[]`
+
+Allows specifying a list of glyphs to be included in the font for each font family. This can reduce the size of the font file:
+
+```js
+import { createUnifont, providers } from 'unifont'
+
+const unifont = await createUnifont([
+  providers.google(),
+])
+
+const { fonts } = await unifont.resolveFont('Poppins', {
+  options: {
+    google: {
+      experimental: {
+        glyphs: ['Hello', 'World'],
+      },
     },
   },
 })
@@ -181,8 +240,36 @@ import { providers } from 'unifont'
 
 providers.googleicons({
   experimental: {
-    variableAxis: {
-      Poppins: ['Hello', 'World']
+    glyphs: {
+      'Material Symbols Outlined': ['arrow_right', 'favorite', 'arrow_drop_down']
+    },
+  },
+})
+```
+
+Only available when resolving the new `Material Symbols` icons. Overriden by the `experimental.glyphs` family option.
+
+#### Family options
+
+##### `experimental.glyphs`
+
+- Type: `string[]`
+
+Allows specifying a list of glyphs to be included in the font for each font family. This can reduce the size of the font file:
+
+```js
+import { createUnifont, providers } from 'unifont'
+
+const unifont = await createUnifont([
+  providers.googleicons(),
+])
+
+const { fonts } = await unifont.resolveFont('Poppins', {
+  options: {
+    googleicons: {
+      experimental: {
+        'Material Symbols Outlined': ['arrow_right', 'favorite', 'arrow_drop_down']
+      },
     },
   },
 })
@@ -353,6 +440,66 @@ const { fonts } = await unifont.resolveFont({
 })
 ```
 
+###### `options`
+
+- Type: `{ [key: string]?: Record<string, any> }`
+
+A provider can define options to provide on a font family basis. Types will be automatically inferred:
+
+```js
+import { createUnifont, providers } from 'unifont'
+
+const unifont = await createUnifont([
+  providers.google(),
+])
+
+const { fonts } = await unifont.resolveFont('Poppins', {
+  options: {
+    google: {
+      experimental: {
+        glyphs: ['Hello', 'World']
+      }
+    }
+  },
+})
+```
+
+###### `formats`
+
+- Type: `('woff2' | 'woff' | 'otf' | 'ttf' | 'eot')[]`
+- Default: `['woff2']`
+
+Specifies what font formats to retrieve:
+
+```js
+import { createUnifont, providers } from 'unifont'
+
+const unifont = await createUnifont([
+  providers.google(),
+])
+
+const { fonts } = await unifont.resolveFont('Poppins', {
+  formats: ['woff2', 'woff2']
+})
+```
+
+##### Providers
+
+- Type: `string[]`
+
+By default it uses all the providers provided to `createUnifont()`. However you can restrict usage to only a subset:
+
+```js
+import { createUnifont, providers } from 'unifont'
+
+const unifont = await createUnifont([
+  providers.google(),
+  providers.fontsource(),
+])
+
+const { fonts } = await unifont.resolveFont('Poppins', {}, ['google'])
+```
+
 #### `listFonts()`
 
 - Type: `(options: { provider: string }) => Promise<string[] | undefined>`
@@ -478,6 +625,29 @@ export const myProvider = defineFontProvider('my-provider', async (options, ctx)
           return [/* ... */]
         })
       }
+    }
+  }
+})
+```
+
+If you use family options, you can override the type of `options` and it will be inferred:
+
+```ts
+import type { ResolveFontOptions } from 'unifont'
+import { hash } from 'ohash'
+import { defineFontProvider } from 'unifont'
+
+export interface MyProviderFamilyOptions {
+  foo?: string
+}
+
+export const myProvider = defineFontProvider('my-provider', async (options, ctx) => {
+  // ...
+
+  return {
+    // ...
+    async resolveFont(fontFamily, options: ResolveFontOptions<MyProviderFamilyOptions>) {
+      // ...
     }
   }
 })

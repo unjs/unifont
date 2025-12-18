@@ -6,4 +6,13 @@ export default antfu().append({
     'antfu/no-top-level-await': 'off',
     'no-console': 'off',
   },
+}, {
+  rules: {
+    '@stylistic/object-curly-newline': ['error', {
+      ImportDeclaration: 'never',
+      ExportDeclaration: 'never',
+    }],
+    'pnpm/json-enforce-catalog': 'off',
+    'pnpm/yaml-enforce-settings': 'off',
+  },
 })

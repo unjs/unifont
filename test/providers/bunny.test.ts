@@ -10,14 +10,13 @@ describe('bunny', () => {
     expect(fonts).toMatchInlineSnapshot(`
       [
         {
+          "meta": {
+            "subset": "latin",
+          },
           "src": [
             {
               "format": "woff2",
               "url": "https://fonts.bunny.net/abel/files/abel-latin-400-normal.woff2",
-            },
-            {
-              "format": "woff",
-              "url": "https://fonts.bunny.net/abel/files/abel-latin-400-normal.woff",
             },
           ],
           "style": "normal",
@@ -61,6 +60,89 @@ describe('bunny', () => {
       provider: 'bunny',
       weights: ['400 1100'],
     })
-    expect(fonts.length).toBe(6)
+    expect(fonts.length).toBe(4)
+  })
+
+  it('filters subsets correctly', async () => {
+    const unifont = await createUnifont([providers.bunny()])
+
+    const { fonts: fonts0 } = await unifont.resolveFont('Roboto', {})
+    expect(fonts0.length).toEqual(14)
+
+    const { fonts: fonts1 } = await unifont.resolveFont('Roboto', {
+      subsets: ['latin'],
+    })
+    expect(fonts1.length).toEqual(2)
+  })
+
+  describe('formats', () => {
+    it('woff2', async () => {
+      const unifont = await createUnifont([providers.bunny()])
+      const { fonts } = await unifont.resolveFont('Roboto', {
+        formats: ['woff2'],
+        styles: ['normal'],
+        subsets: ['latin'],
+        weights: ['400'],
+      })
+      expect(fonts.length).toBe(1)
+      expect(Array.from(new Set(fonts.flatMap(font => font.src.map(source => 'name' in source ? source.name : source.format))))).toStrictEqual(['woff2'])
+    })
+
+    it('woff', async () => {
+      const unifont = await createUnifont([providers.bunny()])
+      const { fonts } = await unifont.resolveFont('Roboto', {
+        formats: ['woff'],
+        styles: ['normal'],
+        subsets: ['latin'],
+        weights: ['400'],
+      })
+      expect(fonts.length).toBe(1)
+      expect(Array.from(new Set(fonts.flatMap(font => font.src.map(source => 'name' in source ? source.name : source.format))))).toStrictEqual(['woff'])
+    })
+
+    it('ttf', async () => {
+      const unifont = await createUnifont([providers.bunny()])
+      const { fonts } = await unifont.resolveFont('Roboto', {
+        formats: ['ttf'],
+        styles: ['normal'],
+        subsets: ['latin'],
+        weights: ['400'],
+      })
+      expect(fonts.length).toBe(0)
+    })
+
+    it('eot', async () => {
+      const unifont = await createUnifont([providers.bunny()])
+      const { fonts } = await unifont.resolveFont('Roboto', {
+        formats: ['eot'],
+        styles: ['normal'],
+        subsets: ['latin'],
+        weights: ['400'],
+      })
+      expect(fonts.length).toBe(0)
+    })
+
+    it('otf', async () => {
+      const unifont = await createUnifont([providers.bunny()])
+      const { fonts } = await unifont.resolveFont('Roboto', {
+        formats: ['otf'],
+        styles: ['normal'],
+        subsets: ['latin'],
+        weights: ['400'],
+      })
+      expect(fonts.length).toBe(0)
+    })
+
+    it('several', async () => {
+      const unifont = await createUnifont([providers.bunny()])
+      const { fonts } = await unifont.resolveFont('Roboto', {
+        formats: ['woff2', 'woff'],
+        styles: ['normal'],
+        subsets: ['latin'],
+        weights: ['400'],
+      })
+      expect(fonts.length).toBe(1)
+      expect(Array.from(new Set(fonts.flatMap(font => font.src.map(source => 'name' in source ? source.name : source.format))))).toStrictEqual(['woff2', 'woff'])
+    })
   })
 })

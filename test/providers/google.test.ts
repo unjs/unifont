@@ -1,7 +1,6 @@
 import type { ResolveFontOptions } from '../../src'
 import { describe, expect, it } from 'vitest'
 import { createUnifont, providers } from '../../src'
-import { splitCssIntoSubsets } from '../../src/providers/google'
 import { getOptimizerIdentityFromUrl, groupBy, pickUniqueBy } from '../utils'
 
 describe('google', () => {
@@ -17,7 +16,7 @@ describe('google', () => {
 
     const { fonts } = await unifont.resolveFont({ fontFamily: 'Poppins', provider: 'google' })
 
-    expect(fonts).toHaveLength(6)
+    expect(fonts).toHaveLength(4)
     expect(fonts[0]?.meta).toMatchInlineSnapshot(`
       {
         "priority": 0,
@@ -41,26 +40,24 @@ describe('google', () => {
     const resolvedStyles = pickUniqueBy(fonts, fnt => fnt.style)
     const resolvedWeights = pickUniqueBy(fonts, fnt => String(fnt.weight))
 
-    expect(fonts).toHaveLength(3)
+    expect(fonts).toHaveLength(2)
     expect(resolvedStyles).toMatchObject(styles)
     expect(resolvedWeights).toMatchObject(weights)
   })
 
-  it('supports variable axes', async () => {
-    const unifont = await createUnifont([
-      providers.google({
-        experimental: {
-          variableAxis: {
-            Recursive: {
-              slnt: [['-15', '0']],
-              CASL: [['0', '1']],
-              CRSV: ['1'],
-              MONO: [['0', '1']],
-            },
+  it('supports provider variable axes', async () => {
+    const unifont = await createUnifont([providers.google({
+      experimental: {
+        variableAxis: {
+          Recursive: {
+            slnt: [['-15', '0']],
+            CASL: [['0', '1']],
+            CRSV: ['1'],
+            MONO: [['0', '1']],
           },
         },
-      }),
-    ])
+      },
+    })])
 
     const { fonts } = await unifont.resolveFont({
       fontFamily: 'Recursive',
@@ -72,22 +69,50 @@ describe('google', () => {
     const resolvedWeights = pickUniqueBy(fonts, fnt => String(fnt.weight))
     const resolvedPriorities = pickUniqueBy(fonts, fnt => fnt.meta?.priority)
 
-    const styles = [
-      'oblique 0deg 15deg',
-      'normal',
-    ] as ResolveFontOptions['styles']
+    const styles = ['oblique 0deg 15deg']
 
     // Variable wght and separate weights from 300 to 1000
-    const weights = [
-      '300,1000',
-      ...[...Array.from({ length: 7 }).keys()].map(i =>
-        String(i * 100 + 300),
-      ),
-    ]
+    const weights = ['300,1000']
 
-    const priorities = [0, 1]
+    const priorities = [0]
 
-    expect(fonts).toHaveLength(11)
+    expect(fonts).toHaveLength(4)
+    expect(resolvedStyles).toMatchObject(styles)
+    expect(resolvedWeights).toMatchObject(weights)
+    expect(resolvedPriorities).toMatchObject(priorities)
+  })
+
+  it('supports family variable axes', async () => {
+    const unifont = await createUnifont([providers.google()])
+
+    const { fonts } = await unifont.resolveFont('Recursive', {
+      weights: ['300 1000'],
+      options: {
+        google: {
+          experimental: {
+            variableAxis: {
+              slnt: [['-15', '0']],
+              CASL: [['0', '1']],
+              CRSV: ['1'],
+              MONO: [['0', '1']],
+            },
+          },
+        },
+      },
+    })
+
+    const resolvedStyles = pickUniqueBy(fonts, fnt => fnt.style)
+    const resolvedWeights = pickUniqueBy(fonts, fnt => String(fnt.weight))
+    const resolvedPriorities = pickUniqueBy(fonts, fnt => fnt.meta?.priority)
+
+    const styles = ['oblique 0deg 15deg']
+
+    // Variable wght and separate weights from 300 to 1000
+    const weights = ['300,1000']
+
+    const priorities = [0]
+
+    expect(fonts).toHaveLength(4)
     expect(resolvedStyles).toMatchObject(styles)
     expect(resolvedWeights).toMatchObject(weights)
     expect(resolvedPriorities).toMatchObject(priorities)
@@ -107,12 +132,14 @@ describe('google', () => {
     expect(names!.length > 0).toEqual(true)
   })
 
-  it('respects glyphs option and resolves optimized font', async () => {
-    const unifont = await createUnifont([
-      providers.google({
-        experimental: { glyphs: { Poppins: ['Hello', 'World'] } },
-      }),
-    ])
+  it('respects provider glyphs option and resolves optimized font', async () => {
+    const unifont = await createUnifont([providers.google({
+      experimental: {
+        glyphs: {
+          Poppings: ['Hello', 'World'],
+        },
+      },
+    })])
 
     const { fonts } = await unifont.resolveFont({
       fontFamily: 'Poppins',
@@ -136,15 +163,56 @@ describe('google', () => {
 
     expect(identifiersByFormat).toMatchInlineSnapshot(`
       {
-        "woff": [
+        "woff2": [
           {
-            "format": "woff",
+            "format": "woff2",
             "identifier": {
-              "kit": "pxiEyp8kv8JHgFVrFJPMcBMSdJLnJzs",
-              "skey": "87759fb096548f6d",
+              "kit": "",
+              "skey": "",
+            },
+          },
+          {
+            "format": "woff2",
+            "identifier": {
+              "kit": "",
+              "skey": "",
             },
           },
         ],
+      }
+    `)
+  })
+
+  it('respects family glyphs option and resolves optimized font', async () => {
+    const unifont = await createUnifont([providers.google()])
+
+    const { fonts } = await unifont.resolveFont('Poppins', {
+      styles: ['normal'],
+      weights: ['400'],
+      options: {
+        google: {
+          experimental: {
+            glyphs: ['Hello', 'World'],
+          },
+        },
+      },
+    })
+
+    // Do not use sanitizeFontSource here, as we must test the optimizer identity in url params
+    const remoteFontSources = fonts.flatMap(fnt =>
+      fnt.src.flatMap(src => ('url' in src ? src : [])),
+    )
+    const identities = remoteFontSources.map(src => ({
+      format: src.format,
+      identifier: getOptimizerIdentityFromUrl('google', src.url),
+    }))
+    const identifiersByFormat = groupBy(
+      identities,
+      src => src.format ?? 'unknown',
+    )
+
+    expect(identifiersByFormat).toMatchInlineSnapshot(`
+      {
         "woff2": [
           {
             "format": "woff2",
@@ -161,57 +229,8 @@ describe('google', () => {
   it('filters subsets correctly', async () => {
     const unifont = await createUnifont([providers.google()])
 
-    const { fonts } = await unifont.resolveFont({ fontFamily: 'Roboto', provider: 'google', subsets: ['latin'] })
-    expect(fonts.length).toEqual(4)
-  })
-
-  describe('splitCssIntoSubsets()', () => {
-    it('associates subsets and css correctly if there are comments', () => {
-      expect(
-        splitCssIntoSubsets(`
-/* vietnamese */
-@font-face {
-  font-family: 'A';
-}
-/* latin-ext */
-@font-face {
-  font-family: 'B';
-}
-@font-face {
-  font-family: 'Still B';
-}
-/* latin */
-@font-face {
-  font-family: 'C';
-}
-body {
-  --google-font-color-bungeetint:none;
-}
-@font-face {
-  font-family: 'Still C';
-}
-`),
-      ).toEqual([
-        { subset: 'vietnamese', css: '@font-face{font-family:"A"}' },
-        { subset: 'latin-ext', css: '@font-face{font-family:"B"}' },
-        { subset: 'latin-ext', css: '@font-face{font-family:"Still B"}' },
-        { subset: 'latin', css: '@font-face{font-family:"C"}' },
-        { subset: 'latin', css: '@font-face{font-family:"Still C"}' },
-      ])
-    })
-  })
-
-  it('it does not associate subsets if there are no comments', () => {
-    const input = `
-@font-face {
-  font-family: 'A';
-}
-@font-face {
-  font-family: 'B';
-}
-`
-
-    expect(splitCssIntoSubsets(input)).toEqual([{ subset: null, css: input }])
+    const { fonts } = await unifont.resolveFont('Roboto', { subsets: ['latin'] })
+    expect(fonts.length).toEqual(2)
   })
 
   it('falls back to static weights', async () => {
@@ -221,6 +240,79 @@ body {
       provider: 'google',
       weights: ['400 1100'],
     })
-    expect(fonts.length).toBe(18)
+    expect(fonts.length).toBe(12)
+  })
+
+  describe('formats', () => {
+    it('woff2', async () => {
+      const unifont = await createUnifont([providers.google()])
+      const { fonts } = await unifont.resolveFont('Roboto', {
+        formats: ['woff2'],
+        styles: ['normal'],
+        subsets: ['latin'],
+        weights: ['400'],
+      })
+      expect(fonts.length).toBe(1)
+      expect(fonts.flatMap(font => font.src.map(source => 'name' in source ? source.name : source.format))).toStrictEqual(['woff2'])
+    })
+
+    it('woff', async () => {
+      const unifont = await createUnifont([providers.google()])
+      const { fonts } = await unifont.resolveFont('Roboto', {
+        formats: ['woff'],
+        styles: ['normal'],
+        subsets: ['latin'],
+        weights: ['400'],
+      })
+      expect(fonts.length).toBe(1)
+      expect(fonts.flatMap(font => font.src.map(source => 'name' in source ? source.name : source.format))).toStrictEqual(['woff'])
+    })
+
+    it('ttf', async () => {
+      const unifont = await createUnifont([providers.google()])
+      const { fonts } = await unifont.resolveFont('Roboto', {
+        formats: ['ttf'],
+        styles: ['normal'],
+        subsets: ['latin'],
+        weights: ['400'],
+      })
+      expect(fonts.length).toBe(1)
+      expect(fonts.flatMap(font => font.src.map(source => 'name' in source ? source.name : source.format))).toStrictEqual(['truetype'])
+    })
+
+    it('eot', async () => {
+      const unifont = await createUnifont([providers.google()])
+      const { fonts } = await unifont.resolveFont('Roboto', {
+        formats: ['eot'],
+        styles: ['normal'],
+        subsets: ['latin'],
+        weights: ['400'],
+      })
+      expect(fonts.length).toBe(1)
+      expect(fonts.flatMap(font => font.src.map(source => 'name' in source ? source.name : source.format))).toStrictEqual([undefined])
+    })
+
+    it('otf', async () => {
+      const unifont = await createUnifont([providers.google()])
+      const { fonts } = await unifont.resolveFont('Roboto', {
+        formats: ['otf'],
+        styles: ['normal'],
+        subsets: ['latin'],
+        weights: ['400'],
+      })
+      expect(fonts.length).toBe(0)
+    })
+
+    it('several', async () => {
+      const unifont = await createUnifont([providers.google()])
+      const { fonts } = await unifont.resolveFont('Roboto', {
+        formats: ['woff2', 'woff', 'ttf', 'eot'],
+        styles: ['normal'],
+        subsets: ['latin'],
+        weights: ['400'],
+      })
+      expect(fonts.length).toBe(2)
+      expect(fonts.flatMap(font => font.src.map(source => 'name' in source ? source.name : source.format))).toStrictEqual(['woff2', 'woff', 'truetype', undefined])
+    })
   })
 })

@@ -2,7 +2,7 @@
   "name": "unifont",
   "type": "module",
   "version": "0.6.0",
-  "packageManager": "pnpm@10.21.0",
+  "packageManager": "pnpm@10.26.0",
   "description": "Framework agnostic tools for accessing data from font CDNs and providers",
   "license": "MIT",
   "repository": {
@@ -11,11 +11,11 @@
   },
   "sideEffects": false,
   "exports": {
-    ".": "./dist/index.js"
+    ".": "./dist/index.mjs"
   },
-  "main": "./dist/index.js",
-  "module": "./dist/index.js",
-  "types": "./dist/index.d.ts",
+  "main": "./dist/index.mjs",
+  "module": "./dist/index.mjs",
+  "types": "./dist/index.d.mts",
   "files": [
     "dist"
   ],
@@ -32,24 +32,24 @@
     "test:types": "tsc --noEmit"
   },
   "dependencies": {
-    "css-tree": "^3.0.0",
-    "ofetch": "^1.4.1",
-    "ohash": "^2.0.0"
+    "css-tree": "^3.1.0",
+    "ofetch": "^1.5.1",
+    "ohash": "^2.0.11"
   },
   "devDependencies": {
-    "@antfu/eslint-config": "6.2.0",
+    "@antfu/eslint-config": "6.7.1",
     "@types/css-tree": "2.3.11",
-    "@types/node": "24.10.0",
-    "@vitest/coverage-v8": "4.0.10",
-    "bumpp": "10.3.1",
-    "eslint": "9.39.1",
-    "lint-staged": "16.2.6",
+    "@types/node": "24.10.4",
+    "@vitest/coverage-v8": "4.0.16",
+    "bumpp": "10.3.2",
+    "eslint": "9.39.2",
+    "lint-staged": "16.2.7",
     "simple-git-hooks": "2.13.1",
-    "tsdown": "0.15.12",
+    "tsdown": "0.18.1",
     "typescript": "5.9.3",
-    "unstorage": "1.17.2",
-    "vite": "7.2.2",
-    "vitest": "4.0.10"
+    "unstorage": "1.17.3",
+    "vite": "7.3.0",
+    "vitest": "4.0.16"
   },
   "resolutions": {
     "unifont": "link:."
