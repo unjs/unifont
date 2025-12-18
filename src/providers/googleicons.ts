@@ -5,7 +5,7 @@ import { $fetch } from '../fetch'
 import { cleanFontFaces, defineFontProvider } from '../utils'
 import { userAgents } from './google'
 
-interface ProviderOptions {
+export interface GoogleiconsOptions {
   experimental?: {
     /**
      * Experimental: Specifying a list of icons to be included in the font for each font family.
@@ -19,7 +19,19 @@ interface ProviderOptions {
   }
 }
 
-export default defineFontProvider('googleicons', async (_options: ProviderOptions, ctx) => {
+export interface GoogleiconsFamilyOptions {
+  experimental?: {
+    /**
+     * Experimental: Specifying a list of icons to be included in the font for each font family.
+     * This can reduce the size of the font file.
+     *
+     * **Only available when resolving the new `Material Symbols` icons.**
+     */
+    glyphs?: string[]
+  }
+}
+
+export default defineFontProvider('googleicons', async (providerOptions: GoogleiconsOptions, ctx) => {
   const googleIcons = await ctx.storage.getItem('googleicons:meta.json', async () => {
     const data = await $fetch<string>(
       'https://fonts.google.com/metadata/icons?key=material_symbols&incomplete=true',
@@ -31,9 +43,9 @@ export default defineFontProvider('googleicons', async (_options: ProviderOption
     return response.families
   })
 
-  async function getFontDetails(family: string, options: ResolveFontOptions) {
+  async function getFontDetails(family: string, options: ResolveFontOptions<GoogleiconsFamilyOptions>) {
     // Google Icons require sorted icon names, or we will see a 400 error
-    const iconNames = _options.experimental?.glyphs?.[family]?.sort().join(',')
+    const iconNames = (options.options?.experimental?.glyphs ?? providerOptions.experimental?.glyphs?.[family])?.join('')
 
     let css = ''
 
@@ -58,7 +70,7 @@ export default defineFontProvider('googleicons', async (_options: ProviderOption
           baseURL: 'https://fonts.googleapis.com',
           headers: { 'user-agent': userAgent },
           query: {
-            family: `${family}:` + `opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200`,
+            family: `${family}:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200`,
             ...(iconNames && { icon_names: iconNames }),
           },
         })
@@ -72,7 +84,7 @@ export default defineFontProvider('googleicons', async (_options: ProviderOption
     listFonts() {
       return googleIcons
     },
-    async resolveFont(fontFamily, options) {
+    async resolveFont(fontFamily, options: ResolveFontOptions<GoogleiconsFamilyOptions>) {
       if (!googleIcons.includes(fontFamily)) {
         return
       }

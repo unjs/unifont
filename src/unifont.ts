@@ -7,10 +7,19 @@ export interface UnifontOptions {
   throwOnError?: boolean
 }
 
+type ExtractFamilyOptions<T extends Provider> = Exclude<
+  Parameters<NonNullable<Awaited<ReturnType<T>>>['resolveFont']>[1]['options'],
+  undefined
+>
+
 export interface Unifont<T extends Provider[]> {
-  resolveFont: (fontFamily: string, options?: Partial<ResolveFontOptions>, providers?: T[number]['_name'][]) => Promise<ResolveFontResult & {
-    provider?: T[number]['_name']
-  }>
+  resolveFont: (
+    fontFamily: string,
+    options?: Partial<ResolveFontOptions<{
+      [K in T[number] as K['_name']]?: ExtractFamilyOptions<K>;
+    }>>,
+    providers?: T[number]['_name'][],
+  ) => Promise<ResolveFontResult & { provider?: T[number]['_name'] }>
   listFonts: (providers?: T[number]['_name'][]) => Promise<string[] | undefined>
 }
 
@@ -68,7 +77,9 @@ export async function createUnifont<T extends [Provider, ...Provider[]]>(provide
 
   async function resolveFont(
     fontFamily: string,
-    options: Partial<ResolveFontOptions> = {},
+    options: Partial<ResolveFontOptions<{
+      [K in T[number] as K['_name']]?: ExtractFamilyOptions<K>;
+    }>> = {},
     providers: T[number]['_name'][] = allProviders,
   ): Promise<
     ResolveFontResult & {
@@ -80,7 +91,10 @@ export async function createUnifont<T extends [Provider, ...Provider[]]>(provide
       const provider = stack[id]
 
       try {
-        const result = await provider?.resolveFont(fontFamily, mergedOptions)
+        const result = await provider?.resolveFont(fontFamily, {
+          ...mergedOptions,
+          options: mergedOptions.options?.[id] as any,
+        })
         if (result) {
           return {
             provider: id,

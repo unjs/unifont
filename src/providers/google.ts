@@ -7,13 +7,13 @@ import { cleanFontFaces, defineFontProvider, prepareWeights, splitCssIntoSubsets
 
 type VariableAxis = 'opsz' | 'slnt' | 'wdth' | (string & {})
 
-interface ProviderOptions {
+export interface GoogleOptions {
   experimental?: {
     /**
      * Experimental: Setting variable axis configuration on a per-font basis.
      */
     variableAxis?: {
-      [key: string]: Partial<Record<VariableAxis, ([string, string] | string)[]>>
+      [fontFamily: string]: Partial<Record<VariableAxis, ([string, string] | string)[]>>
     }
     /**
      * Experimental: Specifying a list of glyphs to be included in the font for each font family.
@@ -25,6 +25,20 @@ interface ProviderOptions {
   }
 }
 
+export interface GoogleFamilyOptions {
+  experimental?: {
+    /**
+     * Experimental: Setting variable axis configuration on a per-font basis.
+     */
+    variableAxis?: Partial<Record<VariableAxis, ([string, string] | string)[]>>
+    /**
+     * Experimental: Specifying a list of glyphs to be included in the font for each font family.
+     * This can reduce the size of the font file.
+     */
+    glyphs?: string[]
+  }
+}
+
 // https://stackoverflow.com/questions/25011533/google-font-api-uses-browser-detection-how-to-get-all-font-variations-for-font
 export const userAgents: Partial<Record<FontFormat, string>> = {
   woff2: 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/121.0.0.0 Safari/537.36',
@@ -33,7 +47,7 @@ export const userAgents: Partial<Record<FontFormat, string>> = {
   eot: 'Mozilla/4.0 (compatible; MSIE 8.0; Windows NT 6.1; Trident/4.0)',
 }
 
-export default defineFontProvider('google', async (_options: ProviderOptions = {}, ctx) => {
+export default defineFontProvider('google', async (providerOptions: GoogleOptions, ctx) => {
   const googleFonts = await ctx.storage.getItem('google:meta.json', () => $fetch<{ familyMetadataList: FontIndexMeta[] }>('https://fonts.google.com/metadata/fonts', { responseType: 'json' }).then(r => r.familyMetadataList))
 
   const styleMap = {
@@ -42,10 +56,10 @@ export default defineFontProvider('google', async (_options: ProviderOptions = {
     normal: '0',
   }
 
-  async function getFontDetails(family: string, options: ResolveFontOptions) {
+  async function getFontDetails(family: string, options: ResolveFontOptions<GoogleFamilyOptions>) {
     const font = googleFonts.find(font => font.family === family)!
     const styles = [...new Set(options.styles.map(i => styleMap[i]))].sort()
-    const glyphs = _options.experimental?.glyphs?.[family]?.join('')
+    const glyphs = (options.options?.experimental?.glyphs ?? providerOptions.experimental?.glyphs?.[family])?.join('')
     const weights = prepareWeights({
       inputWeights: options.weights,
       hasVariableWeights: font.axes.some(a => a.tag === 'wght'),
@@ -62,12 +76,18 @@ export default defineFontProvider('google', async (_options: ProviderOptions = {
 
     const resolvedAxes = []
     let resolvedVariants: string[] = []
+    const variableAxis = options.options?.experimental?.variableAxis ?? providerOptions.experimental?.variableAxis?.[family]
+    const candidateAxes = [
+      'wght',
+      'ital',
+      ...Object.keys(variableAxis ?? {}),
+    ].sort(googleFlavoredSorting)
 
-    for (const axis of ['wght', 'ital', ...Object.keys(_options?.experimental?.variableAxis?.[family] ?? {})].sort(googleFlavoredSorting)) {
+    for (const axis of candidateAxes) {
       const axisValue = ({
         wght: weights.map(v => v.weight),
         ital: styles,
-      })[axis] ?? _options!.experimental!.variableAxis![family]![axis]!.map(v => Array.isArray(v) ? `${v[0]}..${v[1]}` : v)
+      })[axis] ?? variableAxis![axis]!.map(v => Array.isArray(v) ? `${v[0]}..${v[1]}` : v)
 
       if (resolvedVariants.length === 0) {
         resolvedVariants = axisValue
@@ -121,7 +141,7 @@ export default defineFontProvider('google', async (_options: ProviderOptions = {
     listFonts() {
       return googleFonts.map(font => font.family)
     },
-    async resolveFont(fontFamily, options) {
+    async resolveFont(fontFamily, options: ResolveFontOptions<GoogleFamilyOptions>) {
       if (!googleFonts.some(font => font.family === fontFamily)) {
         return
       }
