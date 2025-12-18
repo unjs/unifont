@@ -8,10 +8,10 @@ export function defineFontProvider<
 >(
   name: TName,
   provider: TProvider,
-): TProvider extends ProviderDefinition<infer Options, infer FamilyOptions> ? ProviderFactory<
+): TProvider extends ProviderDefinition<infer TOptions, infer TFamilyOptions> ? ProviderFactory<
   TName,
-  Options,
-  FamilyOptions
+  TOptions,
+  TFamilyOptions
 > : never {
   return ((options: Parameters<TProvider>[0]) =>
     Object.assign(provider.bind(null, options || ({} as Parameters<TProvider>[0])), {
