@@ -11,11 +11,11 @@
   },
   "sideEffects": false,
   "exports": {
-    ".": "./dist/index.js"
+    ".": "./dist/index.mjs"
   },
-  "main": "./dist/index.js",
-  "module": "./dist/index.js",
-  "types": "./dist/index.d.ts",
+  "main": "./dist/index.mjs",
+  "module": "./dist/index.mjs",
+  "types": "./dist/index.d.mts",
   "files": [
     "dist"
   ],
@@ -45,7 +45,7 @@
     "eslint": "9.39.2",
     "lint-staged": "16.2.6",
     "simple-git-hooks": "2.13.1",
-    "tsdown": "0.15.12",
+    "tsdown": "0.18.1",
     "typescript": "5.9.3",
     "unstorage": "1.17.2",
     "vite": "7.3.0",
