@@ -3,18 +3,18 @@ import { findAll, generate, parse } from 'css-tree'
 import { hash } from 'ohash'
 
 export function defineFontProvider<
-  TName extends string,
-  TProvider extends ProviderDefinition<never, never>,
+  Name extends string,
+  Provider extends ProviderDefinition<never, never>,
 >(
-  name: TName,
-  provider: TProvider,
-): TProvider extends ProviderDefinition<infer TOptions, infer TFamilyOptions> ? ProviderFactory<
-  TName,
-  TOptions,
-  TFamilyOptions
+  name: Name,
+  provider: Provider,
+): Provider extends ProviderDefinition<infer Options, infer FamilyOptions> ? ProviderFactory<
+  Name,
+  Options,
+  FamilyOptions
 > : never {
-  return ((options: Parameters<TProvider>[0]) =>
-    Object.assign(provider.bind(null, options || ({} as Parameters<TProvider>[0])), {
+  return ((options: Parameters<Provider>[0]) =>
+    Object.assign(provider.bind(null, options || ({} as Parameters<Provider>[0])), {
       _name: name,
       _options: options,
     })) as any
