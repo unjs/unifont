@@ -37,7 +37,7 @@ importers:
         specifier: 10.3.2
         version: 10.3.2
       changelogithub:
-        specifier: ^14.0.0
+        specifier: 14.0.0
         version: 14.0.0
       eslint:
         specifier: 9.39.2
