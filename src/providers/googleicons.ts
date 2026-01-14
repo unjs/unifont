@@ -5,7 +5,7 @@ import { $fetch } from '../fetch'
 import { cleanFontFaces, defineFontProvider } from '../utils'
 import { userAgents } from './google'
 
-export interface GoogleiconsOptions {
+export interface GoogleiconsProviderOptions {
   experimental?: {
     /**
      * Experimental: Specifying a list of icons to be included in the font for each font family.
@@ -31,7 +31,7 @@ export interface GoogleiconsFamilyOptions {
   }
 }
 
-export default defineFontProvider('googleicons', async (providerOptions: GoogleiconsOptions, ctx) => {
+export default defineFontProvider('googleicons', async (providerOptions: GoogleiconsProviderOptions, ctx) => {
   const googleIcons = await ctx.storage.getItem('googleicons:meta.json', async () => {
     const data = await $fetch<string>(
       'https://fonts.google.com/metadata/icons?key=material_symbols&incomplete=true',

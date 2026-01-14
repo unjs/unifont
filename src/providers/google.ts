@@ -7,7 +7,7 @@ import { cleanFontFaces, defineFontProvider, prepareWeights, splitCssIntoSubsets
 
 type VariableAxis = 'opsz' | 'slnt' | 'wdth' | (string & {})
 
-export interface GoogleOptions {
+export interface GoogleProviderOptions {
   experimental?: {
     /**
      * Experimental: Setting variable axis configuration on a per-font basis.
@@ -47,7 +47,7 @@ export const userAgents: Partial<Record<FontFormat, string>> = {
   woff2: 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/121.0.0.0 Safari/537.36',
 }
 
-export default defineFontProvider('google', async (providerOptions: GoogleOptions, ctx) => {
+export default defineFontProvider('google', async (providerOptions: GoogleProviderOptions, ctx) => {
   const googleFonts = await ctx.storage.getItem('google:meta.json', () => $fetch<{ familyMetadataList: FontIndexMeta[] }>('https://fonts.google.com/metadata/fonts', { responseType: 'json' }).then(r => r.familyMetadataList))
 
   const styleMap = {
