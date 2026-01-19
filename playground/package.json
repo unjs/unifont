@@ -8,6 +8,6 @@
     "unifont": "latest"
   },
   "devDependencies": {
-    "unstorage": "1.17.3"
+    "unstorage": "1.17.4"
   }
 }
