@@ -37,7 +37,7 @@
     "ohash": "^2.0.11"
   },
   "devDependencies": {
-    "@antfu/eslint-config": "6.7.3",
+    "@antfu/eslint-config": "7.0.1",
     "@types/css-tree": "2.3.11",
     "@types/node": "24.10.9",
     "@vitest/coverage-v8": "4.0.17",
