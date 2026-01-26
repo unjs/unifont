@@ -19,7 +19,7 @@ const customProvider = defineFontProvider('custom', async () => {
 describe('custom provider', () => {
   it('works', async () => {
     const unifont = await createUnifont([customProvider()])
-    expect(await unifont.resolveFont('Test Font').then(r => r.fonts)).toMatchInlineSnapshot(`
+    expect(await unifont.resolveFont({ fontFamily: 'Test Font', provider: 'custom' }).then(r => r.fonts)).toMatchInlineSnapshot(`
       [
         {
           "meta": {
@@ -41,6 +41,6 @@ describe('custom provider', () => {
 
   it('includes an init object if set by the provider', async () => {
     const unifont = await createUnifont([customProvider()])
-    expect(await unifont.resolveFont('Test Font').then(r => r.fonts.pop()?.meta?.init)).toMatchObject(init)
+    expect(await unifont.resolveFont({ fontFamily: 'Test Font', provider: 'custom' }).then(r => r.fonts.pop()?.meta?.init)).toMatchObject(init)
   })
 })
