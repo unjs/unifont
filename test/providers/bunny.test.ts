@@ -4,9 +4,9 @@ import { createUnifont, providers } from '../../src'
 describe('bunny', () => {
   it('works', async () => {
     const unifont = await createUnifont([providers.bunny()])
-    expect(await unifont.resolveFont('NonExistent Font').then(r => r.fonts)).toMatchInlineSnapshot(`[]`)
-    expect(await unifont.resolveFont('Abel', { weights: ['1100'] }).then(r => r.fonts)).toMatchInlineSnapshot(`[]`)
-    const { fonts } = await unifont.resolveFont('Abel')
+    expect(await unifont.resolveFont({ fontFamily: 'NonExistent Font', provider: 'bunny' }).then(r => r.fonts)).toMatchInlineSnapshot(`[]`)
+    expect(await unifont.resolveFont({ fontFamily: 'Abel', provider: 'bunny', weights: ['1100'] }).then(r => r.fonts)).toMatchInlineSnapshot(`[]`)
+    const { fonts } = await unifont.resolveFont({ fontFamily: 'Abel', provider: 'bunny' })
     expect(fonts).toMatchInlineSnapshot(`
       [
         {
@@ -49,13 +49,15 @@ describe('bunny', () => {
 
   it('handles listFonts correctly', async () => {
     const unifont = await createUnifont([providers.bunny()])
-    const names = await unifont.listFonts()
+    const names = await unifont.listFonts({ provider: 'bunny' })
     expect(names!.length > 0).toEqual(true)
   })
 
   it('falls back to static weights', async () => {
     const unifont = await createUnifont([providers.bunny()])
-    const { fonts } = await unifont.resolveFont('Alef', {
+    const { fonts } = await unifont.resolveFont({
+      fontFamily: 'Alef',
+      provider: 'bunny',
       weights: ['400 1100'],
     })
     expect(fonts.length).toBe(4)
@@ -64,10 +66,12 @@ describe('bunny', () => {
   it('filters subsets correctly', async () => {
     const unifont = await createUnifont([providers.bunny()])
 
-    const { fonts: fonts0 } = await unifont.resolveFont('Roboto', {})
+    const { fonts: fonts0 } = await unifont.resolveFont({ fontFamily: 'Roboto', provider: 'bunny' })
     expect(fonts0.length).toEqual(14)
 
-    const { fonts: fonts1 } = await unifont.resolveFont('Roboto', {
+    const { fonts: fonts1 } = await unifont.resolveFont({
+      fontFamily: 'Roboto',
+      provider: 'bunny',
       subsets: ['latin'],
     })
     expect(fonts1.length).toEqual(2)
@@ -76,7 +80,9 @@ describe('bunny', () => {
   describe('formats', () => {
     it('woff2', async () => {
       const unifont = await createUnifont([providers.bunny()])
-      const { fonts } = await unifont.resolveFont('Roboto', {
+      const { fonts } = await unifont.resolveFont({
+        fontFamily: 'Roboto',
+        provider: 'bunny',
         formats: ['woff2'],
         styles: ['normal'],
         subsets: ['latin'],
@@ -88,7 +94,9 @@ describe('bunny', () => {
 
     it('woff', async () => {
       const unifont = await createUnifont([providers.bunny()])
-      const { fonts } = await unifont.resolveFont('Roboto', {
+      const { fonts } = await unifont.resolveFont({
+        fontFamily: 'Roboto',
+        provider: 'bunny',
         formats: ['woff'],
         styles: ['normal'],
         subsets: ['latin'],
@@ -100,7 +108,9 @@ describe('bunny', () => {
 
     it('ttf', async () => {
       const unifont = await createUnifont([providers.bunny()])
-      const { fonts } = await unifont.resolveFont('Roboto', {
+      const { fonts } = await unifont.resolveFont({
+        fontFamily: 'Roboto',
+        provider: 'bunny',
         formats: ['ttf'],
         styles: ['normal'],
         subsets: ['latin'],
@@ -111,7 +121,9 @@ describe('bunny', () => {
 
     it('eot', async () => {
       const unifont = await createUnifont([providers.bunny()])
-      const { fonts } = await unifont.resolveFont('Roboto', {
+      const { fonts } = await unifont.resolveFont({
+        fontFamily: 'Roboto',
+        provider: 'bunny',
         formats: ['eot'],
         styles: ['normal'],
         subsets: ['latin'],
@@ -122,7 +134,9 @@ describe('bunny', () => {
 
     it('otf', async () => {
       const unifont = await createUnifont([providers.bunny()])
-      const { fonts } = await unifont.resolveFont('Roboto', {
+      const { fonts } = await unifont.resolveFont({
+        fontFamily: 'Roboto',
+        provider: 'bunny',
         formats: ['otf'],
         styles: ['normal'],
         subsets: ['latin'],
@@ -133,7 +147,9 @@ describe('bunny', () => {
 
     it('several', async () => {
       const unifont = await createUnifont([providers.bunny()])
-      const { fonts } = await unifont.resolveFont('Roboto', {
+      const { fonts } = await unifont.resolveFont({
+        fontFamily: 'Roboto',
+        provider: 'bunny',
         formats: ['woff2', 'woff'],
         styles: ['normal'],
         subsets: ['latin'],

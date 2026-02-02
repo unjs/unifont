@@ -16,7 +16,7 @@ export type FontStyles = 'normal' | 'italic' | 'oblique'
 
 export type FontFormat = keyof typeof formatMap
 
-export interface ResolveFontOptions<FamilyOptions extends Record<string, any> | never = never> {
+export interface ResolveFontOptions<FamilyOptions extends Record<string, any> | undefined | never = never> {
   weights: string[]
   styles: FontStyles[]
   // TODO: improve support and support unicode range
