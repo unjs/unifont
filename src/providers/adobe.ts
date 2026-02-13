@@ -29,6 +29,7 @@ export default defineFontProvider('adobe', async (options: AdobeProviderOptions,
     kits: [] as AdobeFontKit[],
   }
   let lastRefreshKitTime: number
+  let fetchKitsPromise: Promise<void> | undefined
 
   const kits = typeof options.id === 'string' ? [options.id] : options.id
 
@@ -118,13 +119,23 @@ export default defineFontProvider('adobe', async (options: AdobeProviderOptions,
       }
 
       // Try refreshing the kit metadata if family is not found. We use a debounce mechanism to avoid frequent refreshes.
+      // If a refresh is already in flight, await the existing promise to avoid a race condition
+      // where concurrent callers see a cleared familyMap.
       if (!familyMap.has(family)) {
-        const lastRefetch = lastRefreshKitTime || 0
-        const now = Date.now()
+        if (fetchKitsPromise) {
+          await fetchKitsPromise
+        }
+        else {
+          const lastRefetch = lastRefreshKitTime || 0
+          const now = Date.now()
 
-        if (now - lastRefetch > KIT_REFRESH_TIMEOUT) {
-          lastRefreshKitTime = Date.now()
-          await fetchKits(true)
+          if (now - lastRefetch > KIT_REFRESH_TIMEOUT) {
+            lastRefreshKitTime = now
+            fetchKitsPromise = fetchKits(true).finally(() => {
+              fetchKitsPromise = undefined
+            })
+            await fetchKitsPromise
+          }
         }
       }
 
