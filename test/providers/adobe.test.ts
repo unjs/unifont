@@ -128,6 +128,77 @@ describe('adobe', () => {
     expect(fonts.length).toBe(4)
   })
 
+  it('resolves adobe fonts correctly when concurrent non-adobe fonts trigger kit refresh', async () => {
+    const originalFetch = globalThis.fetch
+
+    // Track API calls to detect the refresh
+    let apiCallCount = 0
+
+    globalThis.fetch = vi.fn().mockImplementation(async (url: string) => {
+      if (url.includes('typekit.com/api/v1/json/kits/racetest/published')) {
+        apiCallCount++
+        // Introduce a small delay to widen the race window
+        await new Promise(resolve => setTimeout(resolve, 50))
+        return new Response(JSON.stringify({
+          kit: {
+            id: 'racetest',
+            families: [
+              {
+                id: 'testfont',
+                name: 'TestFont',
+                slug: 'testfont',
+                css_names: ['testfont'],
+                css_stack: 'testfont, serif',
+                variations: ['n4'],
+              },
+            ],
+          },
+        }), { status: 200, headers: { 'content-type': 'application/json' } })
+      }
+      else if (url.includes('racetest.css')) {
+        return new Response(`
+          @font-face {
+            font-family: "testfont";
+            src: url("https://use.typekit.net/test.woff2") format("woff2");
+            font-weight: 400;
+            font-style: normal;
+          }
+        `, { status: 200, headers: { 'content-type': 'text/css' } })
+      }
+      return originalFetch(url)
+    })
+
+    try {
+      // Mock Date.now to make the initial fetchKits look old, so a refresh is triggered
+      const realDateNow = Date.now.bind(Date)
+      let time = realDateNow()
+      vi.spyOn(Date, 'now').mockImplementation(() => time)
+
+      const unifont = await createUnifont([providers.adobe({ id: 'racetest' })])
+      expect(apiCallCount).toBe(1)
+
+      // Advance time past KIT_REFRESH_TIMEOUT (5 minutes)
+      time += 6 * 60 * 1000
+
+      // Concurrently resolve: a non-adobe font (triggers refresh) and an adobe font.
+      // Without the fix, the non-adobe font lookup triggers fetchKits(true) which
+      // synchronously clears familyMap. The concurrent TestFont lookup would then
+      // see an empty map and incorrectly add TestFont to notFoundFamilies.
+      const [nonExistent, testFont] = await Promise.all([
+        unifont.resolveFont('NonExistentFont'),
+        unifont.resolveFont('TestFont'),
+      ])
+
+      expect(nonExistent.fonts).toHaveLength(0)
+      expect(testFont.fonts.length).toBeGreaterThan(0)
+
+      vi.restoreAllMocks()
+    }
+    finally {
+      globalThis.fetch = originalFetch
+    }
+  })
+
   it('refreshes kit metadata when font is not found in cache', async () => {
     let apiCallCount = 0
 
