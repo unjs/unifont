@@ -416,6 +416,30 @@ describe('npm', () => {
         }
       }
     })
+
+    it('does not fall back to CDN when remote is false', async () => {
+      const readFile = vi.fn(async (path: string) => {
+        if (path === './package.json')
+          return MOCK_PACKAGE_JSON
+        // Local CSS not found
+        return null
+      })
+
+      // Mock CDN to track if it's called
+      const cdnCalled = vi.fn()
+      const restoreFetch = mockFetchReturn(/@fontsource\/roboto/, () => {
+        cdnCalled()
+        return new Response(MOCK_ROBOTO_CSS)
+      })
+
+      const unifont = await createUnifont([providers.npm({ readFile, remote: false })])
+      const { fonts } = await unifont.resolveFont('Roboto')
+
+      expect(fonts).toStrictEqual([])
+      expect(cdnCalled).not.toHaveBeenCalled()
+
+      restoreFetch()
+    })
   })
 
   describe('listFonts', () => {

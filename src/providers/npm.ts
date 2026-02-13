@@ -12,15 +12,28 @@ export interface NpmProviderOptions {
    */
   cdn?: string
   /**
+   * Whether to fall back to fetching from the CDN when local resolution
+   * fails or `readFile` is not provided.
+   *
+   * Set to `false` to only resolve from locally installed packages.
+   * This is useful when another provider (e.g. `fontsource`) already
+   * handles CDN resolution.
+   *
+   * @default true
+   */
+  remote?: boolean
+  /**
    * Optional function to read a file from the local filesystem.
    * When provided, the provider will try to resolve fonts from locally
-   * installed packages in `node_modules` before falling back to the CDN.
+   * installed packages in `node_modules` before falling back to the CDN
+   * (unless `remote` is set to `false`).
    *
    * @example
    * ```ts
    * import { readFile } from 'node:fs/promises'
    * providers.npm({
    *   readFile: path => readFile(path, 'utf-8').catch(() => null),
+   *   remote: false, // only resolve from local node_modules
    * })
    * ```
    */
@@ -120,6 +133,7 @@ interface DetectedFont {
 
 export default defineFontProvider('npm', (providerOptions: NpmProviderOptions, ctx) => {
   const cdn = providerOptions.cdn || DEFAULT_CDN
+  const remote = providerOptions.remote ?? true
   const npmFetch = $fetch.create({ baseURL: cdn })
   const readFile = providerOptions.readFile
   const root = providerOptions.root || '.'
@@ -309,6 +323,10 @@ export default defineFontProvider('npm', (providerOptions: NpmProviderOptions, c
         const localResult = await resolveFromLocal(pkgName, cssFile, family, options.formats)
         if (localResult) {
           return localResult
+        }
+
+        if (!remote) {
+          return null
         }
 
         // Fall back to CDN
