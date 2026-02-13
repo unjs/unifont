@@ -100,6 +100,14 @@ export const formatMap = {
   eot: 'embedded-opentype',
 } satisfies Record<string, string>
 
+/** Maps variation format strings (e.g. 'woff2-variations') to their base CSS format name (e.g. 'woff2') */
+const variationFormatMap: Record<string, string> = {
+  'woff2-variations': 'woff2',
+  'woff-variations': 'woff',
+  'opentype-variations': 'opentype',
+  'truetype-variations': 'truetype',
+}
+
 function computeIdFromSource(source: LocalFontSource | RemoteFontSource): string {
   return 'name' in source ? source.name : source.url
 }
@@ -120,7 +128,16 @@ export function cleanFontFaces(fonts: FontFaceData[], _formats: FontFormat[]): F
               format: formatMap[source.format as FontFormat] ?? source.format,
             }
           : {}) }))
-      .filter(source => 'name' in source || !source.format || formats.includes(source.format as FontFormat))
+      .filter((source) => {
+        if ('name' in source)
+          return true
+        if (!source.format)
+          return true
+        if (formats.includes(source.format))
+          return true
+        const baseFormat = variationFormatMap[source.format]
+        return !!baseFormat && formats.includes(baseFormat)
+      })
 
     if (src.length === 0) {
       continue
