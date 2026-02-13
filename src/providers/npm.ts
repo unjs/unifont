@@ -1,7 +1,9 @@
-import { joinURL } from 'ufo'
+import type { ResolveFontOptions } from '../types'
+
+import { hash } from 'ohash'
 import { extractFontFaceData } from '../css/parse'
 import { $fetch } from '../fetch'
-import { defineFontProvider } from '../utils'
+import { cleanFontFaces, defineFontProvider } from '../utils'
 
 export interface NpmProviderOptions {
   /**
@@ -31,60 +33,63 @@ export interface NpmFamilyOptions {
 
 const DEFAULT_CDN = 'https://cdn.jsdelivr.net/npm'
 
-export default defineFontProvider<NpmProviderOptions, NpmFamilyOptions>('npm', (providerOptions, ctx) => {
+export default defineFontProvider('npm', (providerOptions: NpmProviderOptions, ctx) => {
   const cdn = providerOptions.cdn || DEFAULT_CDN
   const npmFetch = $fetch.create({ baseURL: cdn })
 
   return {
-    async resolveFont(family, options) {
+    async resolveFont(family, options: ResolveFontOptions<NpmFamilyOptions>) {
       const familyOptions = options.options || {}
 
       const pkgName = familyOptions.package || `@fontsource/${family.toLowerCase().replace(/\s+/g, '-')}`
       const pkgVersion = familyOptions.version || 'latest'
       const cssFile = familyOptions.file || 'index.css'
 
-      const key = `npm:${pkgName}@${pkgVersion}/${cssFile}`
+      const key = `npm:${pkgName}@${pkgVersion}/${cssFile}-${hash(options)}`
 
-      const css = await ctx.storage.getItem(key, async () => {
+      const fonts = await ctx.storage.getItem(key, async () => {
+        let css: string | null
         try {
-          return await npmFetch<string>(joinURL(`${pkgName}@${pkgVersion}`, cssFile))
+          css = await npmFetch<string>(`${pkgName}@${pkgVersion}/${cssFile}`)
         }
         catch {
           return null
         }
+
+        if (!css) {
+          return null
+        }
+
+        const fontFaces = extractFontFaceData(css, family)
+        const baseUrl = `${cdn}/${pkgName}@${pkgVersion}/`
+
+        // Fix relative URLs to absolute CDN URLs
+        for (const face of fontFaces) {
+          if (Array.isArray(face.src)) {
+            face.src = face.src.map((src) => {
+              if ('url' in src) {
+                const url = src.url
+                if (url.startsWith('http') || url.startsWith('data:') || url.startsWith('//')) {
+                  return src
+                }
+                return {
+                  ...src,
+                  url: new URL(url, baseUrl).href,
+                }
+              }
+              return src
+            })
+          }
+        }
+
+        return cleanFontFaces(fontFaces, options.formats)
       })
 
-      if (!css)
+      if (!fonts) {
         return
-
-      const fontFaces = extractFontFaceData(css)
-      const baseUrl = joinURL(cdn, `${pkgName}@${pkgVersion}/`)
-
-      // Fix relative URLs
-      for (const face of fontFaces) {
-        if (Array.isArray(face.src)) {
-          face.src = face.src.map((src) => {
-            if (typeof src === 'string') {
-              return src.startsWith('http') || src.startsWith('data:')
-                ? src
-                : new URL(src, baseUrl).href
-            }
-            if ('url' in src) {
-              return {
-                ...src,
-                url: (src.url.startsWith('http') || src.url.startsWith('data:'))
-                  ? src.url
-                  : new URL(src.url, baseUrl).href,
-              }
-            }
-            return src
-          })
-        }
       }
 
-      return {
-        fonts: fontFaces,
-      }
+      return { fonts }
     },
   }
 })
