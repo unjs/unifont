@@ -2,7 +2,7 @@
   "name": "unifont",
   "type": "module",
   "version": "0.7.4",
-  "packageManager": "pnpm@10.29.2",
+  "packageManager": "pnpm@10.29.3",
   "description": "Framework agnostic tools for accessing data from font CDNs and providers",
   "license": "MIT",
   "repository": {
@@ -37,9 +37,9 @@
     "ohash": "^2.0.11"
   },
   "devDependencies": {
-    "@antfu/eslint-config": "7.3.0",
+    "@antfu/eslint-config": "7.4.3",
     "@types/css-tree": "2.3.11",
-    "@types/node": "24.10.12",
+    "@types/node": "24.10.13",
     "@vitest/coverage-v8": "4.0.18",
     "bumpp": "10.4.1",
     "changelogithub": "14.0.0",
