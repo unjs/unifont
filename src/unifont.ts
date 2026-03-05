@@ -7,20 +7,21 @@ export interface UnifontOptions {
   throwOnError?: boolean
 }
 
+type ExtractProviderFromName<T extends Provider[], U extends T[number]['_name']> = Extract<T[number], { _name: U }>
+
 type ExtractFamilyOptions<T extends Provider> = Exclude<
   Parameters<NonNullable<Awaited<ReturnType<T>>>['resolveFont']>[1]['options'],
   undefined
 >
-
 export interface Unifont<T extends Provider[]> {
-  resolveFont: (
-    fontFamily: string,
-    options?: Partial<ResolveFontOptions<{
-      [K in T[number] as K['_name']]?: ExtractFamilyOptions<K>;
-    }>>,
-    providers?: T[number]['_name'][],
+  providers: T[number]['_name'][]
+  resolveFont: <U extends T[number]['_name']>(
+    options: {
+      fontFamily: string
+      provider: U
+    } & Partial<ResolveFontOptions<ExtractFamilyOptions<ExtractProviderFromName<T, U>>>>,
   ) => Promise<ResolveFontResult & { provider?: T[number]['_name'] }>
-  listFonts: (providers?: T[number]['_name'][]) => Promise<string[] | undefined>
+  listFonts: (options: { provider: T[number]['_name'] }) => Promise<string[] | undefined>
 }
 
 export const defaultResolveOptions: ResolveFontOptions = {
@@ -76,67 +77,53 @@ export async function createUnifont<T extends [Provider, ...Provider[]]>(provide
   const allProviders = Object.keys(stack)
 
   async function resolveFont(
-    fontFamily: string,
-    options: Partial<ResolveFontOptions<{
-      [K in T[number] as K['_name']]?: ExtractFamilyOptions<K>;
-    }>> = {},
-    providers: T[number]['_name'][] = allProviders,
-  ): Promise<
-    ResolveFontResult & {
-      provider?: T[number]['_name']
+    { fontFamily, provider: id, ...options }: Partial<ResolveFontOptions> & {
+      fontFamily: string
+      provider: T[number]['_name']
+    },
+  ): Promise<ResolveFontResult> {
+    const provider = stack[id]
+    if (!provider) {
+      const message = `Could not found \`${id}\` provider.`
+      if (unifontOptions?.throwOnError) {
+        throw new Error(message)
+      }
+      console.error(message)
+      return { fonts: [] }
     }
-  > {
-    const mergedOptions = { ...defaultResolveOptions, ...options }
-    for (const id of providers) {
-      const provider = stack[id]
-
-      try {
-        const result = await provider?.resolveFont(fontFamily, {
-          ...mergedOptions,
-          options: mergedOptions.options?.[id] as any,
-        })
-        if (result) {
-          return {
-            provider: id,
-            ...result,
-          }
-        }
+    try {
+      const result = await provider?.resolveFont(fontFamily, { ...defaultResolveOptions, ...options })
+      if (result) {
+        return result
       }
-      catch (cause) {
-        const message = `Could not resolve font face for \`${fontFamily}\` from \`${id}\` provider.`
-        if (unifontOptions?.throwOnError) {
-          throw new Error(message, { cause })
-        }
-        console.error(message, cause)
+    }
+    catch (cause) {
+      const message = `Could not resolve font face for \`${fontFamily}\` from \`${id}\` provider.`
+      if (unifontOptions?.throwOnError) {
+        throw new Error(message, { cause })
       }
+      console.error(message, cause)
     }
     return { fonts: [] }
   }
 
-  async function listFonts(providers: T[number]['_name'][] = allProviders): Promise<string[] | undefined> {
-    let names: string[] | undefined
-    for (const id of providers) {
-      const provider = stack[id]
+  async function listFonts({ provider: id }: { provider: T[number]['_name'] }): Promise<string[] | undefined> {
+    const provider = stack[id]
 
-      try {
-        const result = await provider?.listFonts?.()
-        if (result) {
-          names ??= []
-          names.push(...result)
-        }
-      }
-      catch (cause) {
-        const message = `Could not list names from \`${id}\` provider.`
-        if (unifontOptions?.throwOnError) {
-          throw new Error(message, { cause })
-        }
-        console.error(message, cause)
-      }
+    try {
+      return await provider?.listFonts?.()
     }
-    return names
+    catch (cause) {
+      const message = `Could not list names from \`${id}\` provider.`
+      if (unifontOptions?.throwOnError) {
+        throw new Error(message, { cause })
+      }
+      console.error(message, cause)
+    }
   }
 
   return {
+    providers: allProviders,
     resolveFont,
     listFonts,
   }
