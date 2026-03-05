@@ -655,9 +655,9 @@ Published under [MIT License](./LICENCE).
 
 <!-- Badges -->
 
-[npm-version-src]: https://img.shields.io/npm/v/unifont?style=flat-square
-[npm-version-href]: https://npmjs.com/package/unifont
-[npm-downloads-src]: https://img.shields.io/npm/dm/unifont?style=flat-square
+[npm-version-src]: https://npmx.dev/api/registry/badge/version/unifont
+[npm-version-href]: https://npmx.dev/package/unifont
+[npm-downloads-src]: https://npmx.dev/api/registry/badge/downloads/unifont
 [npm-downloads-href]: https://npm.chart.dev/unifont
 [github-actions-src]: https://img.shields.io/github/actions/workflow/status/unjs/unifont/ci.yml?branch=main&style=flat-square
 [github-actions-href]: https://github.com/unjs/unifont/actions?query=workflow%3Aci
