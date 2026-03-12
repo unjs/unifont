@@ -56,7 +56,7 @@ export function prepareWeights({
     }
   }
 
-  return [...new Set(collectedWeights)].map(weight => ({
+  return Array.from(new Set(collectedWeights), weight => ({
     weight,
     variable: weight.includes(' '),
   }))

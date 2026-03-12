@@ -58,6 +58,8 @@ export default defineFontProvider('google', async (providerOptions: GoogleProvid
 
   async function getFontDetails(family: string, options: ResolveFontOptions<GoogleFamilyOptions>) {
     const font = googleFonts.find(font => font.family === family)!
+    // https://github.com/e18e/eslint-plugin/issues/69
+    // eslint-disable-next-line e18e/prefer-array-to-sorted
     const styles = [...new Set(options.styles.map(i => styleMap[i]))].sort()
     const glyphs = (options.options?.experimental?.glyphs ?? providerOptions.experimental?.glyphs?.[family])?.join('')
     const weights = prepareWeights({
@@ -93,7 +95,7 @@ export default defineFontProvider('google', async (providerOptions: GoogleProvid
         resolvedVariants = axisValue
       }
       else {
-        resolvedVariants = resolvedVariants.flatMap(v => [...axisValue].map(o => [v, o].join(','))).sort()
+        resolvedVariants = resolvedVariants.flatMap(v => Array.from(axisValue, o => [v, o].join(','))).sort()
       }
       resolvedAxes.push(axis)
     }
