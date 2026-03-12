@@ -52,7 +52,7 @@ describe('googleicons', () => {
     const unifont = await createUnifont([providers.googleicons({
       experimental: {
         glyphs: {
-          'Material Symbols Outlined': ['arrow_right', 'favorite', 'arrow_drop_down'],
+          'Material Symbols Outlined': ['bar_chart', 'bolt'],
         },
       },
     })])
@@ -78,8 +78,8 @@ describe('googleicons', () => {
           {
             "format": "woff2",
             "identifier": {
-              "kit": "",
-              "skey": "",
+              "kit": "kJEhBvYX7BgnkSrUwT8OhrdQw4oELdPIeeII9v6oFsLjBuVYLAPbrM4kWKE8mcwLO8rfPSFqKIVE",
+              "skey": "b8dc2088854b122f",
             },
           },
         ],
@@ -97,7 +97,7 @@ describe('googleicons', () => {
       options: {
         googleicons: {
           experimental: {
-            glyphs: ['arrow_right', 'favorite', 'arrow_drop_down'],
+            glyphs: ['bar_chart', 'bolt'],
           },
         },
       },
@@ -118,8 +118,8 @@ describe('googleicons', () => {
           {
             "format": "woff2",
             "identifier": {
-              "kit": "",
-              "skey": "",
+              "kit": "kJEhBvYX7BgnkSrUwT8OhrdQw4oELdPIeeII9v6oFsLjBuVYLAPbrM4kWKE8mcwLO8rfPSFqKIVE",
+              "skey": "b8dc2088854b122f",
             },
           },
         ],
