@@ -7,19 +7,16 @@ import { cleanFontFaces, defineFontProvider } from '../utils'
 
 export interface NpmProviderOptions {
   /**
-   * CDN to use for fetching npm packages remotely.
    * @default 'https://cdn.jsdelivr.net/npm'
+   *
+   * CDN to use for fetching npm packages remotely.
    */
   cdn?: string
   /**
-   * Whether to fall back to fetching from the CDN when local resolution
-   * fails or `readFile` is not provided.
-   *
-   * Set to `false` to only resolve from locally installed packages.
-   * This is useful when another provider (e.g. `fontsource`) already
-   * handles CDN resolution.
-   *
    * @default true
+   *
+   * Whether to fall back to fetching from the CDN when local resolution
+   * fails. Set to `false` to only resolve from locally installed packages.
    */
   remote?: boolean
   /**
@@ -27,40 +24,34 @@ export interface NpmProviderOptions {
    * When provided, the provider will try to resolve fonts from locally
    * installed packages in `node_modules` before falling back to the CDN
    * (unless `remote` is set to `false`).
-   *
-   * @example
-   * ```ts
-   * import { readFile } from 'node:fs/promises'
-   * providers.npm({
-   *   readFile: path => readFile(path, 'utf-8').catch(() => null),
-   *   remote: false, // only resolve from local node_modules
-   * })
-   * ```
    */
   readFile?: (path: string) => Promise<string | null>
   /**
-   * Root directory of the project for resolving local packages.
-   * Used to find `package.json` and `node_modules`.
-   * @default '.' (current working directory)
+   * @default '.'
+   *
+   * Root directory of the project, used to find `package.json` and
+   * `node_modules` when resolving local packages.
    */
   root?: string
 }
 
 export interface NpmFamilyOptions {
   /**
-   * The npm package name.
-   * When not specified, the provider will try to find the font family
-   * in known font package patterns (e.g. `@fontsource/${family}`).
+   * The NPM package name. When not specified, the provider will try to
+   * find the font family in known font package patterns or infer based
+   * on Fontsource conventions.
    */
   package?: string
   /**
-   * The version of the package (used for CDN resolution only).
    * @default 'latest'
+   *
+   * The version of the package (used for CDN resolution only).
    */
   version?: string
   /**
-   * The entry CSS file to parse.
    * @default 'index.css'
+   *
+   * The entry CSS file to parse from the package.
    */
   file?: string
 }

@@ -94,15 +94,13 @@ providers.fontshare()
 
 ### Fontsource
 
-A provider for [Fontsource](https://fontsource.org/).
+A provider for [Fontsource](https://fontsource.org/)'s API.
 
 ```js
 import { providers } from 'unifont'
 
 providers.fontsource()
 ```
-
-It uses the API, not installed NPM packages (see [PR #189](https://github.com/unjs/unifont/pull/189)).
 
 ### Google
 
@@ -275,6 +273,146 @@ const { fonts } = await unifont.resolveFont('Poppins', {
 ```
 
 Only available when resolving the new `Material Symbols` icons.
+
+### NPM
+
+A provider for NPM packages, either from locally installed packages in `node_modules` or from a CDN.
+
+```js
+import { providers } from 'unifont'
+
+providers.npm()
+```
+
+The provider automatically detects fonts from your `package.json` dependencies and can resolve fonts from packages like `@fontsource/*`, `@fontsource-variable/*`, and other known font packages.
+
+#### Options
+
+##### `cdn`
+
+- Type: `string`
+- Default: `'https://cdn.jsdelivr.net/npm'`
+
+CDN to use for fetching npm packages remotely:
+
+```js
+import { providers } from 'unifont'
+
+providers.npm({ cdn: 'https://esm.sh' })
+```
+
+##### `remote`
+
+- Type: `boolean`
+- Default: `true`
+
+Whether to fall back to fetching from the CDN when local resolution fails. Set to `false` to only resolve from locally installed packages:
+
+```js
+import { providers } from 'unifont'
+
+providers.npm({ remote: true })
+```
+
+##### `readFile`
+
+- Type: `(path: string) => Promise<string | null>`
+
+Optional function to read a file from the local filesystem. When provided, the provider will try to resolve fonts from locally installed packages in `node_modules` before falling back to the CDN (unless `remote` is set to `false`):
+
+```js
+import { readFile } from 'node:fs/promises'
+import { providers } from 'unifont'
+
+providers.npm({
+  readFile: path => readFile(path, 'utf-8').catch(() => null),
+  remote: false,
+})
+```
+
+##### `root`
+
+- Type: `string`
+- Default: `'.'`
+
+Root directory of the project, used to find `package.json` and `node_modules` when resolving local packages:
+
+```js
+import { providers } from 'unifont'
+
+providers.npm({ root: './src' })
+```
+
+#### Family options
+
+##### `package`
+
+- Type: `string`
+- Default: Auto-detected or inferred from family name
+
+The NPM package name. When not specified, the provider will try to find the font family in known font package patterns or infer based on Fontsource conventions:
+
+```js
+import { createUnifont, providers } from 'unifont'
+
+const unifont = await createUnifont([
+  providers.npm(),
+])
+
+const { fonts } = await unifont.resolveFont('Roboto', {
+  options: {
+    npm: {
+      package: '@fontsource/roboto'
+    },
+  },
+})
+```
+
+##### `version`
+
+- Type: `string`
+- Default: `'latest'`
+
+The version of the package (used for CDN resolution only):
+
+```js
+import { createUnifont, providers } from 'unifont'
+
+const unifont = await createUnifont([
+  providers.npm(),
+])
+
+const { fonts } = await unifont.resolveFont('Roboto', {
+  options: {
+    npm: {
+      version: '5.0.0'
+    },
+  },
+})
+```
+
+##### `file`
+
+- Type: `string`
+- Default: `'index.css'`
+
+The entry CSS file to parse from the package:
+
+```js
+import { createUnifont, providers } from 'unifont'
+
+const unifont = await createUnifont([
+  providers.npm(),
+])
+
+const { fonts } = await unifont.resolveFont('Roboto', {
+  options: {
+    npm: {
+      file: 'latin.css'
+    },
+  },
+})
+```
 
 ## `Unifont`
 
