@@ -32,7 +32,7 @@ export default defineFontProvider('bunny', async (_options, ctx) => {
     if (weights.length === 0 || styles.size === 0)
       return []
 
-    const resolvedVariants = weights.flatMap(w => [...styles].map(s => `${w.weight}${s}`))
+    const resolvedVariants = weights.flatMap(w => Array.from(styles, s => `${w.weight}${s}`))
 
     const css = await fontAPI<string>('/css', {
       query: {

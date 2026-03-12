@@ -76,9 +76,11 @@ function createCacheKey(...fragments: unknown[]): string {
   return parts.join(':')
 }
 
+const RE = /[^\w.-]/g
+
 function sanitize(input: string): string {
   if (!input)
     return ''
 
-  return input.replace(/[^\w.-]/g, '_')
+  return input.replace(RE, '_')
 }
