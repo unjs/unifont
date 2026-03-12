@@ -72,8 +72,10 @@ export function extractFontFaceData(css: string, family?: string): FontFaceData[
   return mergeFontSources(fontFaces)
 }
 
+const RE = /^(?<quote>['"])(.*)\k<quote>$/
+
 function processRawValue(value: string) {
-  return value.split(',').map(v => v.trim().replace(/^(?<quote>['"])(.*)\k<quote>$/, '$2'))
+  return value.split(',').map(v => v.trim().replace(RE, '$2'))
 }
 
 function extractCSSValue(node: Declaration) {

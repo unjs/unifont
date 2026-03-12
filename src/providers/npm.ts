@@ -109,10 +109,14 @@ function slugToFamily(slug: string): string {
   return slug.split('-').map(s => s.charAt(0).toUpperCase() + s.slice(1)).join(' ')
 }
 
+const SPACE_RE = /\s+/g
+
 /** Convert a family name like "Geist Sans" to a fontsource slug "geist-sans" */
 function familyToSlug(family: string): string {
-  return family.toLowerCase().replace(/\s+/g, '-')
+  return family.toLowerCase().replace(SPACE_RE, '-')
 }
+
+const VARIABLE_RE = / Variable$/
 
 /**
  * Guess the npm package name and CSS file for a font family that wasn't
@@ -120,7 +124,7 @@ function familyToSlug(family: string): string {
  */
 function guessPackageForFamily(family: string): { pkgName: string, file: string } {
   if (family.endsWith(' Variable')) {
-    return { pkgName: `@fontsource-variable/${familyToSlug(family.replace(/ Variable$/, ''))}`, file: 'index.css' }
+    return { pkgName: `@fontsource-variable/${familyToSlug(family.replace(VARIABLE_RE, ''))}`, file: 'index.css' }
   }
   return { pkgName: `@fontsource/${familyToSlug(family)}`, file: 'index.css' }
 }
@@ -282,7 +286,7 @@ export default defineFontProvider('npm', (providerOptions: NpmProviderOptions, c
       if (fonts.size === 0) {
         return undefined
       }
-      return [...fonts.values()].map(f => f.family)
+      return Array.from(fonts.values(), f => f.family)
     },
 
     async resolveFont(family: string, options: ResolveFontOptions<NpmFamilyOptions>) {

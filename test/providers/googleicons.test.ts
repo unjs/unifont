@@ -149,7 +149,7 @@ describe('googleicons', () => {
         weights: ['400'],
       })
       expect(fonts.length).toBe(7)
-      expect(Array.from(new Set(fonts.flatMap(font => font.src.map(source => 'name' in source ? source.name : source.format))))).toStrictEqual(['woff'])
+      expect([...new Set(fonts.flatMap(font => font.src.map(source => 'name' in source ? source.name : source.format)))]).toStrictEqual(['woff'])
     })
 
     it('ttf', async () => {
@@ -161,7 +161,7 @@ describe('googleicons', () => {
         weights: ['400'],
       })
       expect(fonts.length).toBe(7)
-      expect(Array.from(new Set(fonts.flatMap(font => font.src.map(source => 'name' in source ? source.name : source.format))))).toStrictEqual(['truetype'])
+      expect([...new Set(fonts.flatMap(font => font.src.map(source => 'name' in source ? source.name : source.format)))]).toStrictEqual(['truetype'])
     })
 
     it('eot', async () => {
@@ -173,7 +173,7 @@ describe('googleicons', () => {
         weights: ['400'],
       })
       expect(fonts.length).toBe(7)
-      expect(Array.from(new Set(fonts.flatMap(font => font.src.map(source => 'name' in source ? source.name : source.format))))).toStrictEqual([undefined])
+      expect([...new Set(fonts.flatMap(font => font.src.map(source => 'name' in source ? source.name : source.format)))]).toStrictEqual([undefined])
     })
 
     it('otf', async () => {
@@ -196,7 +196,7 @@ describe('googleicons', () => {
         weights: ['400'],
       })
       expect(fonts.length).toBe(8)
-      expect(Array.from(new Set(fonts.flatMap(font => font.src.map(source => 'name' in source ? source.name : source.format))))).toStrictEqual(['woff2', undefined, 'woff', 'truetype'])
+      expect([...new Set(fonts.flatMap(font => font.src.map(source => 'name' in source ? source.name : source.format)))]).toStrictEqual(['woff2', undefined, 'woff', 'truetype'])
     })
   })
 })
