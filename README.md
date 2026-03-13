@@ -274,9 +274,9 @@ const { fonts } = await unifont.resolveFont('Poppins', {
 
 Only available when resolving the new `Material Symbols` icons.
 
-### NPM
+### npm
 
-A provider for NPM packages, either from locally installed packages in `node_modules` or from a CDN.
+A provider for npm packages, either from locally installed packages in `node_modules` or from a CDN.
 
 ```js
 import { providers } from 'unifont'
@@ -350,7 +350,7 @@ providers.npm({ root: './src' })
 - Type: `string`
 - Default: Auto-detected or inferred from family name
 
-The NPM package name. When not specified, the provider will try to find the font family in known font package patterns or infer based on Fontsource conventions:
+The npm package name. When not specified, the provider will try to find the font family in known font package patterns or infer based on Fontsource conventions:
 
 ```js
 import { createUnifont, providers } from 'unifont'
