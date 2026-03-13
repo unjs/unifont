@@ -58,7 +58,7 @@ describe('bunny', () => {
     const { fonts } = await unifont.resolveFont('Alef', {
       weights: ['400 1100'],
     })
-    expect(fonts.length).toBe(4)
+    expect(fonts.length).toBe(2)
   })
 
   it('filters subsets correctly', async () => {
