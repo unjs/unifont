@@ -210,7 +210,7 @@ describe('css font-face extraction', () => {
         @font-face {
           font-family: 'Test Font';
           src: url('/test.woff2') format('woff2');
-          font-stretch: '110%';
+          font-stretch: 110%;
         }
       `
 

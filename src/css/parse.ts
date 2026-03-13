@@ -132,7 +132,8 @@ function extractCSSValue(node: Declaration) {
       values.push(Number(child.value))
     }
     if (child.type === 'Percentage') {
-      values.push(`${child.value}%`)
+      const percentageValue = `${child.value}%`
+      buffer = buffer ? `${buffer} ${percentageValue}` : percentageValue
     }
   }
 
