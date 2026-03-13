@@ -7,6 +7,7 @@ const extractableKeyMap: Record<string, keyof FontFaceData> = {
   'src': 'src',
   'font-display': 'display',
   'font-weight': 'weight',
+  'font-stretch': 'stretch',
   'font-style': 'style',
   'font-feature-settings': 'featureSettings',
   'font-variation-settings': 'variationSettings',
@@ -129,6 +130,9 @@ function extractCSSValue(node: Declaration) {
     }
     if (child.type === 'Number') {
       values.push(Number(child.value))
+    }
+    if (child.type === 'Percentage') {
+      values.push(`${child.value}%`)
     }
   }
 

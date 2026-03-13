@@ -205,6 +205,30 @@ describe('css font-face extraction', () => {
       `)
     })
 
+    it('should handle percentages', () => {
+      const css = `
+        @font-face {
+          font-family: 'Test Font';
+          src: url('/test.woff2') format('woff2');
+          font-stretch: '110%';
+        }
+      `
+
+      expect(extractFontFaceData(css)).toMatchInlineSnapshot(`
+        [
+          {
+            "src": [
+              {
+                "format": "woff2",
+                "url": "/test.woff2",
+              },
+            ],
+            "stretch": "110%",
+          },
+        ]
+      `)
+    })
+
     it('should handle multi-value font-style properties', () => {
       expect(extractFontFaceData(`
         @font-face {
