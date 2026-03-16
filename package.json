@@ -41,7 +41,7 @@
     "@types/css-tree": "2.3.11",
     "@types/node": "24.12.0",
     "@vitest/coverage-v8": "4.0.18",
-    "bumpp": "10.4.1",
+    "bumpp": "11.0.1",
     "changelogithub": "14.0.0",
     "eslint": "10.0.3",
     "lint-staged": "16.3.3",
