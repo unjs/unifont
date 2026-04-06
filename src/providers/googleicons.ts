@@ -45,7 +45,7 @@ export default defineFontProvider('googleicons', async (providerOptions: Googlei
 
   async function getFontDetails(family: string, options: ResolveFontOptions<GoogleiconsFamilyOptions>) {
     // Google Icons require sorted icon names, or we will see a 400 error
-    const iconNames = (options.options?.experimental?.glyphs ?? providerOptions.experimental?.glyphs?.[family])?.join('')
+    const iconNames = (options.options?.experimental?.glyphs ?? providerOptions.experimental?.glyphs?.[family])?.toSorted().join(',')
 
     let css = ''
 

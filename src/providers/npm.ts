@@ -59,7 +59,7 @@ export interface NpmFamilyOptions {
    */
   version?: string
   /**
-   * The entry CSS file to parse.
+   * The entry CSS file to parse from the package.
    * @default 'index.css'
    */
   file?: string
