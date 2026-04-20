@@ -1,0 +1,13 @@
+{
+  "name": "proxy",
+  "type": "module",
+  "scripts": {
+    "build": "nitro build",
+    "dev": "nitro dev",
+    "preview": "nitro preview"
+  },
+  "devDependencies": {
+    "nitro": "latest",
+    "std-env": "^4.1.0"
+  }
+}
