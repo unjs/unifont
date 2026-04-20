@@ -40,6 +40,7 @@ export default defineConfig({
       proxy: 'https://fonts.google.com/metadata/fonts',
     },
     '/google/v1/css': {
+      headers: { vary: 'user-agent' },
       proxy: {
         to: 'https://fonts.googleapis.com/css2',
         forwardHeaders: ['user-agent'],
@@ -50,6 +51,7 @@ export default defineConfig({
         'https://fonts.google.com/metadata/icons?key=material_symbols&incomplete=true',
     },
     '/google/v1/icon': {
+      headers: { vary: 'user-agent' },
       proxy: {
         to: 'https://fonts.googleapis.com/icon',
         forwardHeaders: ['user-agent'],
