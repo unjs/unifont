@@ -6,6 +6,7 @@ export default defineConfig({
     '/**': {
       // 6 hours in production, no cache in development
       isr: isProduction ? 60 * 60 * 6 : false,
+      cors: true,
       headers: isProduction ? { 'access-control-max-age': '21600' } : {}, // 6 hours
     },
     '/adobe/v1/kit-css/*.css': {

@@ -77,7 +77,7 @@ importers:
   proxy:
     devDependencies:
       nitro:
-        specifier: latest
+        specifier: 3.0.260415-beta
         version: 3.0.260415-beta(chokidar@5.0.0)(dotenv@17.2.3)(giget@2.0.0)(jiti@2.6.1)(lru-cache@11.2.7)(vite@8.0.9(@types/node@24.12.2)(esbuild@0.27.2)(jiti@2.6.1)(yaml@2.8.2))
       std-env:
         specifier: ^4.1.0
