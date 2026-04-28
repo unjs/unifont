@@ -36,9 +36,10 @@ export default defineFontProvider('adobe', async (options: AdobeProviderOptions,
   await fetchKits()
 
   async function fetchKits(bypassCache: boolean = false) {
-    familyMap.clear()
-    notFoundFamilies.clear()
-    fonts.kits = []
+    // Build new state and swap atomically at the end so concurrent readers
+    // never observe a cleared familyMap / fonts.kits while the refresh is in flight.
+    const newKits: AdobeFontKit[] = []
+    const newFamilyMap = new Map<string, string>()
 
     await Promise.all(kits.map(async (id) => {
       let meta: AdobeFontKit
@@ -55,11 +56,18 @@ export default defineFontProvider('adobe', async (options: AdobeProviderOptions,
         throw new TypeError('No font metadata found in adobe response.')
       }
 
-      fonts.kits.push(meta)
+      newKits.push(meta)
       for (const family of meta.families) {
-        familyMap.set(family.name, family.id)
+        newFamilyMap.set(family.name, family.id)
       }
     }))
+
+    familyMap.clear()
+    notFoundFamilies.clear()
+    fonts.kits = newKits
+    for (const [k, v] of newFamilyMap) {
+      familyMap.set(k, v)
+    }
   }
 
   async function getFontDetails(family: string, options: ResolveFontOptions) {
