@@ -1,11 +1,10 @@
 packages:
   - playground
 
+overrides:
+  unifont: 'link:.'
 ignoredBuiltDependencies:
   - esbuild
 
 onlyBuiltDependencies:
   - simple-git-hooks
-
-overrides:
-  unifont: "link:."
