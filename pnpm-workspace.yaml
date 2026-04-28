@@ -6,3 +6,6 @@ ignoredBuiltDependencies:
 
 onlyBuiltDependencies:
   - simple-git-hooks
+
+overrides:
+  unifont: "link:."

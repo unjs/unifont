@@ -52,9 +52,6 @@
     "vite": "8.0.10",
     "vitest": "4.1.4"
   },
-  "resolutions": {
-    "unifont": "link:."
-  },
   "simple-git-hooks": {
     "pre-commit": "npx lint-staged"
   },
