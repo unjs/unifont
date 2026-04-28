@@ -201,6 +201,86 @@ describe('adobe', () => {
     }
   })
 
+  it('resolves adobe fonts correctly when a concurrent refresh clears state mid-flight', async () => {
+    const originalFetch = globalThis.fetch
+
+    globalThis.fetch = vi.fn().mockImplementation(async (url: string) => {
+      if (url.includes('typekit.com/api/v1/json/kits/clearrace/published')) {
+        await new Promise(resolve => setTimeout(resolve, 50))
+        return new Response(JSON.stringify({
+          kit: {
+            id: 'clearrace',
+            families: [
+              {
+                id: 'aleo',
+                name: 'Aleo',
+                slug: 'aleo',
+                css_names: ['aleo'],
+                css_stack: 'aleo, serif',
+                variations: ['n4', 'i4'],
+              },
+              {
+                id: 'barlow',
+                name: 'Barlow',
+                slug: 'barlow',
+                css_names: ['barlow'],
+                css_stack: 'barlow, sans-serif',
+                variations: ['n4'],
+              },
+            ],
+          },
+        }), { status: 200, headers: { 'content-type': 'application/json' } })
+      }
+      else if (url.includes('clearrace.css')) {
+        await new Promise(resolve => setTimeout(resolve, 50))
+        return new Response(`
+          @font-face {
+            font-family: "aleo";
+            src: url("https://use.typekit.net/aleo.woff2") format("woff2");
+            font-weight: 400;
+            font-style: normal;
+          }
+          @font-face {
+            font-family: "barlow";
+            src: url("https://use.typekit.net/barlow.woff2") format("woff2");
+            font-weight: 400;
+            font-style: normal;
+          }
+        `, { status: 200, headers: { 'content-type': 'text/css' } })
+      }
+      return originalFetch(url)
+    })
+
+    try {
+      const realDateNow = Date.now.bind(Date)
+      let time = realDateNow()
+      vi.spyOn(Date, 'now').mockImplementation(() => time)
+
+      const unifont = await createUnifont([providers.adobe({ id: 'clearrace' })])
+
+      // Advance time past KIT_REFRESH_TIMEOUT (5 minutes) so the next miss
+      // will trigger fetchKits(true).
+      time += 6 * 60 * 1000
+
+      // Order matters: Aleo's resolveFont must run first so its synchronous
+      // prefix passes the familyMap.has() check and yields at
+      // `await ctx.storage.getItem(...)` *before* NonExistentFont's resolveFont
+      // synchronously clears familyMap / fonts.kits at the top of fetchKits.
+      const [aleo, nonExistent] = await Promise.all([
+        unifont.resolveFont('Aleo'),
+        unifont.resolveFont('NonExistentFont'),
+      ])
+
+      expect(nonExistent.fonts).toHaveLength(0)
+      expect(aleo.fonts.length).toBeGreaterThan(0)
+
+      vi.restoreAllMocks()
+    }
+    finally {
+      globalThis.fetch = originalFetch
+    }
+  })
+
   it('refreshes kit metadata when font is not found in cache', async () => {
     let apiCallCount = 0
 
