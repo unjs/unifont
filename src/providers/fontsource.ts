@@ -6,6 +6,21 @@ import { cleanFontFaces, defineFontProvider, prepareWeights } from '../utils'
 
 const fontAPI = $fetch.create({ baseURL: 'https://api.fontsource.org/v1' })
 
+// registered OpenType axes served via the fontsource `standard` variant
+const FONTSOURCE_REGISTERED_AXES = new Set(['wght', 'ital', 'slnt', 'wdth', 'opsz'])
+
+function pickFontsourceAxisSlug(axes: string[]): 'wght' | 'standard' | 'full' {
+  let hasRegisteredExtra = false
+  for (const axis of axes) {
+    if (axis === 'wght' || axis === 'ital')
+      continue
+    if (!FONTSOURCE_REGISTERED_AXES.has(axis))
+      return 'full'
+    hasRegisteredExtra = true
+  }
+  return hasRegisteredExtra ? 'standard' : 'wght'
+}
+
 export default defineFontProvider('fontsource', async (_options, ctx) => {
   const fonts = await ctx.storage.getItem('fontsource:meta.json', () => fontAPI<FontsourceFontMeta[]>('/fonts', { responseType: 'json' }))
   const familyMap = new Map<string, FontsourceFontMeta>()
@@ -36,11 +51,12 @@ export default defineFontProvider('fontsource', async (_options, ctx) => {
             try {
               const variableAxes = await ctx.storage.getItem(`fontsource:${font.family}-axes.json`, () => fontAPI<FontsourceVariableFontDetail>(`/variable/${font.id}`, { responseType: 'json' }))
               if (variableAxes && variableAxes.axes.wght) {
+                const axisSlug = pickFontsourceAxisSlug(Object.keys(variableAxes.axes))
                 fontFaceData.push({
                   style,
                   weight: [Number(variableAxes.axes.wght.min), Number(variableAxes.axes.wght.max)],
                   src: [
-                    { url: `https://cdn.jsdelivr.net/fontsource/fonts/${font.id}:vf@latest/${subset}-wght-${style}.woff2`, format: 'woff2' },
+                    { url: `https://cdn.jsdelivr.net/fontsource/fonts/${font.id}:vf@latest/${subset}-${axisSlug}-${style}.woff2`, format: 'woff2' },
                   ],
                   unicodeRange: fontDetail.unicodeRange[subset]?.split(','),
                   meta: { subset },
