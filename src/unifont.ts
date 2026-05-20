@@ -20,7 +20,7 @@ export interface Unifont<T extends Provider[]> {
     }>>,
     providers?: T[number]['_name'][],
   ) => Promise<ResolveFontResult & { provider?: T[number]['_name'] }>
-  getAvailableFontProperties: (fontFamily: string, providers?: T[number]['_name'][]) => Promise<GetAvailableFontPropertiesResult & { provider?: T[number]['_name'] }>
+  getAvailableFontProperties: (fontFamily: string, providers?: T[number]['_name'][]) => Promise<(GetAvailableFontPropertiesResult & { provider?: T[number]['_name'] }) | undefined>
   listFonts: (providers?: T[number]['_name'][]) => Promise<string[] | undefined>
 }
 
@@ -118,7 +118,7 @@ export async function createUnifont<T extends [Provider, ...Provider[]]>(provide
     fontFamily: string,
     providers: T[number]['_name'][] = allProviders,
   ): Promise<
-    GetAvailableFontPropertiesResult & { provider?: T[number]['_name'] }
+    (GetAvailableFontPropertiesResult & { provider?: T[number]['_name'] }) | undefined
   > {
     for (const id of providers) {
       const provider = stack[id]
@@ -126,7 +126,10 @@ export async function createUnifont<T extends [Provider, ...Provider[]]>(provide
       try {
         const result = await provider?.getAvailableFontProperties?.(fontFamily)
         if (result) {
-          return result
+          return {
+            ...result,
+            provider: id,
+          }
         }
       }
       catch (cause) {
@@ -137,7 +140,7 @@ export async function createUnifont<T extends [Provider, ...Provider[]]>(provide
         console.error(message, cause)
       }
     }
-    return {}
+    return undefined
   }
 
   async function listFonts(providers: T[number]['_name'][] = allProviders): Promise<string[] | undefined> {

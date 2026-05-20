@@ -138,6 +138,7 @@ describe('google', () => {
     "ttf",
     "eot",
   ],
+  "provider": "google",
   "styles": [
     "normal",
     "italic",
@@ -168,7 +169,7 @@ describe('google', () => {
   ],
 }`)
     result = await unifont.getAvailableFontProperties('XXX')
-    expect(result).toMatchInlineSnapshot(`{}`)
+    expect(result).toEqual(undefined)
   })
 
   it('respects provider glyphs option and resolves optimized font', async () => {

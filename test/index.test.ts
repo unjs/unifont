@@ -197,7 +197,7 @@ describe('unifont', () => {
       // @ts-expect-error at least a provider is required
       const unifont = await createUnifont([])
       const result = await unifont.getAvailableFontProperties('Foo')
-      expect(result).toMatchInlineSnapshot('{}')
+      expect(result).toEqual(undefined)
       expect(console.error).not.toHaveBeenCalled()
       error.mockRestore()
     })
@@ -218,6 +218,7 @@ describe('unifont', () => {
   "formats": [
     "woff2",
   ],
+  "provider": "stub",
 }`)
       expect(console.error).not.toHaveBeenCalled()
       error.mockRestore()
@@ -236,7 +237,7 @@ describe('unifont', () => {
         }))(),
       ])
       const result = await unifont.getAvailableFontProperties('Foo')
-      expect(result).toEqual({})
+      expect(result).toEqual(undefined)
       expect(console.error).toHaveBeenCalledWith(
         'Could not get available properties for `Foo` from `bad-provider` provider.',
         expect.objectContaining({}),

@@ -66,6 +66,7 @@ describe('fontshare', () => {
     "woff",
     "ttf",
   ],
+  "provider": "fontshare",
   "styles": [
     "normal",
     "italic",
@@ -80,7 +81,7 @@ describe('fontshare', () => {
   ],
 }`)
     result = await unifont.getAvailableFontProperties('XXX')
-    expect(result).toMatchInlineSnapshot(`{}`)
+    expect(result).toEqual(undefined)
   })
 
   it('falls back to static weights', async () => {

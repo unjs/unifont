@@ -58,6 +58,7 @@ describe('googleicons', () => {
     "ttf",
     "eot",
   ],
+  "provider": "googleicons",
   "styles": [
     "normal",
   ],
@@ -68,7 +69,7 @@ describe('googleicons', () => {
   ],
 }`)
     result = await unifont.getAvailableFontProperties('XXX')
-    expect(result).toMatchInlineSnapshot(`{}`)
+    expect(result).toEqual(undefined)
   })
 
   it('respects provider glyphs option and resolves optimized Material Symbols', async () => {

@@ -656,7 +656,7 @@ const availableFonts = await unifont.listFont(['google'])
 
 #### `getAvailableFontProperties()`
 
-- Type: `(fontFamily: string, providers?: T[number]['_name'][]) => Promise<GetAvailableFontPropertiesResult & { provider?: T[number]['_name'] }>`
+- Type: `(fontFamily: string, providers?: T[number]['_name'][]) => Promise<(GetAvailableFontPropertiesResult & { provider?: T[number]['_name'] }) | undefined>`
 
 Retrieves available font properties for the specified font family:
 

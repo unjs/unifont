@@ -65,7 +65,7 @@ export default defineFontProvider('bunny', async (_options, ctx) => {
     getAvailableFontProperties(fontFamily) {
       const id = familyMap.get(fontFamily)
       if (!id)
-        return {}
+        return
       const font = fonts[id]!
       return {
         formats: ['woff2', 'woff'],

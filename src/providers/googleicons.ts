@@ -86,7 +86,7 @@ export default defineFontProvider('googleicons', async (providerOptions: Googlei
     },
     getAvailableFontProperties(fontFamily) {
       if (!googleIcons.includes(fontFamily)) {
-        return {}
+        return
       }
       return {
         formats: ['woff2', 'woff', 'ttf', 'eot'],

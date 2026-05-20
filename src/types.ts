@@ -93,7 +93,7 @@ export interface InitializedProvider<
     family: string,
     options: ResolveFontOptions<FamilyOptions>,
   ) => Awaitable<ResolveFontResult | undefined>
-  getAvailableFontProperties?: (family: string) => Awaitable<GetAvailableFontPropertiesResult>
+  getAvailableFontProperties?: (family: string) => Awaitable<GetAvailableFontPropertiesResult | undefined>
   listFonts?: (() => Awaitable<string[] | undefined>) | undefined
 }
 

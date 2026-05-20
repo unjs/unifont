@@ -144,7 +144,7 @@ export default defineFontProvider('google', async (providerOptions: GoogleProvid
     getAvailableFontProperties(fontFamily) {
       const font = googleFonts.find(font => font.family === fontFamily)
       if (!font)
-        return {}
+        return
       const styles = new Set<FontStyles>(['normal'])
       const weights = new Set<string>()
       for (const rawWeight of Object.keys(font.fonts)) {

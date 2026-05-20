@@ -70,7 +70,7 @@ export default defineFontProvider('fontshare', async (_options, ctx) => {
     },
     getAvailableFontProperties(fontFamily) {
       if (!fontshareFamilies.has(fontFamily))
-        return {}
+        return
       const font = fonts.find(f => f.name === fontFamily)!
       const styles = new Set<FontStyles>(['normal'])
       const weights = new Set<string>()

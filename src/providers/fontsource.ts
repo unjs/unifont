@@ -95,11 +95,11 @@ export default defineFontProvider('fontsource', async (_options, ctx) => {
     async getAvailableFontProperties(fontFamily) {
       const font = familyMap.get(fontFamily)
       if (!font)
-        return {}
+        return
       const weights = [...font.weights.map(String)]
       if (font.variable) {
-        const variableAxes = await getVariableAxes(ctx, font)
-        if (variableAxes.axes.wght)
+        const variableAxes = await getVariableAxes(ctx, font).catch(() => undefined)
+        if (variableAxes?.axes.wght)
           weights.push(`${variableAxes.axes.wght.min} ${variableAxes.axes.wght.max}`)
       }
       return {
