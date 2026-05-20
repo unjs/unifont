@@ -1,4 +1,4 @@
-import type { FontFaceData, FontFormat, ResolveFontOptions } from '../types'
+import type { FontFaceData, FontFormat, FontStyles, ResolveFontOptions } from '../types'
 
 import { hash } from 'ohash'
 import { extractFontFaceData } from '../css/parse'
@@ -141,6 +141,30 @@ export default defineFontProvider('google', async (providerOptions: GoogleProvid
     listFonts() {
       return googleFonts.map(font => font.family)
     },
+    async getAvailableFontProperties(fontFamily) {
+      const font = googleFonts.find(font => font.family === fontFamily)
+      if (!font)
+        return {}
+      const styles = new Set<FontStyles>(['normal'])
+      const weights = new Set<string>()
+      for (const rawWeight of Object.keys(font.fonts)) {
+        const italic = rawWeight.endsWith('i')
+        const weight = italic ? rawWeight.slice(0, -1) : rawWeight
+        if (italic)
+          styles.add('italic')
+        weights.add(weight)
+      }
+      const axe = font.axes.find(e => e.tag === 'wght')
+      if (axe) {
+        weights.add(`${axe.min} ${axe.max}`)
+      }
+      return {
+        formats: ['woff2', 'woff', 'ttf', 'eot'],
+        styles: [...styles],
+        subsets: font.subsets,
+        weights: [...weights],
+      }
+    },
     async resolveFont(fontFamily, options: ResolveFontOptions<GoogleFamilyOptions>) {
       if (!googleFonts.some(font => font.family === fontFamily)) {
         return
@@ -164,7 +188,7 @@ interface FontIndexMeta {
     lineHeight: number | null
   }>
   axes: Array<{
-    tag: string
+    tag: 'wght' | 'opsz'
     min: number
     max: number
     defaultValue: number
