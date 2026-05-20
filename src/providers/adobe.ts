@@ -29,15 +29,17 @@ export default defineFontProvider('adobe', async (options: AdobeProviderOptions,
     kits: [] as AdobeFontKit[],
   }
   let lastRefreshKitTime: number
+  let fetchKitsPromise: Promise<void> | undefined
 
   const kits = typeof options.id === 'string' ? [options.id] : options.id
 
   await fetchKits()
 
   async function fetchKits(bypassCache: boolean = false) {
-    familyMap.clear()
-    notFoundFamilies.clear()
-    fonts.kits = []
+    // Build new state and swap atomically at the end so concurrent readers
+    // never observe a cleared familyMap / fonts.kits while the refresh is in flight.
+    const newKits: AdobeFontKit[] = []
+    const newFamilyMap = new Map<string, string>()
 
     await Promise.all(kits.map(async (id) => {
       let meta: AdobeFontKit
@@ -54,11 +56,18 @@ export default defineFontProvider('adobe', async (options: AdobeProviderOptions,
         throw new TypeError('No font metadata found in adobe response.')
       }
 
-      fonts.kits.push(meta)
+      newKits.push(meta)
       for (const family of meta.families) {
-        familyMap.set(family.name, family.id)
+        newFamilyMap.set(family.name, family.id)
       }
     }))
+
+    familyMap.clear()
+    notFoundFamilies.clear()
+    fonts.kits = newKits
+    for (const [k, v] of newFamilyMap) {
+      familyMap.set(k, v)
+    }
   }
 
   async function getFontDetails(family: string, options: ResolveFontOptions) {
@@ -118,13 +127,23 @@ export default defineFontProvider('adobe', async (options: AdobeProviderOptions,
       }
 
       // Try refreshing the kit metadata if family is not found. We use a debounce mechanism to avoid frequent refreshes.
+      // If a refresh is already in flight, await the existing promise to avoid a race condition
+      // where concurrent callers see a cleared familyMap.
       if (!familyMap.has(family)) {
-        const lastRefetch = lastRefreshKitTime || 0
-        const now = Date.now()
+        if (fetchKitsPromise) {
+          await fetchKitsPromise
+        }
+        else {
+          const lastRefetch = lastRefreshKitTime || 0
+          const now = Date.now()
 
-        if (now - lastRefetch > KIT_REFRESH_TIMEOUT) {
-          lastRefreshKitTime = Date.now()
-          await fetchKits(true)
+          if (now - lastRefetch > KIT_REFRESH_TIMEOUT) {
+            lastRefreshKitTime = now
+            fetchKitsPromise = fetchKits(true).finally(() => {
+              fetchKitsPromise = undefined
+            })
+            await fetchKitsPromise
+          }
         }
       }
 

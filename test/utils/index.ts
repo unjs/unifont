@@ -21,12 +21,14 @@ export function groupBy<T, K extends PropertyKey>(arr: T[], by: (arg: T) => K): 
   }, {} as Record<K, T[]>)
 }
 
+const RE = /^((https?:)?\/\/[^/]+)\/.*(\.[^.]+)?$/
+
 export function sanitizeFontSource(data: FontFaceData[]) {
   return data.map(d => ({
     ...d,
     src: d.src.map(s => ({
       ...s,
-      url: 'url' in s ? s.url.replace(/^((https?:)?\/\/[^/]+)\/.*(\.[^.]+)?$/, '$1/font$3') : undefined,
+      url: 'url' in s ? s.url.replace(RE, '$1/font$3') : undefined,
     })),
   }))
 }

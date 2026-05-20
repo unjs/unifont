@@ -7,6 +7,7 @@ const extractableKeyMap: Record<string, keyof FontFaceData> = {
   'src': 'src',
   'font-display': 'display',
   'font-weight': 'weight',
+  'font-stretch': 'stretch',
   'font-style': 'style',
   'font-feature-settings': 'featureSettings',
   'font-variation-settings': 'variationSettings',
@@ -72,8 +73,10 @@ export function extractFontFaceData(css: string, family?: string): FontFaceData[
   return mergeFontSources(fontFaces)
 }
 
+const RE = /^(?<quote>['"])(.*)\k<quote>$/
+
 function processRawValue(value: string) {
-  return value.split(',').map(v => v.trim().replace(/^(?<quote>['"])(.*)\k<quote>$/, '$2'))
+  return value.split(',').map(v => v.trim().replace(RE, '$2'))
 }
 
 function extractCSSValue(node: Declaration) {
@@ -127,6 +130,10 @@ function extractCSSValue(node: Declaration) {
     }
     if (child.type === 'Number') {
       values.push(Number(child.value))
+    }
+    if (child.type === 'Percentage') {
+      const percentageValue = `${child.value}%`
+      buffer = buffer ? `${buffer} ${percentageValue}` : percentageValue
     }
   }
 

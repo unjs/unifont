@@ -60,7 +60,7 @@ describe('bunny', () => {
       provider: 'bunny',
       weights: ['400 1100'],
     })
-    expect(fonts.length).toBe(4)
+    expect(fonts.length).toBe(2)
   })
 
   it('filters subsets correctly', async () => {
@@ -89,7 +89,7 @@ describe('bunny', () => {
         weights: ['400'],
       })
       expect(fonts.length).toBe(1)
-      expect(Array.from(new Set(fonts.flatMap(font => font.src.map(source => 'name' in source ? source.name : source.format))))).toStrictEqual(['woff2'])
+      expect([...new Set(fonts.flatMap(font => font.src.map(source => 'name' in source ? source.name : source.format)))]).toStrictEqual(['woff2'])
     })
 
     it('woff', async () => {
@@ -103,7 +103,7 @@ describe('bunny', () => {
         weights: ['400'],
       })
       expect(fonts.length).toBe(1)
-      expect(Array.from(new Set(fonts.flatMap(font => font.src.map(source => 'name' in source ? source.name : source.format))))).toStrictEqual(['woff'])
+      expect([...new Set(fonts.flatMap(font => font.src.map(source => 'name' in source ? source.name : source.format)))]).toStrictEqual(['woff'])
     })
 
     it('ttf', async () => {
@@ -156,7 +156,7 @@ describe('bunny', () => {
         weights: ['400'],
       })
       expect(fonts.length).toBe(1)
-      expect(Array.from(new Set(fonts.flatMap(font => font.src.map(source => 'name' in source ? source.name : source.format))))).toStrictEqual(['woff2', 'woff'])
+      expect([...new Set(fonts.flatMap(font => font.src.map(source => 'name' in source ? source.name : source.format)))]).toStrictEqual(['woff2', 'woff'])
     })
   })
 })

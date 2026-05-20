@@ -7,7 +7,7 @@ import { cleanFontFaces, defineFontProvider, prepareWeights, splitCssIntoSubsets
 
 type VariableAxis = 'opsz' | 'slnt' | 'wdth' | (string & {})
 
-export interface GoogleOptions {
+export interface GoogleProviderOptions {
   experimental?: {
     /**
      * Experimental: Setting variable axis configuration on a per-font basis.
@@ -41,13 +41,13 @@ export interface GoogleFamilyOptions {
 
 // https://stackoverflow.com/questions/25011533/google-font-api-uses-browser-detection-how-to-get-all-font-variations-for-font
 export const userAgents: Partial<Record<FontFormat, string>> = {
-  woff2: 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/121.0.0.0 Safari/537.36',
-  woff: 'Mozilla/5.0 (Windows NT 6.1; WOW64; rv:27.0) Gecko/20100101 Firefox/27.0',
-  ttf: 'Mozilla/5.0 (Macintosh; U; Intel Mac OS X 10_6_8; de-at) AppleWebKit/533.21.1 (KHTML, like Gecko) Version/5.0.5 Safari/533.21.1',
   eot: 'Mozilla/4.0 (compatible; MSIE 8.0; Windows NT 6.1; Trident/4.0)',
+  ttf: 'Mozilla/5.0 (Macintosh; U; Intel Mac OS X 10_6_8; de-at) AppleWebKit/533.21.1 (KHTML, like Gecko) Version/5.0.5 Safari/533.21.1',
+  woff: 'Mozilla/5.0 (Windows NT 6.1; WOW64; rv:27.0) Gecko/20100101 Firefox/27.0',
+  woff2: 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/121.0.0.0 Safari/537.36',
 }
 
-export default defineFontProvider('google', async (providerOptions: GoogleOptions, ctx) => {
+export default defineFontProvider('google', async (providerOptions: GoogleProviderOptions, ctx) => {
   const googleFonts = await ctx.storage.getItem('google:meta.json', () => $fetch<{ familyMetadataList: FontIndexMeta[] }>('https://fonts.google.com/metadata/fonts', { responseType: 'json' }).then(r => r.familyMetadataList))
 
   const styleMap = {
@@ -58,6 +58,8 @@ export default defineFontProvider('google', async (providerOptions: GoogleOption
 
   async function getFontDetails(family: string, options: ResolveFontOptions<GoogleFamilyOptions>) {
     const font = googleFonts.find(font => font.family === family)!
+    // https://github.com/e18e/eslint-plugin/issues/69
+
     const styles = [...new Set(options.styles.map(i => styleMap[i]))].sort()
     const glyphs = (options.options?.experimental?.glyphs ?? providerOptions.experimental?.glyphs?.[family])?.join('')
     const weights = prepareWeights({
@@ -93,7 +95,7 @@ export default defineFontProvider('google', async (providerOptions: GoogleOption
         resolvedVariants = axisValue
       }
       else {
-        resolvedVariants = resolvedVariants.flatMap(v => [...axisValue].map(o => [v, o].join(','))).sort()
+        resolvedVariants = resolvedVariants.flatMap(v => Array.from(axisValue, o => [v, o].join(','))).sort()
       }
       resolvedAxes.push(axis)
     }
