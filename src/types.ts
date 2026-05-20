@@ -84,6 +84,8 @@ export interface ResolveFontResult {
   fallbacks?: string[]
 }
 
+export type GetAvailableFontPropertiesResult = Partial<Omit<ResolveFontOptions, 'options'>>
+
 export interface InitializedProvider<
   FamilyOptions extends Record<string, any> = never,
 > {
@@ -91,6 +93,7 @@ export interface InitializedProvider<
     family: string,
     options: ResolveFontOptions<FamilyOptions>,
   ) => Awaitable<ResolveFontResult | undefined>
+  getAvailableFontProperties?: (family: string) => Awaitable<GetAvailableFontPropertiesResult>
   listFonts?: (() => Awaitable<string[] | undefined>) | undefined
 }
 

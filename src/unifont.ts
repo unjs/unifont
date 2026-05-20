@@ -1,5 +1,5 @@
 import type { Storage } from './cache'
-import type { InitializedProvider, Provider, ProviderContext, ResolveFontOptions, ResolveFontResult } from './types'
+import type { GetAvailableFontPropertiesResult, InitializedProvider, Provider, ProviderContext, ResolveFontOptions, ResolveFontResult } from './types'
 import { createAsyncStorage, memoryStorage } from './cache'
 
 export interface UnifontOptions {
@@ -20,6 +20,7 @@ export interface Unifont<T extends Provider[]> {
     }>>,
     providers?: T[number]['_name'][],
   ) => Promise<ResolveFontResult & { provider?: T[number]['_name'] }>
+  getAvailableFontProperties: (fontFamily: string, providers?: T[number]['_name'][]) => Promise<GetAvailableFontPropertiesResult & { provider?: T[number]['_name'] }>
   listFonts: (providers?: T[number]['_name'][]) => Promise<string[] | undefined>
 }
 
@@ -113,6 +114,32 @@ export async function createUnifont<T extends [Provider, ...Provider[]]>(provide
     return { fonts: [] }
   }
 
+  async function getAvailableFontProperties(
+    fontFamily: string,
+    providers: T[number]['_name'][] = allProviders,
+  ): Promise<
+    GetAvailableFontPropertiesResult & { provider?: T[number]['_name'] }
+  > {
+    for (const id of providers) {
+      const provider = stack[id]
+
+      try {
+        const result = await provider?.getAvailableFontProperties?.(fontFamily)
+        if (result) {
+          return result
+        }
+      }
+      catch (cause) {
+        const message = `Could not get available properties for \`${fontFamily}\` from \`${id}\` provider.`
+        if (unifontOptions?.throwOnError) {
+          throw new Error(message, { cause })
+        }
+        console.error(message, cause)
+      }
+    }
+    return {}
+  }
+
   async function listFonts(providers: T[number]['_name'][] = allProviders): Promise<string[] | undefined> {
     let names: string[] | undefined
     for (const id of providers) {
@@ -138,6 +165,7 @@ export async function createUnifont<T extends [Provider, ...Provider[]]>(provide
 
   return {
     resolveFont,
+    getAvailableFontProperties,
     listFonts,
   }
 }
