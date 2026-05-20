@@ -1,4 +1,4 @@
-import type { FontFaceData, ResolveFontOptions } from '../types'
+import type { FontFaceData, FontStyles, ProviderContext, ResolveFontOptions } from '../types'
 
 import { hash } from 'ohash'
 import { $fetch } from '../fetch'
@@ -19,6 +19,10 @@ function pickFontsourceAxisSlug(axes: string[]): 'wght' | 'standard' | 'full' {
     hasRegisteredExtra = true
   }
   return hasRegisteredExtra ? 'standard' : 'wght'
+}
+
+async function getVariableAxes(ctx: ProviderContext, font: FontsourceFontMeta) {
+  return await ctx.storage.getItem(`fontsource:${font.family}-axes.json`, () => fontAPI<FontsourceVariableFontDetail>(`/variable/${font.id}`, { responseType: 'json' }))
 }
 
 export default defineFontProvider('fontsource', async (_options, ctx) => {
@@ -49,8 +53,8 @@ export default defineFontProvider('fontsource', async (_options, ctx) => {
         for (const { weight, variable } of weights) {
           if (variable) {
             try {
-              const variableAxes = await ctx.storage.getItem(`fontsource:${font.family}-axes.json`, () => fontAPI<FontsourceVariableFontDetail>(`/variable/${font.id}`, { responseType: 'json' }))
-              if (variableAxes && variableAxes.axes.wght) {
+              const variableAxes = await getVariableAxes(ctx, font)
+              if (variableAxes.axes.wght) {
                 const axisSlug = pickFontsourceAxisSlug(Object.keys(variableAxes.axes))
                 fontFaceData.push({
                   style,
@@ -88,6 +92,23 @@ export default defineFontProvider('fontsource', async (_options, ctx) => {
     listFonts() {
       return [...familyMap.keys()]
     },
+    async getAvailableFontProperties(fontFamily) {
+      const font = familyMap.get(fontFamily)
+      if (!font)
+        return {}
+      const weights = [...font.weights.map(String)]
+      if (font.variable) {
+        const variableAxes = await getVariableAxes(ctx, font)
+        if (variableAxes.axes.wght)
+          weights.push(`${variableAxes.axes.wght.min} ${variableAxes.axes.wght.max}`)
+      }
+      return {
+        formats: ['woff2', 'woff', 'ttf'],
+        styles: font.styles,
+        subsets: font.subsets,
+        weights,
+      }
+    },
     async resolveFont(fontFamily, options) {
       if (!familyMap.has(fontFamily)) {
         return
@@ -104,7 +125,7 @@ interface FontsourceFontMeta {
   family: string
   subsets: string[]
   weights: number[]
-  styles: string[]
+  styles: FontStyles[]
   defSubset: string
   variable: boolean
   lastModified: string
