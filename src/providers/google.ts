@@ -58,7 +58,6 @@ export default defineFontProvider('google', async (providerOptions: GoogleProvid
 
   async function getFontDetails(family: string, options: ResolveFontOptions<GoogleFamilyOptions>) {
     const font = googleFonts.find(font => font.family === family)!
-
     const styles = [...new Set(options.styles.map(i => styleMap[i]))].sort()
     const glyphs = (options.options?.experimental?.glyphs ?? providerOptions.experimental?.glyphs?.[family])?.join('')
     const weights = prepareWeights({
