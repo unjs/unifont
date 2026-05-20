@@ -48,6 +48,27 @@ describe('googleicons', () => {
     expect(names!.length > 0).toEqual(true)
   })
 
+  it('handles getAvailableFontProperties correctly', async () => {
+    const unifont = await createUnifont([providers.googleicons()])
+    const result = await unifont.getAvailableFontProperties('Material Symbols Outlined')
+    expect(result).toMatchInlineSnapshot(`{
+  "formats": [
+    "woff2",
+    "woff",
+    "ttf",
+    "eot",
+  ],
+  "styles": [
+    "normal",
+  ],
+  "subsets": undefined,
+  "weights": [
+    "100",
+    "400",
+  ],
+}`)
+  })
+
   it('respects provider glyphs option and resolves optimized Material Symbols', async () => {
     const unifont = await createUnifont([providers.googleicons({
       experimental: {

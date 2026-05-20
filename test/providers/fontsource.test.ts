@@ -458,6 +458,45 @@ describe('fontsource', () => {
     expect(names!.length > 0).toEqual(true)
   })
 
+  it('handles getAvailableFontProperties correctly', async () => {
+    const unifont = await createUnifont([providers.fontsource()])
+    const result = await unifont.getAvailableFontProperties('Roboto')
+    expect(result).toMatchInlineSnapshot(`{
+  "formats": [
+    "woff2",
+    "woff",
+    "ttf",
+  ],
+  "styles": [
+    "italic",
+    "normal",
+  ],
+  "subsets": [
+    "cyrillic",
+    "cyrillic-ext",
+    "greek",
+    "greek-ext",
+    "latin",
+    "latin-ext",
+    "math",
+    "symbols",
+    "vietnamese",
+  ],
+  "weights": [
+    "100",
+    "200",
+    "300",
+    "400",
+    "500",
+    "600",
+    "700",
+    "800",
+    "900",
+    "100 900",
+  ],
+}`)
+  })
+
   it('falls back to static weights', async () => {
     const unifont = await createUnifont([providers.fontsource()])
     const { fonts } = await unifont.resolveFont('Roboto', {
