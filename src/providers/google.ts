@@ -141,7 +141,7 @@ export default defineFontProvider('google', async (providerOptions: GoogleProvid
     listFonts() {
       return googleFonts.map(font => font.family)
     },
-    async getAvailableFontProperties(fontFamily) {
+    getAvailableFontProperties(fontFamily) {
       const font = googleFonts.find(font => font.family === fontFamily)
       if (!font)
         return {}

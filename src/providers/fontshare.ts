@@ -68,7 +68,7 @@ export default defineFontProvider('fontshare', async (_options, ctx) => {
     listFonts() {
       return [...fontshareFamilies]
     },
-    async getAvailableFontProperties(fontFamily) {
+    getAvailableFontProperties(fontFamily) {
       if (!fontshareFamilies.has(fontFamily))
         return {}
       const font = fonts.find(f => f.name === fontFamily)!
