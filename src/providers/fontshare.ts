@@ -1,4 +1,4 @@
-import type { ResolveFontOptions } from '../types'
+import type { FontStyles, ResolveFontOptions } from '../types'
 
 import { hash } from 'ohash'
 import { extractFontFaceData } from '../css/parse'
@@ -68,6 +68,34 @@ export default defineFontProvider('fontshare', async (_options, ctx) => {
     listFonts() {
       return [...fontshareFamilies]
     },
+    async getAvailableFontProperties(fontFamily) {
+      if (!fontshareFamilies.has(fontFamily))
+        return {}
+      const font = fonts.find(f => f.name === fontFamily)!
+      const styles = new Set<FontStyles>(['normal'])
+      const weights = new Set<string>()
+      for (const style of font.styles) {
+        if (style.is_italic) {
+          styles.add('italic')
+        }
+        // TODO: support variable fonts
+        if (style.is_variable) {
+        //   const axe = font.axes.find(e => e.property === 'wght')
+        //   if (axe) {
+        //     weights.add(`${axe.range_left} ${axe.range_right}`)
+        //   }
+        }
+        else {
+          weights.add(style.weight.weight.toString())
+        }
+      }
+      return {
+        formats: ['woff2', 'woff', 'ttf'],
+        styles: [...styles],
+        subsets: undefined,
+        weights: [...weights],
+      }
+    },
     async resolveFont(fontFamily, defaults) {
       if (!fontshareFamilies.has(fontFamily)) {
         return
@@ -108,5 +136,12 @@ interface FontshareFontMeta {
       number: number
       weight: number
     }
+  }>
+  axes: Array<{
+    name: string
+    property: 'wght' | 'ital' | 'opsz'
+    range_default: number
+    range_left: number
+    range_right: number
   }>
 }
