@@ -55,7 +55,7 @@ describe('bunny', () => {
 
   it('handles getAvailableFontProperties correctly', async () => {
     const unifont = await createUnifont([providers.bunny()])
-    const result = await unifont.getAvailableFontProperties('Roboto')
+    let result = await unifont.getAvailableFontProperties('Roboto')
     expect(result).toMatchInlineSnapshot(`{
   "formats": [
     "woff2",
@@ -78,6 +78,8 @@ describe('bunny', () => {
     "900",
   ],
 }`)
+    result = await unifont.getAvailableFontProperties('XXX')
+    expect(result).toMatchInlineSnapshot(`{}`)
   })
 
   it('falls back to static weights', async () => {

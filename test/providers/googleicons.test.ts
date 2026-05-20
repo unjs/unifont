@@ -50,7 +50,7 @@ describe('googleicons', () => {
 
   it('handles getAvailableFontProperties correctly', async () => {
     const unifont = await createUnifont([providers.googleicons()])
-    const result = await unifont.getAvailableFontProperties('Material Symbols Outlined')
+    let result = await unifont.getAvailableFontProperties('Material Symbols Outlined')
     expect(result).toMatchInlineSnapshot(`{
   "formats": [
     "woff2",
@@ -67,6 +67,8 @@ describe('googleicons', () => {
     "400",
   ],
 }`)
+    result = await unifont.getAvailableFontProperties('XXX')
+    expect(result).toMatchInlineSnapshot(`{}`)
   })
 
   it('respects provider glyphs option and resolves optimized Material Symbols', async () => {

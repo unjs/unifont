@@ -59,7 +59,7 @@ describe('fontshare', () => {
 
   it('handles getAvailableFontProperties correctly', async () => {
     const unifont = await createUnifont([providers.fontshare()])
-    const result = await unifont.getAvailableFontProperties('Satoshi')
+    let result = await unifont.getAvailableFontProperties('Satoshi')
     expect(result).toMatchInlineSnapshot(`{
   "formats": [
     "woff2",
@@ -79,6 +79,8 @@ describe('fontshare', () => {
     "900",
   ],
 }`)
+    result = await unifont.getAvailableFontProperties('XXX')
+    expect(result).toMatchInlineSnapshot(`{}`)
   })
 
   it('falls back to static weights', async () => {
