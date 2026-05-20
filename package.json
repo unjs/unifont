@@ -44,7 +44,7 @@
     "bumpp": "11.0.1",
     "changelogithub": "14.0.0",
     "eslint": "10.4.0",
-    "lint-staged": "16.4.0",
+    "lint-staged": "17.0.5",
     "simple-git-hooks": "2.13.1",
     "tsdown": "0.21.10",
     "typescript": "6.0.3",
