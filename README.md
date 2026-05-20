@@ -686,7 +686,7 @@ const unifont = await createUnifont([
   providers.fontsource(),
 ])
 
-const availableFonts = await unifont.getAvailableFontProperties('Roboto', ['google'])
+const availableProperties = await unifont.getAvailableFontProperties('Roboto', ['google'])
 ```
 
 ## Building your own provider
