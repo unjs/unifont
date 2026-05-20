@@ -339,6 +339,27 @@ describe('fontsource', () => {
     expect(fonts.some(fnt => Array.isArray(fnt.weight))).toBe(true)
   })
 
+  it('uses the wght variant for fonts whose only variable axis is wght', async () => {
+    const unifont = await createUnifont([providers.fontsource()])
+    const { fonts } = await unifont.resolveFont('Roboto Mono', { weights: ['400 700'], subsets: ['latin'], styles: ['normal'] })
+    const variable = fonts.find(fnt => Array.isArray(fnt.weight))!
+    expect(variable.src[0]).toMatchObject({ url: 'https://cdn.jsdelivr.net/fontsource/fonts/roboto-mono:vf@latest/latin-wght-normal.woff2' })
+  })
+
+  it('uses the standard variant when extra registered axes are present', async () => {
+    const unifont = await createUnifont([providers.fontsource()])
+    const { fonts } = await unifont.resolveFont('Inter', { weights: ['100 900'], subsets: ['latin'], styles: ['normal'] })
+    const variable = fonts.find(fnt => Array.isArray(fnt.weight))!
+    expect(variable.src[0]).toMatchObject({ url: 'https://cdn.jsdelivr.net/fontsource/fonts/inter:vf@latest/latin-standard-normal.woff2' })
+  })
+
+  it('uses the full variant when custom axes are present', async () => {
+    const unifont = await createUnifont([providers.fontsource()])
+    const { fonts } = await unifont.resolveFont('Fraunces', { weights: ['100 900'], subsets: ['latin'], styles: ['normal'] })
+    const variable = fonts.find(fnt => Array.isArray(fnt.weight))!
+    expect(variable.src[0]).toMatchObject({ url: 'https://cdn.jsdelivr.net/fontsource/fonts/fraunces:vf@latest/latin-full-normal.woff2' })
+  })
+
   it('handles default subsets', async () => {
     const unifont = await createUnifont([providers.fontsource()])
     const { fonts } = await unifont.resolveFont('Roboto Mono', { subsets: undefined })
