@@ -1,8 +1,9 @@
 packages:
   - playground
 
-ignoredBuiltDependencies:
-  - esbuild
+overrides:
+  unifont: 'link:.'
 
-onlyBuiltDependencies:
-  - simple-git-hooks
+allowBuilds:
+  esbuild: false
+  simple-git-hooks: true
