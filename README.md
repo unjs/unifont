@@ -39,7 +39,7 @@ const unifont = await createUnifont([
 ])
 
 const availableFonts = await unifont.listFonts()
-const { fonts } = await unifont.resolveFont('Poppins')
+const { fonts, fallbacks } = await unifont.resolveFont('Poppins')
 ```
 
 ## Built-in providers
@@ -481,7 +481,7 @@ const unifont = await createUnifont([
 
 - Type: `(fontFamily: string, options?: Partial<ResolveFontOptions>, providers?: T[]) => Promise<ResolveFontResult & { provider?: T }>`
 
-Retrieves font face data from available providers:
+Retrieves font face data and fallbacks from available providers:
 
 ```js
 import { createUnifont, providers } from 'unifont'
@@ -491,10 +491,12 @@ const unifont = await createUnifont([
   providers.fontsource(),
 ])
 
-const { fonts } = await unifont.resolveFont('Poppins')
+const { fonts, fallbacks } = await unifont.resolveFont('Poppins')
 ```
 
 It loops through all providers and returns the result of the first provider that can return some data.
+
+Fallbacks, if returned, contain the name of a [generic font family](https://developer.mozilla.org/en-US/docs/Web/CSS/Reference/Properties/font-family#generic-name). That can be useful, for example, to generate optimized fallbacks using font metrics.
 
 ##### Options
 
