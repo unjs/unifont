@@ -6,6 +6,15 @@ import { $fetch } from '../fetch'
 import { cleanFontFaces, defineFontProvider, prepareWeights } from '../utils'
 
 const fontAPI = $fetch.create({ baseURL: 'https://api.fontshare.com/v2' })
+
+function getFallbacks(category: string): string[] | undefined {
+  if (category.includes('Serif'))
+    return ['serif']
+  if (category.includes('Sans'))
+    return ['sans-serif']
+  return undefined
+}
+
 export default defineFontProvider('fontshare', async (_options, ctx) => {
   const fontshareFamilies = new Set<string>()
 
@@ -31,9 +40,7 @@ export default defineFontProvider('fontshare', async (_options, ctx) => {
     fontshareFamilies.add(font.name)
   }
 
-  async function getFontDetails(family: string, options: ResolveFontOptions) {
-  // https://api.fontshare.com/v2/css?f[]=alpino@300
-    const font = fonts.find(f => f.name === family)!
+  async function getFontDetails(font: FontshareFontMeta, options: ResolveFontOptions) {
     const numbers: number[] = []
 
     const weights = prepareWeights({
@@ -73,9 +80,13 @@ export default defineFontProvider('fontshare', async (_options, ctx) => {
         return
       }
 
-      const fonts = await ctx.storage.getItem(`fontshare:${fontFamily}-${hash(defaults)}-data.json`, () => getFontDetails(fontFamily, defaults))
+      // https://api.fontshare.com/v2/css?f[]=alpino@300
+      const font = fonts.find(f => f.name === fontFamily)!
 
-      return { fonts }
+      return {
+        fonts: await ctx.storage.getItem(`fontshare:${fontFamily}-${hash(defaults)}-data.json`, () => getFontDetails(font, defaults)),
+        fallbacks: getFallbacks(font.category),
+      }
     },
   }
 })
@@ -85,6 +96,7 @@ export default defineFontProvider('fontshare', async (_options, ctx) => {
 interface FontshareFontMeta {
   slug: string
   name: string
+  category: string
   styles: Array<{
     default: boolean
     file: string
