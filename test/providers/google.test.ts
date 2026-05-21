@@ -307,4 +307,30 @@ describe('google', () => {
       expect(fonts.flatMap(font => font.src.map(source => 'name' in source ? source.name : source.format))).toStrictEqual(['woff2', 'woff', 'truetype', undefined])
     })
   })
+
+  describe('fallbacks', () => {
+    it('returns sans-serif fallback', async () => {
+      const unifont = await createUnifont([providers.google()])
+      const { fallbacks } = await unifont.resolveFont('ABeeZee')
+      expect(fallbacks).toStrictEqual(['sans-serif'])
+    })
+
+    it('returns serif fallback', async () => {
+      const unifont = await createUnifont([providers.google()])
+      const { fallbacks } = await unifont.resolveFont('Abhaya Libre')
+      expect(fallbacks).toStrictEqual(['serif'])
+    })
+
+    it('returns monospace fallback', async () => {
+      const unifont = await createUnifont([providers.google()])
+      const { fallbacks } = await unifont.resolveFont('Anonymous Pro')
+      expect(fallbacks).toStrictEqual(['monospace'])
+    })
+
+    it('does not return invalid fallback', async () => {
+      const unifont = await createUnifont([providers.google()])
+      const { fallbacks } = await unifont.resolveFont('Aboreto')
+      expect(fallbacks).toBeUndefined()
+    })
+  })
 })

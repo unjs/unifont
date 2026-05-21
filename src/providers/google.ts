@@ -47,6 +47,20 @@ export const userAgents: Partial<Record<FontFormat, string>> = {
   woff2: 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/121.0.0.0 Safari/537.36',
 }
 
+// There are others like display and handwriting but these are not valid
+const VALID_FALLBACKS: Record<string, string> = {
+  'Sans Serif': 'sans-serif',
+  'Serif': 'serif',
+  'Monospace': 'monospace',
+}
+
+function getFallbacks(category: string): string[] | undefined {
+  const fallback = VALID_FALLBACKS[category]
+  if (fallback)
+    return [fallback]
+  return undefined
+}
+
 export default defineFontProvider('google', async (providerOptions: GoogleProviderOptions, ctx) => {
   const googleFonts = await ctx.storage.getItem('google:meta.json', () => $fetch<{ familyMetadataList: FontIndexMeta[] }>('https://fonts.google.com/metadata/fonts', { responseType: 'json' }).then(r => r.familyMetadataList))
 
@@ -56,10 +70,9 @@ export default defineFontProvider('google', async (providerOptions: GoogleProvid
     normal: '0',
   }
 
-  async function getFontDetails(family: string, options: ResolveFontOptions<GoogleFamilyOptions>) {
-    const font = googleFonts.find(font => font.family === family)!
+  async function getFontDetails(font: FontIndexMeta, options: ResolveFontOptions<GoogleFamilyOptions>) {
     const styles = [...new Set(options.styles.map(i => styleMap[i]))].sort()
-    const glyphs = (options.options?.experimental?.glyphs ?? providerOptions.experimental?.glyphs?.[family])?.join('')
+    const glyphs = (options.options?.experimental?.glyphs ?? providerOptions.experimental?.glyphs?.[font.family])?.join('')
     const weights = prepareWeights({
       inputWeights: options.weights,
       hasVariableWeights: font.axes.some(a => a.tag === 'wght'),
@@ -76,7 +89,7 @@ export default defineFontProvider('google', async (providerOptions: GoogleProvid
 
     const resolvedAxes = []
     let resolvedVariants: string[] = []
-    const variableAxis = options.options?.experimental?.variableAxis ?? providerOptions.experimental?.variableAxis?.[family]
+    const variableAxis = options.options?.experimental?.variableAxis ?? providerOptions.experimental?.variableAxis?.[font.family]
     const candidateAxes = [
       'wght',
       'ital',
@@ -112,7 +125,7 @@ export default defineFontProvider('google', async (providerOptions: GoogleProvid
           'user-agent': userAgent,
         },
         query: {
-          family: `${family}:${resolvedAxes.join(',')}@${resolvedVariants.join(
+          family: `${font.family}:${resolvedAxes.join(',')}@${resolvedVariants.join(
             ';',
           )}`,
           ...(glyphs && { text: glyphs }),
@@ -142,12 +155,15 @@ export default defineFontProvider('google', async (providerOptions: GoogleProvid
       return googleFonts.map(font => font.family)
     },
     async resolveFont(fontFamily, options: ResolveFontOptions<GoogleFamilyOptions>) {
-      if (!googleFonts.some(font => font.family === fontFamily)) {
+      const font = googleFonts.find(font => font.family === fontFamily)
+      if (!font) {
         return
       }
 
-      const fonts = await ctx.storage.getItem(`google:${fontFamily}-${hash(options)}-data.json`, () => getFontDetails(fontFamily, options))
-      return { fonts }
+      return {
+        fonts: await ctx.storage.getItem(`google:${fontFamily}-${hash(options)}-data.json`, () => getFontDetails(font, options)),
+        fallbacks: getFallbacks(font.category),
+      }
     },
   }
 })
@@ -157,6 +173,7 @@ export default defineFontProvider('google', async (providerOptions: GoogleProvid
 interface FontIndexMeta {
   family: string
   subsets: string[]
+  category: string
   fonts: Record<string, {
     thickness: number | null
     slant: number | null
