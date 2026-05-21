@@ -7,6 +7,15 @@ import { cleanFontFaces, defineFontProvider, prepareWeights, splitCssIntoSubsets
 
 const fontAPI = $fetch.create({ baseURL: 'https://fonts.bunny.net' })
 
+// There are also display and handwriting but these are not valid
+const VALID_FALLBACKS = ['sans-serif', 'serif', 'monospace']
+
+function getFallbacks(category: string): string[] | undefined {
+  if (VALID_FALLBACKS.includes(category))
+    return [category]
+  return undefined
+}
+
 export default defineFontProvider('bunny', async (_options, ctx) => {
   const familyMap = new Map<string, string>()
 
@@ -15,9 +24,7 @@ export default defineFontProvider('bunny', async (_options, ctx) => {
     familyMap.set(family.familyName, id)
   }
 
-  async function getFontDetails(family: string, options: ResolveFontOptions) {
-    const id = familyMap.get(family) as keyof typeof fonts
-    const font = fonts[id]!
+  async function getFontDetails(id: string, font: BunnyFontMeta[string], options: ResolveFontOptions) {
     const weights = prepareWeights({
       inputWeights: options.weights,
       hasVariableWeights: false,
@@ -63,12 +70,17 @@ export default defineFontProvider('bunny', async (_options, ctx) => {
       return [...familyMap.keys()]
     },
     async resolveFont(fontFamily, defaults) {
-      if (!familyMap.has(fontFamily)) {
+      const id = familyMap.get(fontFamily)
+      if (!id) {
         return
       }
 
-      const fonts = await ctx.storage.getItem(`bunny:${fontFamily}-${hash(defaults)}-data.json`, () => getFontDetails(fontFamily, defaults))
-      return { fonts }
+      const font = fonts[id]!
+
+      return {
+        fonts: await ctx.storage.getItem(`bunny:${fontFamily}-${hash(defaults)}-data.json`, () => getFontDetails(id, font, defaults)),
+        fallbacks: getFallbacks(font.category),
+      }
     },
   }
 })
