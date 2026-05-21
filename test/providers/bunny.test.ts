@@ -66,7 +66,17 @@ describe('bunny', () => {
     "italic",
     "normal",
   ],
-  "subsets": undefined,
+  "subsets": [
+    "math",
+    "greek",
+    "latin",
+    "symbols",
+    "cyrillic",
+    "greek-ext",
+    "latin-ext",
+    "vietnamese",
+    "cyrillic-ext",
+  ],
   "weights": [
     "100",
     "200",

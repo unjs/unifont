@@ -70,8 +70,7 @@ export default defineFontProvider('bunny', async (_options, ctx) => {
       return {
         formats: ['woff2', 'woff'],
         styles: font.styles,
-        // TODO: consider parsing one weight to extract subsets
-        subsets: undefined,
+        subsets: Object.keys(font.variants),
         weights: font.weights.map(String),
       }
     },
