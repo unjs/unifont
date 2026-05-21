@@ -7,7 +7,7 @@ import { cleanFontFaces, defineFontProvider, prepareWeights, splitCssIntoSubsets
 
 const fontAPI = $fetch.create({ baseURL: 'https://fonts.bunny.net' })
 
-// There are also display and handwriting but these are not valid
+// There are others like display and handwriting but these are not valid
 const VALID_FALLBACKS = ['sans-serif', 'serif', 'monospace']
 
 function getFallbacks(category: string): string[] | undefined {

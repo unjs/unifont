@@ -150,7 +150,7 @@ describe('fontshare', () => {
       expect(fallbacks).toStrictEqual(['serif'])
     })
 
-    it('does not return display fallback', async () => {
+    it('does not return invalid fallback', async () => {
       const unifont = await createUnifont([providers.fontshare()])
       const { fallbacks } = await unifont.resolveFont('Kihim')
       expect(fallbacks).toBeUndefined()

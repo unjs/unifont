@@ -163,15 +163,9 @@ describe('bunny', () => {
       expect(fallbacks).toStrictEqual(['monospace'])
     })
 
-    it('does not return display fallback', async () => {
+    it('does not return invalid fallback', async () => {
       const unifont = await createUnifont([providers.bunny()])
       const { fallbacks } = await unifont.resolveFont('Aboreto')
-      expect(fallbacks).toBeUndefined()
-    })
-
-    it('does not return handwriting fallback', async () => {
-      const unifont = await createUnifont([providers.bunny()])
-      const { fallbacks } = await unifont.resolveFont('Aguafina Script')
       expect(fallbacks).toBeUndefined()
     })
   })
