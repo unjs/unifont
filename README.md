@@ -42,6 +42,8 @@ const availableFonts = await unifont.listFonts()
 const { fonts, fallbacks } = await unifont.resolveFont('Poppins')
 ```
 
+`unifont` honours the `HTTPS_PROXY` / `HTTP_PROXY` (and lower-case) environment variables for outbound font metadata and binary fetches at build time, so it works behind corporate proxies without extra configuration.
+
 ## Built-in providers
 
 The following providers are built-in but you can build [custom providers](#building-your-own-provider) too.
