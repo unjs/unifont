@@ -16,11 +16,12 @@ let installed = false
 export async function installProxyDispatcher(): Promise<void> {
   if (installed)
     return
-  installed = true
 
   const proxyUrl = process.env.HTTPS_PROXY || process.env.HTTP_PROXY || process.env.https_proxy || process.env.http_proxy
   if (!proxyUrl)
     return
+
+  installed = true
 
   try {
     const { Agent, EnvHttpProxyAgent, getGlobalDispatcher, setGlobalDispatcher } = await import('undici')
