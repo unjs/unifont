@@ -25,6 +25,15 @@ async function getVariableAxes(ctx: ProviderContext, font: FontsourceFontMeta) {
   return await ctx.storage.getItem(`fontsource:${font.family}-axes.json`, () => fontAPI<FontsourceVariableFontDetail>(`/variable/${font.id}`, { responseType: 'json' }))
 }
 
+// There are others like display and handwriting but these are not valid
+const VALID_FALLBACKS = ['sans-serif', 'serif', 'monospace']
+
+function getFallbacks(category: string): string[] | undefined {
+  if (VALID_FALLBACKS.includes(category))
+    return [category]
+  return undefined
+}
+
 export default defineFontProvider('fontsource', async (_options, ctx) => {
   const fonts = await ctx.storage.getItem('fontsource:meta.json', () => fontAPI<FontsourceFontMeta[]>('/fonts', { responseType: 'json' }))
   const familyMap = new Map<string, FontsourceFontMeta>()
@@ -33,8 +42,7 @@ export default defineFontProvider('fontsource', async (_options, ctx) => {
     familyMap.set(meta.family, meta)
   }
 
-  async function getFontDetails(family: string, options: ResolveFontOptions) {
-    const font = familyMap.get(family)!
+  async function getFontDetails(font: FontsourceFontMeta, options: ResolveFontOptions) {
     const weights = prepareWeights({
       inputWeights: options.weights,
       hasVariableWeights: font.variable,
@@ -110,12 +118,15 @@ export default defineFontProvider('fontsource', async (_options, ctx) => {
       }
     },
     async resolveFont(fontFamily, options) {
-      if (!familyMap.has(fontFamily)) {
+      const font = familyMap.get(fontFamily)
+      if (!font) {
         return
       }
 
-      const fonts = await ctx.storage.getItem(`fontsource:${fontFamily}-${hash(options)}-data.json`, () => getFontDetails(fontFamily, options))
-      return { fonts }
+      return {
+        fonts: await ctx.storage.getItem(`fontsource:${fontFamily}-${hash(options)}-data.json`, () => getFontDetails(font, options)),
+        fallbacks: getFallbacks(font.category),
+      }
     },
   }
 })

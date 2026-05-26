@@ -1,6 +1,7 @@
 import type { Storage } from './cache'
 import type { GetAvailableFontPropertiesResult, InitializedProvider, Provider, ProviderContext, ResolveFontOptions, ResolveFontResult } from './types'
 import { createAsyncStorage, memoryStorage } from './cache'
+import { installProxyDispatcher } from './proxy'
 
 export interface UnifontOptions {
   storage?: Storage
@@ -40,6 +41,8 @@ export const defaultResolveOptions: ResolveFontOptions = {
 }
 
 export async function createUnifont<T extends [Provider, ...Provider[]]>(providers: T, unifontOptions?: UnifontOptions): Promise<Unifont<T>> {
+  await installProxyDispatcher()
+
   const stack: Record<string, InitializedProvider> = {}
 
   const storage = unifontOptions?.storage ?? memoryStorage()
