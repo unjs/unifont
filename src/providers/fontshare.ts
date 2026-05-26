@@ -43,9 +43,15 @@ export default defineFontProvider('fontshare', async (_options, ctx) => {
   async function getFontDetails(font: FontshareFontMeta, options: ResolveFontOptions) {
     const numbers: number[] = []
 
+    let axis
+    const hasVariable = font.styles.some(e => e.is_variable)
+    if (hasVariable) {
+      axis = font.axes.find(e => e.property === 'wght')
+    }
+
     const weights = prepareWeights({
       inputWeights: options.weights,
-      hasVariableWeights: false,
+      hasVariableWeights: hasVariable && !!axis,
       weights: font.styles.map(s => String(s.weight.weight)),
     }).map(w => w.weight)
 
@@ -56,7 +62,10 @@ export default defineFontProvider('fontshare', async (_options, ctx) => {
       if (!style.is_italic && !options.styles.includes('normal')) {
         continue
       }
-      if (!weights.includes(String(style.weight.weight))) {
+      if (style.is_variable && axis && !weights.includes(`${axis.range_left} ${axis.range_right}`)) {
+        continue
+      }
+      if (!style.is_variable && !weights.includes(String(style.weight.weight))) {
         continue
       }
       numbers.push(style.weight.number)
@@ -67,7 +76,6 @@ export default defineFontProvider('fontshare', async (_options, ctx) => {
 
     const css = await fontAPI<string>(`/css?f[]=${`${font.slug}@${numbers.join(',')}`}`)
 
-    // TODO: support axes
     return cleanFontFaces(extractFontFaceData(css), options.formats)
   }
 
