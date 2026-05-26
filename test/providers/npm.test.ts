@@ -278,15 +278,14 @@ describe('npm', () => {
         return null
       })
 
-      const unifont = await createUnifont([providers.npm({ readFile })])
+      const unifont = await createUnifont([providers.npm({ readFile, root: '.' })])
       const { fonts } = await unifont.resolveFont('Roboto')
 
       expect(fonts.length).toBeGreaterThan(0)
-      // Should use pinned version from local package.json in CDN URLs
       for (const font of fonts) {
         for (const src of font.src) {
           if ('url' in src) {
-            expect(src.url).toContain('@fontsource/roboto@5.2.9')
+            expect(src.url).toContain('/node_modules/@fontsource/roboto/')
           }
         }
       }
@@ -332,11 +331,11 @@ describe('npm', () => {
         return null
       })
 
-      const unifont = await createUnifont([providers.npm({ readFile })])
+      const unifont = await createUnifont([providers.npm({ readFile, root: '.' })])
       const { fonts } = await unifont.resolveFont('Cal Sans')
 
       expect(fonts.length).toBe(1)
-      expect(fonts[0]!.src[0]).toHaveProperty('url', expect.stringContaining('cal-sans@1.0.1'))
+      expect(fonts[0]!.src[0]).toHaveProperty('url', expect.stringContaining('/node_modules/cal-sans/'))
     })
 
     it('auto-detects @fontsource-variable packages', async () => {
@@ -367,8 +366,14 @@ describe('npm', () => {
         return null
       })
 
-      const unifont = await createUnifont([providers.npm({ readFile, root: '/my/project' })])
-      const { fonts } = await unifont.resolveFont('Roboto')
+      let unifont = await createUnifont([providers.npm({ readFile, root: '/my/project' })])
+      let { fonts } = await unifont.resolveFont('Roboto')
+
+      expect(fonts.length).toBeGreaterThan(0)
+      expect(readFile).toHaveBeenCalledWith('/my/project/node_modules/@fontsource/roboto/index.css')
+
+      unifont = await createUnifont([providers.npm({ readFile, root: '/my/project/' })]);
+      ({ fonts } = await unifont.resolveFont('Roboto'))
 
       expect(fonts.length).toBeGreaterThan(0)
       expect(readFile).toHaveBeenCalledWith('/my/project/node_modules/@fontsource/roboto/index.css')
@@ -461,7 +466,7 @@ describe('npm', () => {
         return null
       })
 
-      const unifont = await createUnifont([providers.npm({ readFile })])
+      const unifont = await createUnifont([providers.npm({ readFile, root: '.' })])
       const names = await unifont.listFonts()
 
       expect(names).toBeDefined()
@@ -492,7 +497,7 @@ describe('npm', () => {
       })
 
       // Provider init should NOT read package.json
-      const unifont = await createUnifont([providers.npm({ readFile })])
+      const unifont = await createUnifont([providers.npm({ readFile, root: '.' })])
       expect(readFile).not.toHaveBeenCalledWith('./package.json')
 
       // First listFonts call triggers the read
@@ -515,7 +520,7 @@ describe('npm', () => {
         return null
       })
 
-      const unifont = await createUnifont([providers.npm({ readFile })])
+      const unifont = await createUnifont([providers.npm({ readFile, root: '.' })])
 
       const names1 = await unifont.listFonts()
       expect(names1).toStrictEqual(['Roboto'])
