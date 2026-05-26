@@ -84,6 +84,7 @@ describe('fontshare', () => {
     "500",
     "700",
     "900",
+    "300 900",
   ],
 }`)
     result = await unifont.getAvailableFontProperties('XXX')

@@ -93,12 +93,11 @@ export default defineFontProvider('fontshare', async (_options, ctx) => {
         if (style.is_italic) {
           styles.add('italic')
         }
-        // TODO: support variable fonts
         if (style.is_variable) {
-        //   const axis = font.axes.find(e => e.property === 'wght')
-        //   if (axis) {
-        //     weights.add(`${axis.range_left} ${axis.range_right}`)
-        //   }
+          const axis = font.axes.find(e => e.property === 'wght')
+          if (axis) {
+            weights.add(`${axis.range_left} ${axis.range_right}`)
+          }
         }
         else {
           weights.add(style.weight.weight.toString())
