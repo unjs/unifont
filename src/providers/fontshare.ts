@@ -87,9 +87,9 @@ export default defineFontProvider('fontshare', async (_options, ctx) => {
         }
         // TODO: support variable fonts
         if (style.is_variable) {
-        //   const axe = font.axes.find(e => e.property === 'wght')
-        //   if (axe) {
-        //     weights.add(`${axe.range_left} ${axe.range_right}`)
+        //   const axis = font.axes.find(e => e.property === 'wght')
+        //   if (axis) {
+        //     weights.add(`${axis.range_left} ${axis.range_right}`)
         //   }
         }
         else {
