@@ -51,6 +51,12 @@ describe('fontshare', () => {
     `)
   })
 
+  it('supports variable fonts', async () => {
+    const unifont = await createUnifont([providers.fontshare()])
+    const { fonts } = await unifont.resolveFont('Satoshi', { weights: ['300 900'] })
+    expect(fonts.some(fnt => Array.isArray(fnt.weight))).toBe(true)
+  })
+
   it('handles listFonts correctly', async () => {
     const unifont = await createUnifont([providers.fontshare()])
     const names = await unifont.listFonts()
