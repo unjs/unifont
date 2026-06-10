@@ -191,6 +191,80 @@ describe('unifont', () => {
     })
   })
 
+  describe('getAvailableFontProperties', () => {
+    it('works with no providers', async () => {
+      const error = vi.spyOn(console, 'error').mockImplementation(() => {})
+      // @ts-expect-error at least a provider is required
+      const unifont = await createUnifont([])
+      const result = await unifont.getAvailableFontProperties('Foo')
+      expect(result).toEqual(undefined)
+      expect(console.error).not.toHaveBeenCalled()
+      error.mockRestore()
+    })
+
+    it('works with providers', async () => {
+      const error = vi.spyOn(console, 'error').mockImplementation(() => {})
+      const unifont = await createUnifont([
+        defineFontProvider('stub', () => ({
+          getAvailableFontProperties() {
+            return { formats: ['woff2'] }
+          },
+          resolveFont() {
+            return { fonts: [] }
+          },
+        }))()])
+      const result = await unifont.getAvailableFontProperties('Foo')
+      expect(result).toMatchInlineSnapshot(`{
+  "formats": [
+    "woff2",
+  ],
+  "provider": "stub",
+}`)
+      expect(console.error).not.toHaveBeenCalled()
+      error.mockRestore()
+    })
+
+    it('handles providers that throw errors when retrieving properties', async () => {
+      const error = vi.spyOn(console, 'error').mockImplementation(() => {})
+      const unifont = await createUnifont([
+        defineFontProvider('bad-provider', () => ({
+          getAvailableFontProperties() {
+            throw new Error('test')
+          },
+          resolveFont() {
+            return { fonts: [] }
+          },
+        }))(),
+      ])
+      const result = await unifont.getAvailableFontProperties('Foo')
+      expect(result).toEqual(undefined)
+      expect(console.error).toHaveBeenCalledWith(
+        'Could not get available properties for `Foo` from `bad-provider` provider.',
+        expect.objectContaining({}),
+      )
+      error.mockRestore()
+    })
+
+    it('throws if it fails and throwOnError is enabled', async () => {
+      const unifont = await createUnifont(
+        [
+          defineFontProvider('bad-provider', () => {
+            return {
+              resolveFont() {
+                return { fonts: [] }
+              },
+              getAvailableFontProperties() {
+                throw new Error('test')
+              },
+            }
+          })(),
+        ],
+        { throwOnError: true },
+      )
+      await expect(() => unifont.getAvailableFontProperties('Foo')).rejects.toThrow()
+    })
+  })
+
   describe('cache isolation', () => {
     it('uses isolated namespace per provider\'s name', async () => {
       const storage = {

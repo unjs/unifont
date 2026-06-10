@@ -39,6 +39,7 @@ const unifont = await createUnifont([
 ])
 
 const availableFonts = await unifont.listFonts()
+const availableProperties = await unifont.getAvailableFontProperties('Poppins')
 const { fonts, fallbacks } = await unifont.resolveFont('Poppins')
 ```
 
@@ -466,6 +467,7 @@ Allows throwing on error if a font provider:
 - Fails to initialize
 - Fails while calling `resolveFont()`
 - Fails while calling `listFonts()`
+- Fails while calling `getAvailableFontProperties()`
 
 If set to `false` (default), an error will be logged to the console instead:
 
@@ -656,6 +658,41 @@ const unifont = await createUnifont([
 const availableFonts = await unifont.listFont(['google'])
 ```
 
+#### `getAvailableFontProperties()`
+
+- Type: `(fontFamily: string, providers?: T[number]['_name'][]) => Promise<(GetAvailableFontPropertiesResult & { provider?: T[number]['_name'] }) | undefined>`
+
+Retrieves available font properties for the specified font family:
+
+```js
+import { createUnifont, providers } from 'unifont'
+
+const unifont = await createUnifont([
+  providers.google(),
+])
+
+const availableProperties = await unifont.getAvailableFontProperties('Roboto')
+```
+
+It loops through all providers and returns the result of the first provider that can return some data.
+
+##### Providers
+
+- Type: `string[]`
+
+By default it uses all the providers provided to `createUnifont()`. However you can restrict usage to only a subset:
+
+```js
+import { createUnifont, providers } from 'unifont'
+
+const unifont = await createUnifont([
+  providers.google(),
+  providers.fontsource(),
+])
+
+const availableProperties = await unifont.getAvailableFontProperties('Roboto', ['google'])
+```
+
 ## Building your own provider
 
 ### Defining a provider
@@ -723,6 +760,29 @@ export const myProvider = defineFontProvider('my-provider', async (options, ctx)
   return {
     listFonts() {
       return fonts.map(font => font.name)
+    }
+    // ...
+  }
+})
+```
+
+### `getAvailableFontProperties()`
+
+While optional, it's usually easy to implement this method as it shares logic with `resolveFont()`:
+
+```ts
+import { defineFontProvider } from 'unifont'
+
+export const myProvider = defineFontProvider('my-provider', async (options, ctx) => {
+  const fonts: { name: string, properties: Record<string, any> }[] = [/* ... */]
+
+  return {
+    getAvailableFontProperties(fontFamily) {
+      const font = fonts.find(font => font.name === fontFamily)
+      if (!font) {
+        return {}
+      }
+      return font.properties
     }
     // ...
   }
