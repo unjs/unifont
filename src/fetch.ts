@@ -1,37 +1,19 @@
-import { ofetch } from 'ofetch'
-import * as fetchLib from './fetch'
+const RETRY_DELAY = 1000
 
-interface Mini$FetchOptions extends RequestInit {
-  baseURL?: string
-  responseType?: 'json' | 'text'
-  query?: Record<string, any>
-  retries?: number
-  retryDelay?: number
-}
-
-export function mini$fetch<T = unknown>(url: string, options?: Mini$FetchOptions): Promise<T> {
-  const retries = options?.retries ?? 3
-  const retryDelay = options?.retryDelay ?? 1000
-
-  return ofetch(url, {
-    baseURL: options?.baseURL,
-    query: options?.query,
-    responseType: options?.responseType ?? 'text',
-    headers: options?.headers,
-    retry: false,
-  }).catch((err) => {
+export async function fetchWithRetries(url: string, init?: RequestInit, retries: number = 3): Promise<Response> {
+  try {
+    const response = await fetch(url, init)
+    if (!response.ok) {
+      throw new Error(`Fetch error (status ${response.status}): ${response.statusText}`)
+    }
+    return response
+  }
+  catch (err) {
     if (retries <= 0) {
       throw err
     }
-    console.warn(`Could not fetch from \`${(options?.baseURL ?? '') + url}\`. Will retry in \`${retryDelay}ms\`. \`${retries}\` retries left.`)
-    return new Promise(resolve => setTimeout(resolve, retryDelay))
-      .then(() => fetchLib.mini$fetch(url, { ...options, retries: retries - 1 }))
-  }) as Promise<T>
+    console.warn(`Could not fetch from \`${url}\`. Will retry in \`${RETRY_DELAY}ms\`. \`${retries}\` retries left.`)
+    return new Promise(resolve => setTimeout(resolve, RETRY_DELAY))
+      .then(() => fetchWithRetries(url, init, retries - 1))
+  }
 }
-
-export const $fetch = Object.assign(mini$fetch, {
-  create: (defaults?: Mini$FetchOptions) => <T = unknown> (url: string, options?: Mini$FetchOptions) => mini$fetch<T>(url, {
-    ...defaults,
-    ...options,
-  }),
-})

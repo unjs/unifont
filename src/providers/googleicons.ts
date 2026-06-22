@@ -1,7 +1,7 @@
 import type { ResolveFontOptions } from '../types'
 import { hash } from 'ohash'
 import { extractFontFaceData } from '../css/parse'
-import { $fetch } from '../fetch'
+import { fetchWithRetries } from '../fetch'
 import { cleanFontFaces, defineFontProvider } from '../utils'
 import { userAgents } from './google'
 
@@ -33,9 +33,9 @@ export interface GoogleiconsFamilyOptions {
 
 export default defineFontProvider('googleicons', async (providerOptions: GoogleiconsProviderOptions, ctx) => {
   const googleIcons = await ctx.storage.getItem('googleicons:meta.json', async () => {
-    const data = await $fetch<string>(
+    const data = await fetchWithRetries(
       'https://fonts.google.com/metadata/icons?key=material_symbols&incomplete=true',
-    )
+    ).then(res => res.text())
     const response: { families: string[] } = JSON.parse(
       data.substring(data.indexOf('\n') + 1), // remove the first line which makes it an invalid JSON
     )
@@ -56,24 +56,19 @@ export default defineFontProvider('googleicons', async (providerOptions: Googlei
 
       // Legacy Material Icons
       if (family.includes('Icons')) {
-        css += await $fetch<string>('/icon', {
-          baseURL: 'https://fonts.googleapis.com',
+        css += await fetchWithRetries(`https://fonts.googleapis.com/icon?family=${family}`, {
           headers: { 'user-agent': userAgent },
-          query: {
-            family,
-          },
-        })
+        }).then(res => res.text())
       }
       // New Material Symbols
       else {
-        css += await $fetch<string>('/css2', {
-          baseURL: 'https://fonts.googleapis.com',
+        let url = `https://fonts.googleapis.com/css2?family=${family}:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200`
+        if (iconNames) {
+          url += `&icon_names=${iconNames}`
+        }
+        css += await fetchWithRetries(url, {
           headers: { 'user-agent': userAgent },
-          query: {
-            family: `${family}:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200`,
-            ...(iconNames && { icon_names: iconNames }),
-          },
-        })
+        }).then(res => res.text())
       }
     }
 
