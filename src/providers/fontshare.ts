@@ -2,10 +2,10 @@ import type { ResolveFontOptions } from '../types'
 
 import { hash } from 'ohash'
 import { extractFontFaceData } from '../css/parse'
-import { $fetch } from '../fetch'
+import { fetchWithRetries } from '../fetch'
 import { cleanFontFaces, defineFontProvider, prepareWeights } from '../utils'
 
-const fontAPI = $fetch.create({ baseURL: 'https://api.fontshare.com/v2' })
+const BASE_URL = 'https://api.fontshare.com/v2'
 
 function getFallbacks(category: string): string[] | undefined {
   if (category.includes('Serif'))
@@ -23,13 +23,7 @@ export default defineFontProvider('fontshare', async (_options, ctx) => {
     let offset = 0
     let chunk
     do {
-      chunk = await fontAPI<{ fonts: FontshareFontMeta[], has_more: boolean }>('/fonts', {
-        responseType: 'json',
-        query: {
-          offset,
-          limit: 100,
-        },
-      })
+      chunk = await fetchWithRetries(`${BASE_URL}/fonts?offset=${offset}&limit=100`).then(res => res.json() as Promise<{ fonts: FontshareFontMeta[], has_more: boolean }>)
       fonts.push(...chunk.fonts)
       offset++
     } while (chunk.has_more)
@@ -74,7 +68,7 @@ export default defineFontProvider('fontshare', async (_options, ctx) => {
     if (numbers.length === 0)
       return []
 
-    const css = await fontAPI<string>(`/css?f[]=${`${font.slug}@${numbers.join(',')}`}`)
+    const css = await fetchWithRetries(`${BASE_URL}/css?f[]=${font.slug}@${numbers.join(',')}`).then(res => res.text())
 
     return cleanFontFaces(extractFontFaceData(css), options.formats)
   }

@@ -2,7 +2,7 @@ import type { FontFaceData, FontFormat, ResolveFontOptions } from '../types'
 
 import { hash } from 'ohash'
 import { extractFontFaceData } from '../css/parse'
-import { $fetch } from '../fetch'
+import { fetchWithRetries } from '../fetch'
 import { cleanFontFaces, defineFontProvider, prepareWeights, splitCssIntoSubsets } from '../utils'
 
 type VariableAxis = 'opsz' | 'slnt' | 'wdth' | (string & {})
@@ -62,7 +62,7 @@ function getFallbacks(category: string): string[] | undefined {
 }
 
 export default defineFontProvider('google', async (providerOptions: GoogleProviderOptions, ctx) => {
-  const googleFonts = await ctx.storage.getItem('google:meta.json', () => $fetch<{ familyMetadataList: FontIndexMeta[] }>('https://fonts.google.com/metadata/fonts', { responseType: 'json' }).then(r => r.familyMetadataList))
+  const { familyMetadataList: googleFonts } = await ctx.storage.getItem('google:meta.json', () => fetchWithRetries('https://fonts.google.com/metadata/fonts').then(res => res.json() as Promise<{ familyMetadataList: FontIndexMeta[] }>))
 
   const styleMap = {
     italic: '1',
@@ -119,18 +119,15 @@ export default defineFontProvider('google', async (providerOptions: GoogleProvid
       if (!userAgent)
         continue
 
-      const rawCss = await $fetch<string>('/css2', {
-        baseURL: 'https://fonts.googleapis.com',
+      let url = `https://fonts.googleapis.com/css2?family=${font.family}:${resolvedAxes.join(',')}@${resolvedVariants.join(';')}`
+      if (glyphs) {
+        url += `&text=${encodeURIComponent(glyphs)}`
+      }
+      const rawCss = await fetchWithRetries(url, {
         headers: {
           'user-agent': userAgent,
         },
-        query: {
-          family: `${font.family}:${resolvedAxes.join(',')}@${resolvedVariants.join(
-            ';',
-          )}`,
-          ...(glyphs && { text: glyphs }),
-        },
-      })
+      }).then(res => res.text())
       const groups = splitCssIntoSubsets(rawCss).filter(group => group.subset ? options.subsets.includes(group.subset) : true)
       for (const group of groups) {
         const data = extractFontFaceData(group.css)
