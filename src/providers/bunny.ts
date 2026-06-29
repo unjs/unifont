@@ -1,4 +1,4 @@
-import type { FontFaceData, ResolveFontOptions } from '../types'
+import type { FontFaceData, FontStyles, ResolveFontOptions } from '../types'
 
 import { hash } from 'ohash'
 import { extractFontFaceData } from '../css/parse'
@@ -69,6 +69,18 @@ export default defineFontProvider('bunny', async (_options, ctx) => {
     listFonts() {
       return [...familyMap.keys()]
     },
+    getAvailableFontProperties(fontFamily) {
+      const id = familyMap.get(fontFamily)
+      if (!id)
+        return
+      const font = fonts[id]!
+      return {
+        formats: ['woff2', 'woff'],
+        styles: font.styles,
+        subsets: Object.keys(font.variants),
+        weights: font.weights.map(String),
+      }
+    },
     async resolveFont(fontFamily, defaults) {
       const id = familyMap.get(fontFamily)
       if (!id) {
@@ -93,7 +105,7 @@ interface BunnyFontMeta {
     defSubset: string
     familyName: string
     isVariable: boolean
-    styles: string[]
+    styles: FontStyles[]
     variants: Record<string, number>
     weights: number[]
   }
