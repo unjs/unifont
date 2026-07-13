@@ -1,5 +1,6 @@
 packages:
   - playground
+  - proxy
 
 overrides:
   unifont: 'link:.'
