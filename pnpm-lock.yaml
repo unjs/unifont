@@ -14,9 +14,6 @@ importers:
       css-tree:
         specifier: ^3.1.0
         version: 3.2.1
-      ofetch:
-        specifier: ^1.5.1
-        version: 1.5.1
       ohash:
         specifier: ^2.0.11
         version: 2.0.11

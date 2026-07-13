@@ -2,10 +2,10 @@ import type { FontFaceData, ResolveFontOptions } from '../types'
 
 import { hash } from 'ohash'
 import { extractFontFaceData } from '../css/parse'
-import { $fetch } from '../fetch'
+import { fetchWithRetries } from '../fetch'
 import { cleanFontFaces, defineFontProvider, prepareWeights, splitCssIntoSubsets } from '../utils'
 
-const fontAPI = $fetch.create({ baseURL: 'https://fonts.bunny.net' })
+const BASE_URL = 'https://fonts.bunny.net'
 
 // There are others like display and handwriting but these are not valid
 const VALID_FALLBACKS = ['sans-serif', 'serif', 'monospace']
@@ -19,7 +19,7 @@ function getFallbacks(category: string): string[] | undefined {
 export default defineFontProvider('bunny', async (_options, ctx) => {
   const familyMap = new Map<string, string>()
 
-  const fonts = await ctx.storage.getItem('bunny:meta.json', () => fontAPI<BunnyFontMeta>('/list', { responseType: 'json' }))
+  const fonts = await ctx.storage.getItem('bunny:meta.json', () => fetchWithRetries(`${BASE_URL}/list`).then(res => res.json() as Promise<BunnyFontMeta>))
   for (const [id, family] of Object.entries(fonts)) {
     familyMap.set(family.familyName, id)
   }
@@ -41,11 +41,7 @@ export default defineFontProvider('bunny', async (_options, ctx) => {
 
     const resolvedVariants = weights.flatMap(w => Array.from(styles, s => `${w.weight}${s}`))
 
-    const css = await fontAPI<string>('/css', {
-      query: {
-        family: `${id}:${resolvedVariants.join(',')}`,
-      },
-    })
+    const css = await fetchWithRetries(`${BASE_URL}/css?family=${id}:${resolvedVariants.join(',')}`).then(res => res.text())
 
     const resolvedFontFaceData: FontFaceData[] = []
 
