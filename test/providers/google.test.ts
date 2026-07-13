@@ -128,6 +128,50 @@ describe('google', () => {
     expect(names!.length > 0).toEqual(true)
   })
 
+  it('handles getAvailableFontProperties correctly', async () => {
+    const unifont = await createUnifont([providers.google()])
+    let result = await unifont.getAvailableFontProperties('Roboto')
+    expect(result).toMatchInlineSnapshot(`{
+  "formats": [
+    "woff2",
+    "woff",
+    "ttf",
+    "eot",
+  ],
+  "provider": "google",
+  "styles": [
+    "normal",
+    "italic",
+  ],
+  "subsets": [
+    "menu",
+    "cyrillic",
+    "cyrillic-ext",
+    "greek",
+    "greek-ext",
+    "latin",
+    "latin-ext",
+    "math",
+    "symbols",
+    "vietnamese",
+  ],
+  "weights": [
+    "100",
+    "200",
+    "300",
+    "400",
+    "500",
+    "600",
+    "700",
+    "800",
+    "900",
+    "100 900",
+  ],
+}`)
+    result = await unifont.getAvailableFontProperties('XXX')
+    expect(result).toEqual(undefined)
+  })
+
   it('respects provider glyphs option and resolves optimized font', async () => {
     const unifont = await createUnifont([providers.google({
       experimental: {
