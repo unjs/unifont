@@ -41,7 +41,7 @@ export interface NpmProviderOptions {
   /**
    * Root directory of the project for resolving local packages.
    * Used to find `package.json` and `node_modules`.
-   * @default '.' (current working directory)
+   * @default process.cwd() (current working directory)
    */
   root?: string
 }
@@ -129,17 +129,24 @@ function guessPackageForFamily(family: string): { pkgName: string, file: string 
   return { pkgName: `@fontsource/${familyToSlug(family)}`, file: 'index.css' }
 }
 
+function stripTrailingSlash(str: string): string {
+  if (str.endsWith('/')) {
+    return str.slice(0, -1)
+  }
+  return str
+}
+
 interface DetectedFont {
   family: string
   pkgName: string
   file: string
 }
 
-export default defineFontProvider('npm', (providerOptions: NpmProviderOptions, ctx) => {
+export default defineFontProvider('npm', async (providerOptions: NpmProviderOptions, ctx) => {
   const cdn = providerOptions.cdn || DEFAULT_CDN
   const remote = providerOptions.remote ?? true
   const readFile = providerOptions.readFile
-  const root = providerOptions.root || '.'
+  const root = stripTrailingSlash(providerOptions.root || await import('node:process').then(m => m.cwd()))
 
   // Lazily computed and cached by package.json content hash
   let detectedFonts: Map<string, DetectedFont> | undefined
@@ -202,7 +209,7 @@ export default defineFontProvider('npm', (providerOptions: NpmProviderOptions, c
     return detectedFonts
   }
 
-  function resolveUrlsToAbsolute(fontFaces: FontFaceData[], baseUrl: string): void {
+  function transformUrls(fontFaces: FontFaceData[], transform: (url: string) => string): void {
     for (const face of fontFaces) {
       if (Array.isArray(face.src)) {
         face.src = face.src.map((src) => {
@@ -213,7 +220,7 @@ export default defineFontProvider('npm', (providerOptions: NpmProviderOptions, c
             }
             return {
               ...src,
-              url: new URL(url, baseUrl).href,
+              url: transform(url),
             }
           }
           return src
@@ -238,23 +245,9 @@ export default defineFontProvider('npm', (providerOptions: NpmProviderOptions, c
       return null
     }
 
-    // Resolve relative URLs to absolute CDN URLs using the installed version
-    let version = 'latest'
-    try {
-      const localPkgJson = await readFile(`${root}/node_modules/${pkgName}/package.json`)
-      if (localPkgJson) {
-        const parsed = JSON.parse(localPkgJson) as { version?: string }
-        if (parsed.version) {
-          version = parsed.version
-        }
-      }
-    }
-    catch {
-      // Use 'latest' as fallback
-    }
-
-    const baseUrl = `${cdn}/${pkgName}@${version}/`
-    resolveUrlsToAbsolute(fontFaces, baseUrl)
+    const { pathToFileURL, fileURLToPath } = await import('node:url')
+    const baseUrl = pathToFileURL(`${root}/node_modules/${pkgName}/`)
+    transformUrls(fontFaces, url => fileURLToPath(new URL(url, baseUrl)))
 
     return cleanFontFaces(fontFaces, formats)
   }
@@ -274,7 +267,7 @@ export default defineFontProvider('npm', (providerOptions: NpmProviderOptions, c
 
     const fontFaces = extractFontFaceData(css, family)
     const baseUrl = `${cdn}/${pkgName}@${pkgVersion}/`
-    resolveUrlsToAbsolute(fontFaces, baseUrl)
+    transformUrls(fontFaces, url => new URL(url, baseUrl).href)
 
     return cleanFontFaces(fontFaces, formats)
   }
@@ -319,7 +312,7 @@ export default defineFontProvider('npm', (providerOptions: NpmProviderOptions, c
         }
       }
 
-      const key = `npm:${pkgName}/${cssFile}-${hash(options)}`
+      const key = `npm:${pkgName}/${cssFile}-${hash(options)}.json`
 
       const fonts = await ctx.storage.getItem(key, async () => {
         // Try local resolution first
