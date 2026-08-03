@@ -42,7 +42,7 @@
     "@types/node": "24.13.3",
     "@vitest/coverage-v8": "4.1.10",
     "bumpp": "12.1.1",
-    "changelogithub": "14.0.0",
+    "changelogithub": "15.0.4",
     "eslint": "10.8.0",
     "lint-staged": "17.3.0",
     "simple-git-hooks": "2.13.1",
