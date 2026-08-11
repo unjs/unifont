@@ -2,7 +2,7 @@ import type { FontFaceData, ResolveFontOptions } from '../types'
 
 import { hash } from 'ohash'
 import { extractFontFaceData } from '../css/parse'
-import { $fetch } from '../fetch'
+import { fetchWithRetries } from '../fetch'
 import { cleanFontFaces, defineFontProvider } from '../utils'
 
 export interface NpmProviderOptions {
@@ -138,7 +138,6 @@ interface DetectedFont {
 export default defineFontProvider('npm', (providerOptions: NpmProviderOptions, ctx) => {
   const cdn = providerOptions.cdn || DEFAULT_CDN
   const remote = providerOptions.remote ?? true
-  const npmFetch = $fetch.create({ baseURL: cdn })
   const readFile = providerOptions.readFile
   const root = providerOptions.root || '.'
 
@@ -263,7 +262,7 @@ export default defineFontProvider('npm', (providerOptions: NpmProviderOptions, c
   async function resolveFromCdn(pkgName: string, pkgVersion: string, cssFile: string, family: string, formats: ResolveFontOptions['formats']): Promise<FontFaceData[] | null> {
     let css: string | null
     try {
-      css = await npmFetch<string>(`${pkgName}@${pkgVersion}/${cssFile}`)
+      css = await fetchWithRetries(`${cdn}/${pkgName}@${pkgVersion}/${cssFile}`).then(res => res.text())
     }
     catch {
       return null

@@ -1,28 +1,26 @@
-import { afterAll, beforeEach, describe, expect, it, vi } from 'vitest'
-import { $fetch, mini$fetch } from '../src/fetch'
-import * as fetchModule from '../src/fetch'
+import { afterAll, afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
+import { fetchWithRetries } from '../src/fetch'
 
 describe('unifont', () => {
   const originalFetch = globalThis.fetch
   beforeEach(() => {
+    vi.useFakeTimers()
     globalThis.fetch = vi.fn(() =>
       Promise.reject(new Error('Network Error')),
     )
-    vi.spyOn(fetchModule, 'mini$fetch')
+  })
+  afterEach(() => {
+    vi.useRealTimers()
   })
   afterAll(() => {
     globalThis.fetch = originalFetch
   })
-  it('does not mutate url', async () => {
-    const options = {
-      baseURL: 'https://fonts.googleapis.com',
-      headers: { 'user-agent': 'my-user-agent' },
-      query: {
-        family: `test`,
-      },
-    }
-    await $fetch('/css2', options).catch(() => null)
-    expect(mini$fetch).toHaveBeenCalledTimes(3)
-    expect(mini$fetch).toHaveBeenLastCalledWith('/css2', { ...options, retries: 0 })
+  it('retries the request before giving up', async () => {
+    const promise = fetchWithRetries('https://fonts.googleapis.com/css2?family=test', undefined, 2).catch(() => null)
+    await vi.runAllTimersAsync()
+    await promise
+    // 1 initial attempt + 2 retries
+    expect(globalThis.fetch).toHaveBeenCalledTimes(3)
+    expect(globalThis.fetch).toHaveBeenLastCalledWith('https://fonts.googleapis.com/css2?family=test', undefined)
   })
 })

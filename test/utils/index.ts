@@ -65,17 +65,12 @@ export function mockFetchReturn(condition: RegExp, value: () => unknown) {
   }
 }
 
-export async function disable$fetchRetry() {
+export async function disableFetchRetry() {
   vi.mock('../../src/fetch', async (importOriginal) => {
     const mod = await importOriginal<typeof import('../../src/fetch')>()
     return {
-      $fetch: Object.assign(mod.mini$fetch, {
-        create: (defaults?: any) => (url: string, options?: any) => mod.mini$fetch(url, {
-          ...defaults,
-          ...options,
-          retries: 0, // Disable retries
-        }),
-      }),
+      // Disable retries
+      fetchWithRetries: (url: string, init?: RequestInit) => mod.fetchWithRetries(url, init, 0),
     }
   })
 }
