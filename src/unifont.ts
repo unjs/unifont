@@ -2,7 +2,7 @@ import type { Storage } from './cache'
 import type { InitializedProvider, Provider, ProviderContext, ResolveFontOptions, ResolveFontResult } from './types'
 import { createAPIFetch } from './api-base'
 import { createAsyncStorage, memoryStorage } from './cache'
-import { installProxyDispatcher } from './proxy'
+import { installProxyDispatcher } from './env-proxy'
 
 export interface UnifontOptions {
   storage?: Storage

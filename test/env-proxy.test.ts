@@ -3,7 +3,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
 async function freshInstall(): Promise<() => Promise<void>> {
   vi.resetModules()
-  const { installProxyDispatcher } = await import('../src/proxy')
+  const { installProxyDispatcher } = await import('../src/env-proxy')
   return installProxyDispatcher
 }
 

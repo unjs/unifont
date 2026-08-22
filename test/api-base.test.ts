@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it, vi } from 'vitest'
-import { createUnifont, providers } from '../../src'
+import { createUnifont, providers } from '../src'
 
 const API_BASE = 'https://proxy.test'
 
