@@ -38,16 +38,18 @@ export function prepareWeights({
         collectedWeights.push(weight)
         continue
       }
-      // As a fallback, request all weights in between
+      // A variable font serves the whole range from one file, but a static family needs one
+      // file per weight, so we only fall back to the endpoints of the range rather than
+      // downloading every intermediate weight the family happens to publish.
       const [min, max] = weight.split(' ')
-      collectedWeights.push(
-        ...weights
-          .filter((_w) => {
-            const w = Number(_w)
-            return w >= Number(min) && w <= Number(max)
-          })
-          .map(w => String(w)),
-      )
+      const inRange = weights
+        .map(Number)
+        .filter(w => w >= Number(min) && w <= Number(max))
+        .sort((a, b) => a - b)
+
+      if (inRange.length > 0) {
+        collectedWeights.push(String(inRange[0]), String(inRange.at(-1)))
+      }
       continue
     }
     // The requested weight is a standard weight
