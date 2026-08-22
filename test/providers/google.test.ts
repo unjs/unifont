@@ -327,6 +327,39 @@ describe('google', () => {
       restore()
     })
 
+    it('clamps a single axis value into range and drops non-numeric ones', async () => {
+      const { requests, restore } = mockCss2()
+      const unifont = await createUnifont([providers.google()])
+      await unifont.resolveFont('Archivo', {
+        formats: ['woff2'],
+        styles: ['normal'],
+        weights: ['400'],
+        options: {
+          google: {
+            experimental: {
+              variableAxis: { wdth: ['200', 'not-a-number'] },
+            },
+          },
+        },
+      })
+
+      expect(requests).toHaveBeenCalledWith('https://fonts.googleapis.com/css2?family=Archivo:ital,wdth,wght@0,125,400')
+      restore()
+    })
+
+    it('dedupes weight ranges that clamp onto the same value', async () => {
+      const { requests, restore } = mockCss2()
+      const unifont = await createUnifont([providers.google()])
+      await unifont.resolveFont('IBM Plex Sans', {
+        formats: ['woff2'],
+        styles: ['normal'],
+        weights: ['700 800', '700 1000'],
+      })
+
+      expect(requests).toHaveBeenCalledWith('https://fonts.googleapis.com/css2?family=IBM Plex Sans:ital,wght@0,700')
+      restore()
+    })
+
     it('drops a descending range', async () => {
       const { requests, restore } = mockCss2()
       const unifont = await createUnifont([providers.google()])
