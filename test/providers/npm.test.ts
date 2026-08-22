@@ -80,6 +80,21 @@ const MOCK_CAL_SANS_CSS = `
 }
 `
 
+const MOCK_LOCAL_SOURCE_CSS = `
+@font-face {
+  font-family: 'Roboto';
+  font-style: normal;
+  font-weight: 400;
+  src: local('Roboto'), url(./files/roboto-latin-400-normal.woff2) format('woff2');
+}
+@font-face {
+  font-family: 'Roboto';
+  font-style: italic;
+  font-weight: 400;
+  src: local('Roboto Italic');
+}
+`
+
 const MOCK_INTER_VARIABLE_CSS = `
 /* inter-latin-wght-normal */
 @font-face {
@@ -262,6 +277,39 @@ describe('npm', () => {
 
       expect(fonts.length).toBe(1)
       expect(fonts[0]!.src[0]).toHaveProperty('url', 'https://fonts.example.com/roboto.woff2')
+
+      restoreFetch()
+    })
+
+    it('preserves local() sources', async () => {
+      const restoreFetch = mockFetchReturn(/@fontsource\/roboto/, () =>
+        new Response(MOCK_LOCAL_SOURCE_CSS))
+
+      const unifont = await createUnifont([providers.npm()])
+      const { fonts } = await unifont.resolveFont('Roboto')
+
+      expect(fonts.length).toBe(2)
+      expect(fonts[0]!.src[0]).toStrictEqual({ name: 'Roboto' })
+      expect(fonts[1]!.src).toStrictEqual([{ name: 'Roboto Italic' }])
+
+      restoreFetch()
+    })
+
+    it('falls back to index.css when per-weight stylesheets are unavailable', async () => {
+      const requested: string[] = []
+      const restoreFetch = mockFetchReturn(/@fontsource\/roboto/, (input) => {
+        const url = String(input)
+        requested.push(url)
+        if (!url.endsWith('/index.css'))
+          throw new Error('Not found')
+        return new Response(MOCK_ROBOTO_CSS)
+      })
+
+      const unifont = await createUnifont([providers.npm()])
+      const { fonts } = await unifont.resolveFont('Roboto', { weights: ['700'], styles: ['normal'] })
+
+      expect(fonts.length).toBe(3)
+      expect(requested.map(url => url.split('/').pop())).toStrictEqual(['700.css', 'index.css'])
 
       restoreFetch()
     })
@@ -472,6 +520,41 @@ describe('npm', () => {
       expect(fonts.map(f => f.weight)).toStrictEqual([400, 500, 600, 700])
     })
 
+    it('falls back to index.css when no styles are requested', async () => {
+      const readFile = vi.fn(async (path: string) => {
+        if (path === './package.json')
+          return MOCK_PACKAGE_JSON
+        if (path === './node_modules/@fontsource/roboto/index.css')
+          return MOCK_ROBOTO_CSS
+        if (path.includes('/node_modules/@fontsource/roboto/files/'))
+          return 'binary'
+        return null
+      })
+
+      const unifont = await createUnifont([providers.npm({ readFile, remote: false })])
+      const { fonts } = await unifont.resolveFont('Roboto', { weights: ['400'], styles: [] })
+
+      expect(fonts.length).toBe(3)
+      expect(readFile).toHaveBeenCalledWith('./node_modules/@fontsource/roboto/index.css')
+    })
+
+    it('uses latest version when local package.json has no version', async () => {
+      const readFile = vi.fn(async (path: string) => {
+        if (path === './package.json')
+          return MOCK_PACKAGE_JSON
+        if (path === './node_modules/@fontsource/roboto/400.css')
+          return MOCK_ROBOTO_CSS
+        if (path === './node_modules/@fontsource/roboto/package.json')
+          return JSON.stringify({ name: '@fontsource/roboto' })
+        return null
+      })
+
+      const unifont = await createUnifont([providers.npm({ readFile })])
+      const { fonts } = await unifont.resolveFont('Roboto', { weights: ['400'], styles: ['normal'] })
+
+      expect(fonts[0]!.src[0]).toHaveProperty('url', expect.stringContaining('@fontsource/roboto@latest'))
+    })
+
     it('falls back to index.css when per-weight stylesheets are missing', async () => {
       const readFile = vi.fn(async (path: string) => {
         if (path === './package.json')
@@ -573,6 +656,73 @@ describe('npm', () => {
       warn.mockRestore()
     })
 
+    it('preserves data and protocol-relative URLs', async () => {
+      const cssWithInlineSources = `
+@font-face {
+  font-family: 'Roboto';
+  font-style: normal;
+  font-weight: 400;
+  src: url(data:font/woff2;base64,AAA) format('woff2'), url(//cdn.example.com/roboto.woff2) format('woff2');
+}
+`
+      const readFile = vi.fn(async (path: string) => {
+        if (path === '/my/project/package.json')
+          return MOCK_PACKAGE_JSON
+        if (path === '/my/project/node_modules/@fontsource/roboto/400.css')
+          return cssWithInlineSources
+        return null
+      })
+
+      const unifont = await createUnifont([providers.npm({ readFile, remote: false, root: '/my/project' })])
+      const { fonts } = await unifont.resolveFont('Roboto', { weights: ['400'], styles: ['normal'] })
+
+      expect(fonts[0]!.src).toStrictEqual([
+        { url: 'data:font/woff2;base64,AAA', format: 'woff2' },
+        { url: '//cdn.example.com/roboto.woff2', format: 'woff2' },
+      ])
+    })
+
+    it('keeps local() sources and drops faces left without a URL', async () => {
+      const readFile = vi.fn(async (path: string) => {
+        if (path === '/my/project/package.json')
+          return MOCK_PACKAGE_JSON
+        if (path === '/my/project/node_modules/@fontsource/roboto/400.css')
+          return MOCK_LOCAL_SOURCE_CSS
+        if (path.includes('/node_modules/@fontsource/roboto/files/'))
+          return 'binary'
+        return null
+      })
+
+      const unifont = await createUnifont([providers.npm({ readFile, remote: false, root: '/my/project' })])
+      const { fonts } = await unifont.resolveFont('Roboto', { weights: ['400'] })
+
+      expect(fonts.length).toBe(1)
+      expect(fonts[0]!.style).toBe('normal')
+      expect(fonts[0]!.src).toStrictEqual([
+        { name: 'Roboto' },
+        { url: 'file:///my/project/node_modules/@fontsource/roboto/files/roboto-latin-400-normal.woff2', format: 'woff2' },
+      ])
+    })
+
+    it('drops sources when the font file cannot be read', async () => {
+      const warn = vi.spyOn(console, 'warn').mockImplementation(() => {})
+      const readFile = vi.fn(async (path: string) => {
+        if (path === '/my/project/package.json')
+          return MOCK_PACKAGE_JSON
+        if (path === '/my/project/node_modules/cal-sans/index.css')
+          return MOCK_CAL_SANS_CSS
+        throw new Error('Permission denied')
+      })
+
+      const unifont = await createUnifont([providers.npm({ readFile, remote: false, root: '/my/project' })])
+      const { fonts } = await unifont.resolveFont('Cal Sans', { weights: ['600'] })
+
+      expect(fonts).toStrictEqual([])
+      expect(warn).toHaveBeenCalledWith(expect.stringContaining('CalSans-SemiBold.woff2'))
+
+      warn.mockRestore()
+    })
+
     it('preserves absolute URLs', async () => {
       const cssWithAbsoluteUrl = `
 @font-face {
@@ -637,6 +787,44 @@ describe('npm', () => {
       const names = await unifont.listFonts()
 
       expect(names).toBeUndefined()
+    })
+
+    it('returns undefined when package.json cannot be read', async () => {
+      const readFile = vi.fn(async () => {
+        throw new Error('Permission denied')
+      })
+
+      const unifont = await createUnifont([providers.npm({ readFile })])
+
+      expect(await unifont.listFonts()).toBeUndefined()
+    })
+
+    it('returns undefined when package.json is empty', async () => {
+      const readFile = vi.fn(async () => '')
+
+      const unifont = await createUnifont([providers.npm({ readFile })])
+
+      expect(await unifont.listFonts()).toBeUndefined()
+    })
+
+    it('returns undefined when package.json is not valid JSON', async () => {
+      const readFile = vi.fn(async (path: string) => path === './package.json' ? '{ not json' : null)
+
+      const unifont = await createUnifont([providers.npm({ readFile })])
+
+      expect(await unifont.listFonts()).toBeUndefined()
+    })
+
+    it('does not re-scan package.json when its content is unchanged', async () => {
+      const readFile = vi.fn(async (path: string) => path === './package.json' ? MOCK_PACKAGE_JSON : null)
+
+      const unifont = await createUnifont([providers.npm({ readFile, remote: false })])
+
+      const names1 = await unifont.listFonts()
+      const names2 = await unifont.listFonts()
+
+      expect(names2).toStrictEqual(names1)
+      expect(readFile.mock.calls.filter(([path]) => path === './package.json').length).toBe(2)
     })
 
     it('lazily reads package.json on first call', async () => {

@@ -277,11 +277,6 @@ export default defineFontProvider('npm', (providerOptions: NpmProviderOptions, c
     const resolved: FontFaceData[] = []
 
     for (const face of fontFaces) {
-      if (!Array.isArray(face.src)) {
-        resolved.push(face)
-        continue
-      }
-
       const src: FontFaceData['src'] = []
       for (const source of face.src) {
         if (!('url' in source)) {
