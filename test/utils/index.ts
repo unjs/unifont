@@ -50,12 +50,12 @@ export function getOptimizerIdentityFromUrl(provider: OptimizationSupportedProvi
   // TODO: add other providers when they support optimizing
 }
 
-export function mockFetchReturn(condition: RegExp, value: () => unknown) {
+export function mockFetchReturn(condition: RegExp, value: (...args: Parameters<typeof globalThis.fetch>) => unknown) {
   const originalFetch = globalThis.fetch
 
   globalThis.fetch = (...args) => {
     if (condition.test(args[0] as string)) {
-      return value() as any
+      return value(...args) as any
     }
     return originalFetch(...args)
   }

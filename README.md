@@ -308,7 +308,7 @@ providers.npm({ cdn: 'https://esm.sh' })
 - Type: `boolean`
 - Default: `true`
 
-Whether to fall back to fetching from the CDN when local resolution fails. Set to `false` to only resolve from locally installed packages:
+Whether to fall back to fetching from the CDN when local resolution fails. Set to `false` to only resolve from locally installed packages, in which case font sources are emitted as `file://` URLs pointing into `node_modules` and no CDN request is made:
 
 ```js
 import { providers } from 'unifont'
@@ -396,9 +396,9 @@ const { fonts } = await unifont.resolveFont('Roboto', {
 ##### `file`
 
 - Type: `string`
-- Default: `'index.css'`
+- Default: per-weight/per-style entry points, falling back to `'index.css'`
 
-The entry CSS file to parse from the package:
+The entry CSS file to parse from the package. When not set, `@fontsource/*` packages are resolved through their per-weight and per-style entry points (`<weight>.css`, `<weight>-italic.css`) for the requested weights and styles:
 
 ```js
 import { createUnifont, providers } from 'unifont'
