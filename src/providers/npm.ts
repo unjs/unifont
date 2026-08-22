@@ -119,12 +119,10 @@ const DEFAULT_CDN = 'https://cdn.jsdelivr.net/npm'
  *
  * - `match`: regex to match against dependency names in package.json
  * - `family`: extracts the font family name from the package name
- * - `file`: CSS entry file to parse (default: 'index.css')
  */
 interface KnownFontPackage {
   match: RegExp
   family: (pkgName: string) => string
-  file?: string
 }
 
 const KNOWN_FONT_PACKAGES: KnownFontPackage[] = [
@@ -248,7 +246,6 @@ function packageDirFor(path: string, cssFile: string): string {
 interface DetectedFont {
   family: string
   pkgName: string
-  file?: string
 }
 
 export default defineFontProvider('npm', (providerOptions: NpmProviderOptions, ctx) => {
@@ -331,7 +328,6 @@ export default defineFontProvider('npm', (providerOptions: NpmProviderOptions, c
             detectedFonts.set(family.toLowerCase(), {
               family,
               pkgName: depName,
-              file: pattern.file,
             })
             break
           }
@@ -492,8 +488,7 @@ export default defineFontProvider('npm', (providerOptions: NpmProviderOptions, c
     async getFontProperties(family: string) {
       const detected = (await getDetectedFonts()).get(family.toLowerCase())
       const pkgName = detected?.pkgName ?? guessPackageForFamily(family)
-      const file = detected?.file
-      const cssFiles = file ? [file] : resolveCssFiles(pkgName, { weights: STANDARD_WEIGHTS, styles: ['normal', 'italic'] })
+      const cssFiles = resolveCssFiles(pkgName, { weights: STANDARD_WEIGHTS, styles: ['normal', 'italic'] })
 
       const allFormats: ResolveFontOptions['formats'] = ['woff2', 'woff', 'otf', 'ttf', 'eot']
       const fonts = await ctx.storage.getItem(`npm:${pkgName}/properties.json`, async () => {
@@ -557,7 +552,7 @@ export default defineFontProvider('npm', (providerOptions: NpmProviderOptions, c
         const fonts = await getDetectedFonts()
         const detected = fonts.get(family.toLowerCase())
         pkgName = detected?.pkgName ?? guessPackageForFamily(family)
-        file = familyOptions.file || detected?.file
+        file = familyOptions.file
       }
 
       const pkgVersion = familyOptions.version || 'latest'
