@@ -38,17 +38,25 @@ export function prepareWeights({
         collectedWeights.push(weight)
         continue
       }
-      // A variable font serves the whole range from one file, but a static family needs one
-      // file per weight, so we only fall back to the endpoints of the range rather than
-      // downloading every intermediate weight the family happens to publish.
+      // A static family needs one file per weight, so we resolve a range to a handful of
+      // representative weights rather than every weight the family happens to publish.
       const [min, max] = weight.split(' ')
-      const inRange = weights
+      const available = weights
         .map(Number)
-        .filter(w => w >= Number(min) && w <= Number(max))
+        .filter(w => !Number.isNaN(w))
         .sort((a, b) => a - b)
+      const inRange = available.filter(w => w >= Number(min) && w <= Number(max))
 
       if (inRange.length > 0) {
-        collectedWeights.push(String(inRange[0]), String(inRange.at(-1)))
+        // Keeping the weight nearest to `normal` as well as the endpoints means text at the
+        // default weight is never matched against a far-away weight by the browser's
+        // font matching algorithm (which would render, say, 400 as 100).
+        for (const w of [inRange[0]!, closestTo(inRange, 400), inRange.at(-1)!]) {
+          collectedWeights.push(String(w))
+        }
+      }
+      else if (available.length > 0) {
+        collectedWeights.push(String(closestTo(available, clamp(400, Number(min), Number(max)))))
       }
       continue
     }
@@ -62,6 +70,21 @@ export function prepareWeights({
     weight,
     variable: weight.includes(' '),
   }))
+}
+
+function clamp(value: number, min: number, max: number): number {
+  return Math.min(Math.max(value, min), max)
+}
+
+/** Picks the value nearest to `target`, preferring the lower value when two are equidistant. */
+function closestTo(sortedValues: number[], target: number): number {
+  let closest = sortedValues[0]!
+  for (const value of sortedValues) {
+    if (Math.abs(value - target) < Math.abs(closest - target)) {
+      closest = value
+    }
+  }
+  return closest
 }
 
 export function splitCssIntoSubsets(input: string): { subset: string | null, css: string }[] {
