@@ -349,12 +349,32 @@ providers.npm({
 })
 ```
 
+##### `resolve`
+
+- Type: `(id: string) => string | null | Promise<string | null>`
+- Default: `import.meta.resolve`, falling back to `<root>/node_modules/<id>`
+
+Resolve a package-relative specifier (such as `@fontsource/roboto/index.css`) to an absolute path on disk. Return `null` (or throw) when the package isn't installed; the provider treats that as "not available locally" and falls back to the CDN unless `remote` is `false`.
+
+Supply a resolver for layouts where the package isn't linked into a `node_modules` directory under `root`: pnpm's isolated store, hoisting to a monorepo root, Yarn PnP, or a bundler alias.
+
+```js
+import { readFile } from 'node:fs/promises'
+import { fileURLToPath } from 'node:url'
+import { providers } from 'unifont'
+
+providers.npm({
+  readFile: path => readFile(path, 'utf-8').catch(() => null),
+  resolve: id => fileURLToPath(import.meta.resolve(id)),
+})
+```
+
 ##### `root`
 
 - Type: `string`
 - Default: `'.'`
 
-Root directory of the project, used to find `package.json` and `node_modules` when resolving local packages:
+Root directory of the project, used to find `package.json`, and `node_modules` when no `resolve` function is provided:
 
 ```js
 import { providers } from 'unifont'

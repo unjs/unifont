@@ -1,7 +1,7 @@
 import type { FontFaceData, ResolveFontOptions } from '../types'
 
-import { resolve } from 'node:path'
-import { pathToFileURL } from 'node:url'
+import { dirname, resolve } from 'node:path'
+import { fileURLToPath, pathToFileURL } from 'node:url'
 import { hash } from 'ohash'
 
 import { extractFontFaceData } from '../css/parse'
@@ -59,8 +59,32 @@ export interface NpmProviderOptions {
    */
   exists?: (path: string) => Promise<boolean>
   /**
+   * Optional function to resolve a package-relative specifier (such as
+   * `@fontsource/roboto/index.css`) to an absolute path on disk.
+   *
+   * Return `null` (or throw) when the package is not installed; the provider
+   * treats that as "not available locally" and falls back to the CDN unless
+   * `remote` is `false`.
+   *
+   * When not provided, `import.meta.resolve` is used, falling back to
+   * `<root>/node_modules/<specifier>`. Supplying a resolver is necessary for
+   * layouts where the package is not linked into a `node_modules` directory
+   * under `root`: pnpm's isolated store, hoisting to a monorepo root, Yarn PnP,
+   * or a bundler alias.
+   *
+   * @example
+   * ```ts
+   * import { fileURLToPath } from 'node:url'
+   * providers.npm({
+   *   resolve: id => fileURLToPath(import.meta.resolve(id)),
+   * })
+   * ```
+   */
+  resolve?: (id: string) => string | null | Promise<string | null>
+  /**
    * Root directory of the project for resolving local packages.
-   * Used to find `package.json` and `node_modules`.
+   * Used to find `package.json`, and `node_modules` when no `resolve` function
+   * is provided.
    * @default '.' (current working directory)
    */
   root?: string
@@ -209,6 +233,18 @@ function stripTrailingSlashes(path: string): string {
   return path.slice(0, end)
 }
 
+/**
+ * Strip the resolved CSS specifier back off to recover the package directory,
+ * which is where the stylesheet's relative font URLs are anchored.
+ */
+function packageDirFor(path: string, cssFile: string): string {
+  const suffix = `/${cssFile}`
+  if (path.replaceAll('\\', '/').endsWith(suffix)) {
+    return path.slice(0, path.length - suffix.length)
+  }
+  return dirname(path)
+}
+
 interface DetectedFont {
   family: string
   pkgName: string
@@ -221,6 +257,32 @@ export default defineFontProvider('npm', (providerOptions: NpmProviderOptions, c
   const readFile = providerOptions.readFile
   const exists = providerOptions.exists ?? (path => readFile!(path).then(contents => contents !== null))
   const root = stripTrailingSlashes(providerOptions.root || '.')
+
+  // `import.meta.resolve` (which resolves relative to `unifont` itself) is only
+  // consulted when the default root is in use.
+  const resolveId = providerOptions.resolve ?? ((id: string) => {
+    if (!providerOptions.root && typeof import.meta.resolve === 'function') {
+      try {
+        const url = import.meta.resolve(id)
+        if (url.startsWith('file:')) {
+          return fileURLToPath(url)
+        }
+      }
+      catch {
+        // Not resolvable from `unifont`; fall through to `root`
+      }
+    }
+    return `${root}/node_modules/${id}`
+  })
+
+  async function resolvePath(id: string): Promise<string | null> {
+    try {
+      return await resolveId(id) ?? null
+    }
+    catch {
+      return null
+    }
+  }
 
   // Lazily computed and cached by package.json content hash
   let detectedFonts: Map<string, DetectedFont> | undefined
@@ -348,28 +410,41 @@ export default defineFontProvider('npm', (providerOptions: NpmProviderOptions, c
       return null
     }
 
-    const stylesheets = await Promise.all(cssFiles.map(cssFile => readFile(`${root}/node_modules/${pkgName}/${cssFile}`).catch(() => null)))
+    const stylesheets = await Promise.all(cssFiles.map(async (cssFile) => {
+      const path = await resolvePath(`${pkgName}/${cssFile}`)
+      if (!path) {
+        return null
+      }
+      const css = await readFile(path).catch(() => null)
+      return css ? { css, pkgDir: packageDirFor(path, cssFile) } : null
+    }))
+
+    const found = stylesheets.filter(entry => entry !== null)
+    if (found.length === 0) {
+      return null
+    }
+
+    if (!remote) {
+      const localFaces: FontFaceData[] = []
+      for (const { css, pkgDir } of found) {
+        localFaces.push(...await resolveUrlsToLocalFiles(extractFontFaceData(css, family), pkgDir))
+      }
+      return localFaces.length > 0 ? cleanFontFaces(localFaces, formats) : null
+    }
 
     const fontFaces: FontFaceData[] = []
-    for (const css of stylesheets) {
-      if (css) {
-        fontFaces.push(...extractFontFaceData(css, family))
-      }
+    for (const { css } of found) {
+      fontFaces.push(...extractFontFaceData(css, family))
     }
 
     if (fontFaces.length === 0) {
       return null
     }
 
-    if (!remote) {
-      const localFaces = await resolveUrlsToLocalFiles(fontFaces, `${root}/node_modules/${pkgName}`)
-      return localFaces.length > 0 ? cleanFontFaces(localFaces, formats) : null
-    }
-
     // Resolve relative URLs to absolute CDN URLs using the installed version
     let version = 'latest'
     try {
-      const localPkgJson = await readFile(`${root}/node_modules/${pkgName}/package.json`)
+      const localPkgJson = await readFile(`${found[0]!.pkgDir}/package.json`)
       if (localPkgJson) {
         const parsed = JSON.parse(localPkgJson) as { version?: string }
         if (parsed.version) {
