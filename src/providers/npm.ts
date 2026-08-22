@@ -175,6 +175,14 @@ function resolveCssFiles(pkgName: string, options: Pick<ResolveFontOptions, 'wei
   return files.length > 0 ? files : [DEFAULT_CSS_FILE]
 }
 
+function stripTrailingSlashes(path: string): string {
+  let end = path.length
+  while (end > 1 && (path[end - 1] === '/' || path[end - 1] === '\\')) {
+    end--
+  }
+  return path.slice(0, end)
+}
+
 interface DetectedFont {
   family: string
   pkgName: string
@@ -185,7 +193,7 @@ export default defineFontProvider('npm', (providerOptions: NpmProviderOptions, c
   const cdn = providerOptions.cdn || DEFAULT_CDN
   const remote = providerOptions.remote ?? true
   const readFile = providerOptions.readFile
-  const root = providerOptions.root || '.'
+  const root = stripTrailingSlashes(providerOptions.root || '.')
 
   // Lazily computed and cached by package.json content hash
   let detectedFonts: Map<string, DetectedFont> | undefined
@@ -403,7 +411,7 @@ export default defineFontProvider('npm', (providerOptions: NpmProviderOptions, c
       const pkgVersion = familyOptions.version || 'latest'
       const cssFiles = file ? [file] : resolveCssFiles(pkgName, options)
 
-      const key = `npm:${pkgName}/${cssFiles.join(',')}-${hash(options)}`
+      const key = `npm:${pkgName}/${cssFiles.join(',')}-${hash(options)}.json`
 
       const fonts = await ctx.storage.getItem(key, async () => {
         const candidates = cssFiles.includes(DEFAULT_CSS_FILE) ? [cssFiles] : [cssFiles, [DEFAULT_CSS_FILE]]

@@ -435,6 +435,24 @@ describe('npm', () => {
       expect(readFile).toHaveBeenCalledWith('/my/project/node_modules/@fontsource/roboto/index.css')
     })
 
+    it('ignores trailing slashes in the root directory', async () => {
+      const readFile = vi.fn(async (path: string) => {
+        if (path === '/my/project/package.json')
+          return MOCK_PACKAGE_JSON
+        if (path === '/my/project/node_modules/@fontsource/roboto/index.css')
+          return MOCK_ROBOTO_CSS
+        if (path === '/my/project/node_modules/@fontsource/roboto/package.json')
+          return MOCK_PKG_VERSION_JSON
+        return null
+      })
+
+      const unifont = await createUnifont([providers.npm({ readFile, root: '/my/project/' })])
+      const { fonts } = await unifont.resolveFont('Roboto')
+
+      expect(fonts.length).toBeGreaterThan(0)
+      expect(readFile).toHaveBeenCalledWith('/my/project/node_modules/@fontsource/roboto/index.css')
+    })
+
     it('handles readFile that throws errors', async () => {
       const readFile = vi.fn(async (path: string) => {
         if (path === './package.json')
