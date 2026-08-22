@@ -478,8 +478,8 @@ describe('npm', () => {
           return MOCK_PACKAGE_JSON
         if (path === './node_modules/cal-sans/index.css')
           return MOCK_CAL_SANS_CSS
-        if (path === './node_modules/cal-sans/package.json')
-          return JSON.stringify({ version: '1.0.1' })
+        if (path.includes('/node_modules/cal-sans/fonts/'))
+          return 'binary'
         return null
       })
 
@@ -495,8 +495,8 @@ describe('npm', () => {
           return MOCK_PACKAGE_JSON
         if (path === './node_modules/@fontsource-variable/inter/index.css')
           return MOCK_INTER_VARIABLE_CSS
-        if (path === './node_modules/@fontsource-variable/inter/package.json')
-          return MOCK_PKG_VERSION_JSON
+        if (path.includes('/node_modules/@fontsource-variable/inter/files/'))
+          return 'binary'
         return null
       })
 
@@ -529,6 +529,71 @@ describe('npm', () => {
       expect(cdnCalled).not.toHaveBeenCalled()
 
       restoreFetch()
+    })
+  })
+
+  describe('remote: false', () => {
+    it('emits file:// URLs for locally installed font files', async () => {
+      const readFile = vi.fn(async (path: string) => {
+        if (path === '/my/project/package.json')
+          return MOCK_PACKAGE_JSON
+        if (path === '/my/project/node_modules/cal-sans/index.css')
+          return MOCK_CAL_SANS_CSS
+        if (path.startsWith('/my/project/node_modules/cal-sans/fonts/'))
+          return 'binary'
+        return null
+      })
+
+      const unifont = await createUnifont([providers.npm({ readFile, remote: false, root: '/my/project' })])
+      const { fonts } = await unifont.resolveFont('Cal Sans', { weights: ['600'], formats: ['woff2', 'woff'] })
+
+      expect(fonts.length).toBe(1)
+      expect(fonts[0]!.src).toStrictEqual([
+        { url: 'file:///my/project/node_modules/cal-sans/fonts/webfonts/CalSans-SemiBold.woff2', format: 'woff2' },
+        { url: 'file:///my/project/node_modules/cal-sans/fonts/webfonts/CalSans-SemiBold.woff', format: 'woff' },
+      ])
+    })
+
+    it('warns and drops sources whose files are missing', async () => {
+      const warn = vi.spyOn(console, 'warn').mockImplementation(() => {})
+      const readFile = vi.fn(async (path: string) => {
+        if (path === '/my/project/package.json')
+          return MOCK_PACKAGE_JSON
+        if (path === '/my/project/node_modules/cal-sans/index.css')
+          return MOCK_CAL_SANS_CSS
+        return null
+      })
+
+      const unifont = await createUnifont([providers.npm({ readFile, remote: false, root: '/my/project' })])
+      const { fonts } = await unifont.resolveFont('Cal Sans', { weights: ['600'] })
+
+      expect(fonts).toStrictEqual([])
+      expect(warn).toHaveBeenCalledWith(expect.stringContaining('CalSans-SemiBold.woff2'))
+
+      warn.mockRestore()
+    })
+
+    it('preserves absolute URLs', async () => {
+      const cssWithAbsoluteUrl = `
+@font-face {
+  font-family: 'Roboto';
+  font-style: normal;
+  font-weight: 400;
+  src: url(https://fonts.example.com/roboto.woff2) format('woff2');
+}
+`
+      const readFile = vi.fn(async (path: string) => {
+        if (path === '/my/project/package.json')
+          return MOCK_PACKAGE_JSON
+        if (path === '/my/project/node_modules/@fontsource/roboto/400.css')
+          return cssWithAbsoluteUrl
+        return null
+      })
+
+      const unifont = await createUnifont([providers.npm({ readFile, remote: false, root: '/my/project' })])
+      const { fonts } = await unifont.resolveFont('Roboto', { weights: ['400'] })
+
+      expect(fonts[0]!.src[0]).toHaveProperty('url', 'https://fonts.example.com/roboto.woff2')
     })
   })
 

@@ -1,6 +1,9 @@
 import type { FontFaceData, ResolveFontOptions } from '../types'
 
+import { resolve } from 'node:path'
+import { pathToFileURL } from 'node:url'
 import { hash } from 'ohash'
+
 import { extractFontFaceData } from '../css/parse'
 import { fetchWithRetries } from '../fetch'
 import { cleanFontFaces, defineFontProvider } from '../utils'
@@ -15,7 +18,8 @@ export interface NpmProviderOptions {
    * Whether to fall back to fetching from the CDN when local resolution
    * fails or `readFile` is not provided.
    *
-   * Set to `false` to only resolve from locally installed packages.
+   * Set to `false` to only resolve from locally installed packages, emitting
+   * `file://` URLs for font files found in `node_modules`.
    * This is useful when another provider (e.g. `fontsource`) already
    * handles CDN resolution.
    *
@@ -264,6 +268,51 @@ export default defineFontProvider('npm', (providerOptions: NpmProviderOptions, c
     }
   }
 
+  /**
+   * Rewrite relative URLs to `file://` URLs pointing at the installed package.
+   * Sources whose files are missing on disk are dropped rather than silently
+   * falling back to the CDN, which `remote: false` promises not to use.
+   */
+  async function resolveUrlsToLocalFiles(fontFaces: FontFaceData[], pkgDir: string): Promise<FontFaceData[]> {
+    const resolved: FontFaceData[] = []
+
+    for (const face of fontFaces) {
+      if (!Array.isArray(face.src)) {
+        resolved.push(face)
+        continue
+      }
+
+      const src: FontFaceData['src'] = []
+      for (const source of face.src) {
+        if (!('url' in source)) {
+          src.push(source)
+          continue
+        }
+
+        const url = source.url
+        if (url.startsWith('http') || url.startsWith('data:') || url.startsWith('//')) {
+          src.push(source)
+          continue
+        }
+
+        const filePath = resolve(pkgDir, url)
+        const exists = await readFile!(filePath).then(contents => contents !== null).catch(() => false)
+        if (!exists) {
+          console.warn(`Could not find \`${filePath}\` when resolving fonts locally. \`unifont\` will not include this font source.`)
+          continue
+        }
+
+        src.push({ ...source, url: pathToFileURL(filePath).href })
+      }
+
+      if (src.some(source => 'url' in source)) {
+        resolved.push({ ...face, src })
+      }
+    }
+
+    return resolved
+  }
+
   async function resolveFromLocal(pkgName: string, cssFiles: string[], family: string, formats: ResolveFontOptions['formats']): Promise<FontFaceData[] | null> {
     if (!readFile) {
       return null
@@ -280,6 +329,11 @@ export default defineFontProvider('npm', (providerOptions: NpmProviderOptions, c
 
     if (fontFaces.length === 0) {
       return null
+    }
+
+    if (!remote) {
+      const localFaces = await resolveUrlsToLocalFiles(fontFaces, `${root}/node_modules/${pkgName}`)
+      return localFaces.length > 0 ? cleanFontFaces(localFaces, formats) : null
     }
 
     // Resolve relative URLs to absolute CDN URLs using the installed version

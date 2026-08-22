@@ -308,7 +308,7 @@ providers.npm({ cdn: 'https://esm.sh' })
 - Type: `boolean`
 - Default: `true`
 
-Whether to fall back to fetching from the CDN when local resolution fails. Set to `false` to only resolve from locally installed packages:
+Whether to fall back to fetching from the CDN when local resolution fails. Set to `false` to only resolve from locally installed packages, in which case font sources are emitted as `file://` URLs pointing into `node_modules` and no CDN request is made:
 
 ```js
 import { providers } from 'unifont'
