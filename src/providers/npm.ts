@@ -43,6 +43,22 @@ export interface NpmProviderOptions {
    */
   readFile?: (path: string) => Promise<string | null>
   /**
+   * Optional function to check whether a file exists on the local filesystem.
+   * Used when resolving font files with `remote: false`; when not provided,
+   * `readFile` is used instead, which reads and decodes the whole font binary.
+   *
+   * @example
+   * ```ts
+   * import { access, readFile } from 'node:fs/promises'
+   * providers.npm({
+   *   readFile: path => readFile(path, 'utf-8').catch(() => null),
+   *   exists: path => access(path).then(() => true).catch(() => false),
+   *   remote: false,
+   * })
+   * ```
+   */
+  exists?: (path: string) => Promise<boolean>
+  /**
    * Root directory of the project for resolving local packages.
    * Used to find `package.json` and `node_modules`.
    * @default '.' (current working directory)
@@ -175,6 +191,16 @@ function resolveCssFiles(pkgName: string, options: Pick<ResolveFontOptions, 'wei
   return files.length > 0 ? files : [DEFAULT_CSS_FILE]
 }
 
+const URL_SUFFIX_RE = /[?#].*$/
+
+/**
+ * Remove any query string or fragment from a CSS `url()` value. Both are
+ * meaningless for a `file://` URL, so they are dropped rather than preserved.
+ */
+function stripUrlSuffix(url: string): string {
+  return url.replace(URL_SUFFIX_RE, '')
+}
+
 function stripTrailingSlashes(path: string): string {
   let end = path.length
   while (end > 1 && (path[end - 1] === '/' || path[end - 1] === '\\')) {
@@ -193,6 +219,7 @@ export default defineFontProvider('npm', (providerOptions: NpmProviderOptions, c
   const cdn = providerOptions.cdn || DEFAULT_CDN
   const remote = providerOptions.remote ?? true
   const readFile = providerOptions.readFile
+  const exists = providerOptions.exists ?? (path => readFile!(path).then(contents => contents !== null))
   const root = stripTrailingSlashes(providerOptions.root || '.')
 
   // Lazily computed and cached by package.json content hash
@@ -298,9 +325,9 @@ export default defineFontProvider('npm', (providerOptions: NpmProviderOptions, c
           continue
         }
 
-        const filePath = resolve(pkgDir, url)
-        const exists = await readFile!(filePath).then(contents => contents !== null).catch(() => false)
-        if (!exists) {
+        const filePath = resolve(pkgDir, stripUrlSuffix(url))
+        const fileExists = await exists(filePath).catch(() => false)
+        if (!fileExists) {
           console.warn(`Could not find \`${filePath}\` when resolving fonts locally. \`unifont\` will not include this font source.`)
           continue
         }
