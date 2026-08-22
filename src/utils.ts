@@ -45,16 +45,26 @@ export function prepareWeights({
         collectedWeights.push(weight)
         continue
       }
-      // As a fallback, request all weights in between
+      // A static family needs one file per weight, so we resolve a range to a handful of
+      // representative weights rather than every weight the family happens to publish.
       const [min, max] = weight.split(' ')
-      collectedWeights.push(
-        ...weights
-          .filter((_w) => {
-            const w = Number(_w)
-            return w >= Number(min) && w <= Number(max)
-          })
-          .map(w => String(w)),
-      )
+      const available = weights
+        .map(Number)
+        .filter(w => !Number.isNaN(w))
+        .sort((a, b) => a - b)
+      const inRange = available.filter(w => w >= Number(min) && w <= Number(max))
+
+      if (inRange.length > 0) {
+        // Keeping the weight nearest to `normal` as well as the endpoints means text at the
+        // default weight is never matched against a far-away weight by the browser's
+        // font matching algorithm (which would render, say, 400 as 100).
+        for (const w of [inRange[0]!, closestTo(inRange, 400), inRange.at(-1)!]) {
+          collectedWeights.push(String(w))
+        }
+      }
+      else if (available.length > 0) {
+        collectedWeights.push(String(closestTo(available, clamp(400, Number(min), Number(max)))))
+      }
       continue
     }
     // The requested weight is a standard weight
@@ -67,6 +77,21 @@ export function prepareWeights({
     weight,
     variable: weight.includes(' '),
   }))
+}
+
+function clamp(value: number, min: number, max: number): number {
+  return Math.min(Math.max(value, min), max)
+}
+
+/** Picks the value nearest to `target`, preferring the lower value when two are equidistant. */
+function closestTo(sortedValues: number[], target: number): number {
+  let closest = sortedValues[0]!
+  for (const value of sortedValues) {
+    if (Math.abs(value - target) < Math.abs(closest - target)) {
+      closest = value
+    }
+  }
+  return closest
 }
 
 export function splitCssIntoSubsets(input: string): { subset: string | null, css: string }[] {
