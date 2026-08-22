@@ -1,5 +1,6 @@
 import type { Endpoint } from '../lib/endpoints'
 import { afterEach, describe, expect, it, vi } from 'vitest'
+import { InvalidRequestError } from '../lib/endpoints'
 import { createCachedProxy, finalizeResponse } from '../lib/forward'
 
 const endpoint: Endpoint = {
@@ -83,6 +84,45 @@ describe('cached proxy', () => {
     expect(fetchMock).toHaveBeenCalledTimes(2)
   })
 
+  it('falls back to a generic content type when the upstream omits one', async () => {
+    mockUpstream(() => new Response(new Uint8Array([1, 2, 3])))
+    const proxy = createCachedProxy({ ...endpoint, name: 'no-content-type' })
+
+    const response = await proxy(get('/test/v1/thing?family=Mock'))
+
+    expect(response.headers.get('content-type')).toBe('application/octet-stream')
+  })
+
+  it('reports a rejected parameter as a 400 rather than a server error', async () => {
+    const fetchMock = mockUpstream('a{}')
+    const proxy = createCachedProxy({
+      ...endpoint,
+      name: 'invalid-parameter',
+      resolve: () => {
+        throw new InvalidRequestError('Invalid `family`.')
+      },
+    })
+
+    await expect(proxy(get('/test/v1/thing?family=Mock'))).rejects.toMatchObject({
+      status: 400,
+      message: 'Invalid `family`.',
+    })
+    expect(fetchMock).not.toHaveBeenCalled()
+  })
+
+  it('does not disguise an unexpected resolve failure as a 400', async () => {
+    mockUpstream('a{}')
+    const proxy = createCachedProxy({
+      ...endpoint,
+      name: 'resolve-bug',
+      resolve: () => {
+        throw new TypeError('resolve is broken')
+      },
+    })
+
+    await expect(proxy(get('/test/v1/thing?family=Mock'))).rejects.toThrow('resolve is broken')
+  })
+
   it('passes an upstream 404 through instead of reporting a gateway error', async () => {
     mockUpstream(() => new Response('nope', { status: 404 }))
     const proxy = createCachedProxy({ ...endpoint, name: 'upstream-missing' })
@@ -103,6 +143,20 @@ describe('finalizeResponse', () => {
     expect(response.headers.get('content-encoding')).toBeNull()
     expect(response.headers.get('content-type')).toBe('text/css')
     expect(await response.text()).toBe(body)
+  })
+
+  it('leaves a response without a cache-control header alone', () => {
+    const response = finalizeResponse(new Response('a{}'))
+
+    expect(response.headers.get('cache-control')).toBeNull()
+  })
+
+  it('does not prefix a cache-control header that is already public', () => {
+    const response = finalizeResponse(new Response('a{}', {
+      headers: { 'cache-control': 'public, max-age=60' },
+    }))
+
+    expect(response.headers.get('cache-control')).toBe('public, max-age=60')
   })
 
   it('marks the response as shared-cacheable and preserves 304s', async () => {

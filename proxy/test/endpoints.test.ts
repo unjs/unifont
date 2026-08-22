@@ -54,6 +54,15 @@ describe('endpoints', () => {
     expect(new Set(names).size).toBe(names.length)
   })
 
+  it('rejects a route parameter that is absent altogether', () => {
+    const parameterised = endpoints.filter(endpoint => endpoint.route.includes(':'))
+
+    expect(parameterised.length).toBeGreaterThan(0)
+    for (const endpoint of parameterised) {
+      expect(() => endpoint.resolve({ params: {}, query: new URLSearchParams() }), endpoint.name).toThrow()
+    }
+  })
+
   it('cannot be steered at a host it does not already serve', () => {
     for (const endpoint of endpoints) {
       const params = routeParams(endpoint.route)
@@ -88,6 +97,7 @@ describe('endpoints', () => {
     ['/bunny/v1/list', 'https://fonts.bunny.net/list'],
     ['/bunny/v1/css?family=abeezee:400', 'https://fonts.bunny.net/css?family=abeezee:400'],
     ['/fontshare/v1/fonts?offset=0&limit=100', 'https://api.fontshare.com/v2/fonts?offset=0&limit=100'],
+    ['/fontshare/v1/fonts', 'https://api.fontshare.com/v2/fonts'],
     ['/fontshare/v1/css?f[]=alpino@300', 'https://api.fontshare.com/v2/css?f[]=alpino@300'],
     ['/fontsource/v1/fonts', 'https://api.fontsource.org/v1/fonts'],
     ['/fontsource/v1/fonts/roboto', 'https://api.fontsource.org/v1/fonts/roboto'],
@@ -131,6 +141,7 @@ describe('endpoints', () => {
     '/fontsource/v1/fonts/roboto%2f..',
     '/bunny/v1/css?family=https://evil.test',
     '/fontshare/v1/fonts?limit=100000',
+    `/google/v1/css?family=Roboto&text=${'a'.repeat(513)}`,
   ])('rejects %s', (path) => {
     expect(() => request(path)).toThrow()
   })

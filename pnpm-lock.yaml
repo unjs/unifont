@@ -92,9 +92,6 @@ importers:
       nitro:
         specifier: 3.0.260610-beta
         version: 3.0.260610-beta(chokidar@5.0.0)(dotenv@17.4.2)(giget@3.3.0)(jiti@2.7.0)(lru-cache@11.5.1)(vite@8.2.1(@types/node@24.13.3)(jiti@2.7.0)(yaml@2.9.0))
-      vitest:
-        specifier: 4.1.10
-        version: 4.1.10(@types/node@24.13.3)(@vitest/coverage-v8@4.1.10)(vite@8.2.1(@types/node@24.13.3)(jiti@2.7.0)(yaml@2.9.0))
 
 packages:
 

@@ -69,8 +69,5 @@ jobs:
       - name: 📦 Install dependencies
         run: pnpm install
 
-      - name: 🧪 Test proxy
-        run: pnpm --filter unifont-proxy test
-
       - name: 🛠 Build proxy
         run: pnpm --filter unifont-proxy build

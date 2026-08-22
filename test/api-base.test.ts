@@ -1,5 +1,7 @@
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { createUnifont, providers } from '../src'
+import { createAPIFetch } from '../src/api-base'
+import { userAgents } from '../src/providers/google'
 
 const API_BASE = 'https://proxy.test'
 
@@ -127,5 +129,26 @@ describe('apiBase', () => {
     await createUnifont([providers.bunny()]).catch(() => {})
 
     expect(mock.requests).toEqual(['https://fonts.bunny.net/list'])
+  })
+
+  it('appends the format to a proxied URL that carries no query string of its own', async () => {
+    const mock = mockFetch({})
+    restore = mock.restore
+
+    await createAPIFetch(API_BASE)('https://fonts.google.com/metadata/fonts', {
+      headers: { 'user-agent': userAgents.woff2! },
+    }).catch(() => {})
+
+    expect(mock.requests).toEqual([`${API_BASE}/google/v1/fonts?format=woff2`])
+  })
+
+  it('requests an API the proxy does not serve directly, even with apiBase set', async () => {
+    const mock = mockFetch({})
+    restore = mock.restore
+
+    const cdnURL = 'https://cdn.jsdelivr.net/npm/@fontsource/poppins@5/400.css'
+    await createAPIFetch(API_BASE)(cdnURL).catch(() => {})
+
+    expect(mock.requests).toEqual([cdnURL])
   })
 })
