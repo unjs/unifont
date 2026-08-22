@@ -49,9 +49,11 @@ export interface NpmProviderOptions {
    *
    * @example
    * ```ts
-   * import { access } from 'node:fs/promises'
+   * import { access, readFile } from 'node:fs/promises'
    * providers.npm({
+   *   readFile: path => readFile(path, 'utf-8').catch(() => null),
    *   exists: path => access(path).then(() => true).catch(() => false),
+   *   remote: false,
    * })
    * ```
    */
