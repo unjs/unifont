@@ -169,6 +169,26 @@ describe('google', () => {
     expect(await unifont.getFontProperties('XXX')).toEqual(undefined)
   })
 
+  it('omits a variable weight range when the family has no wght axis', async () => {
+    const restore = mockFetchReturn(/fonts\.google\.com\/metadata\/fonts/, () => new Response(JSON.stringify({
+      familyMetadataList: [{
+        family: 'No Wght',
+        fonts: { 400: {} },
+        subsets: ['latin'],
+        axes: [{ tag: 'wdth', min: 75, max: 125, defaultValue: 100 }],
+      }],
+    })))
+
+    try {
+      const unifont = await createUnifont([providers.google()])
+      const result = await unifont.getFontProperties('No Wght')
+      expect(result?.weights).toEqual(['400'])
+    }
+    finally {
+      restore()
+    }
+  })
+
   it('respects provider glyphs option and resolves optimized font', async () => {
     const unifont = await createUnifont([providers.google({
       experimental: {

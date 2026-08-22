@@ -57,6 +57,182 @@ describe('adobe', () => {
     vi.restoreAllMocks()
   })
 
+  it('throws when the adobe api returns no kit metadata', async () => {
+    const error = vi.spyOn(console, 'error').mockImplementation(() => {})
+
+    const restoreFetch = mockFetchReturn(
+      /^https:\/\/typekit\.com\/api\/v1\/json\/kits\/nometa\/published/,
+      () => new Response(JSON.stringify({ kit: null }), { headers: { 'content-type': 'application/json' } }),
+    )
+
+    try {
+      const unifont = await createUnifont([providers.adobe({ id: 'nometa' })])
+
+      expect(error).toHaveBeenCalledWith(
+        'Could not initialize provider `adobe`. `unifont` will not be able to process fonts provided by this provider.',
+        expect.objectContaining({ message: 'No font metadata found in adobe response.' }),
+      )
+      expect(await unifont.resolveFont('Aleo').then(r => r.fonts)).toEqual([])
+    }
+    finally {
+      restoreFetch()
+      vi.restoreAllMocks()
+    }
+  })
+
+  it('does not refresh again for a family already in the negative cache', async () => {
+    let apiCallCount = 0
+    const originalFetch = globalThis.fetch
+
+    globalThis.fetch = vi.fn(async (url: string) => {
+      if (url.includes('typekit.com/api/v1/json/kits/negcache/published')) {
+        apiCallCount++
+        return new Response(JSON.stringify({
+          kit: { id: 'negcache', families: [] },
+        }), { headers: { 'content-type': 'application/json' } })
+      }
+      return originalFetch(url)
+    }) as typeof globalThis.fetch
+
+    try {
+      const unifont = await createUnifont([providers.adobe({ id: 'negcache' })])
+      expect(apiCallCount).toBe(1)
+
+      // First miss triggers a refresh, after which the family is negatively cached.
+      expect(await unifont.resolveFont('Missing').then(r => r.fonts)).toEqual([])
+      expect(apiCallCount).toBe(2)
+
+      expect(await unifont.resolveFont('Missing').then(r => r.fonts)).toEqual([])
+      expect(apiCallCount).toBe(2)
+
+      // A different family still misses, but the debounce window suppresses the refresh.
+      expect(await unifont.resolveFont('AlsoMissing').then(r => r.fonts)).toEqual([])
+      expect(apiCallCount).toBe(2)
+    }
+    finally {
+      globalThis.fetch = originalFetch
+    }
+  })
+
+  it('derives the css name from the family when css_names is empty', async () => {
+    const originalFetch = globalThis.fetch
+
+    globalThis.fetch = vi.fn(async (url: string) => {
+      if (url.includes('typekit.com/api/v1/json/kits/nocssname/published')) {
+        return new Response(JSON.stringify({
+          kit: {
+            id: 'nocssname',
+            families: [{
+              id: 'variablefont',
+              name: 'Variable Font',
+              slug: 'variable-font',
+              css_names: [],
+              css_stack: 'variable-font, serif',
+              variations: ['n4'],
+            }],
+          },
+        }), { headers: { 'content-type': 'application/json' } })
+      }
+      if (url.includes('nocssname.css')) {
+        return new Response(`
+          @font-face {
+            font-family: "variable-font";
+            src: url("https://use.typekit.net/variable.woff2") format("woff2");
+            font-weight: 100 900;
+            font-style: normal;
+          }
+        `, { headers: { 'content-type': 'text/css' } })
+      }
+      return originalFetch(url)
+    }) as typeof globalThis.fetch
+
+    try {
+      const unifont = await createUnifont([providers.adobe({ id: 'nocssname' })])
+      const { fonts } = await unifont.resolveFont('Variable Font')
+      expect(fonts).toHaveLength(1)
+      expect(fonts[0]!.weight).toEqual([100, 900])
+    }
+    finally {
+      globalThis.fetch = originalFetch
+    }
+  })
+
+  it('awaits an in-flight kit refresh instead of starting a second one', async () => {
+    let apiCallCount = 0
+    const originalFetch = globalThis.fetch
+
+    globalThis.fetch = vi.fn(async (url: string) => {
+      if (url.includes('typekit.com/api/v1/json/kits/inflight/published')) {
+        apiCallCount++
+        await new Promise(resolve => setTimeout(resolve, 50))
+        return new Response(JSON.stringify({
+          kit: { id: 'inflight', families: [] },
+        }), { headers: { 'content-type': 'application/json' } })
+      }
+      return originalFetch(url)
+    }) as typeof globalThis.fetch
+
+    try {
+      const unifont = await createUnifont([providers.adobe({ id: 'inflight' })])
+      expect(apiCallCount).toBe(1)
+
+      // Both misses race: the first starts the refresh, the second awaits it.
+      const [a, b] = await Promise.all([
+        unifont.resolveFont('MissingOne'),
+        unifont.resolveFont('MissingTwo'),
+      ])
+
+      expect(a.fonts).toEqual([])
+      expect(b.fonts).toEqual([])
+      expect(apiCallCount).toBe(2)
+    }
+    finally {
+      globalThis.fetch = originalFetch
+    }
+  })
+
+  it('keeps font faces that declare no weight', async () => {
+    const originalFetch = globalThis.fetch
+
+    globalThis.fetch = vi.fn(async (url: string) => {
+      if (url.includes('typekit.com/api/v1/json/kits/noweight/published')) {
+        return new Response(JSON.stringify({
+          kit: {
+            id: 'noweight',
+            families: [{
+              id: 'noweight',
+              name: 'NoWeight',
+              slug: 'noweight',
+              css_names: ['noweight'],
+              css_stack: 'noweight, serif',
+              variations: ['n4'],
+            }],
+          },
+        }), { headers: { 'content-type': 'application/json' } })
+      }
+      if (url.includes('noweight.css')) {
+        return new Response(`
+          @font-face {
+            font-family: "noweight";
+            src: url("https://use.typekit.net/noweight.woff2") format("woff2");
+            font-style: normal;
+          }
+        `, { headers: { 'content-type': 'text/css' } })
+      }
+      return originalFetch(url)
+    }) as typeof globalThis.fetch
+
+    try {
+      const unifont = await createUnifont([providers.adobe({ id: 'noweight' })])
+      const { fonts } = await unifont.resolveFont('NoWeight')
+      expect(fonts).toHaveLength(1)
+      expect(fonts[0]!.weight).toBeUndefined()
+    }
+    finally {
+      globalThis.fetch = originalFetch
+    }
+  })
+
   it('works', async () => {
     const unifont = await createUnifont([providers.adobe({ id: ['sij5ufr', 'grx7wdj'] })])
     expect(await unifont.resolveFont('NonExistent Font').then(r => r.fonts)).toMatchInlineSnapshot(`[]`)

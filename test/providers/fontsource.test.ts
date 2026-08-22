@@ -483,6 +483,50 @@ describe('fontsource', () => {
     restoreFetch()
   })
 
+  it('omits the variable weight range when the axes metadata has no wght axis', async () => {
+    const restoreFetch = mockFetchReturn(/\/variable\//, () => new Response(JSON.stringify({
+      axes: { slnt: { min: '-10', max: '0', default: '0' } },
+    })))
+
+    try {
+      const unifont = await createUnifont([providers.fontsource()])
+
+      const result = await unifont.getFontProperties('Roboto')
+      expect(result?.weights?.every(weight => !weight.includes(' '))).toBe(true)
+
+      const { fonts } = await unifont.resolveFont('Roboto', { weights: ['100 900'] })
+      expect(fonts.every(font => !Array.isArray(font.weight))).toBe(true)
+    }
+    finally {
+      restoreFetch()
+    }
+  })
+
+  it('does not request axes metadata for a non-variable family', async () => {
+    const restoreFetch = mockFetchReturn(/api\.fontsource\.org\/v1\/fonts$/, () => new Response(JSON.stringify([{
+      id: 'static-only',
+      family: 'Static Only',
+      subsets: ['latin'],
+      weights: [400, 700],
+      styles: ['normal'],
+      defSubset: 'latin',
+      variable: false,
+      lastModified: '2024-01-01',
+      category: 'sans-serif',
+      version: 'v1',
+      type: 'google',
+    }])))
+
+    try {
+      const unifont = await createUnifont([providers.fontsource()])
+      const result = await unifont.getFontProperties('Static Only')
+      expect(result?.weights).toEqual(['400', '700'])
+    }
+    finally {
+      restoreFetch()
+    }
+  })
+
   it('falls back to static weights', async () => {
     const unifont = await createUnifont([providers.fontsource()])
     const { fonts } = await unifont.resolveFont('Roboto', {
