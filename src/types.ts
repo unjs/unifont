@@ -84,6 +84,26 @@ export interface ResolveFontResult {
   fallbacks?: string[]
 }
 
+export interface FontProperties {
+  /**
+   * Weights available for the font family. Values are either discrete weights (`'400'`)
+   * or variable ranges expressed as `'<min> <max>'` (`'100 900'`).
+   */
+  weights?: string[]
+  /** Styles available for the font family. */
+  styles?: FontStyles[]
+  /**
+   * Subsets available for the font family. `undefined` means the provider does not
+   * expose subset information, not that no subsets are available.
+   */
+  subsets?: string[]
+  /**
+   * Formats the provider can serve. This reflects provider capability rather than
+   * per-family availability, so some formats may not exist for every family.
+   */
+  formats?: FontFormat[]
+}
+
 export interface InitializedProvider<
   FamilyOptions extends Record<string, any> = never,
 > {
@@ -91,6 +111,11 @@ export interface InitializedProvider<
     family: string,
     options: ResolveFontOptions<FamilyOptions>,
   ) => Awaitable<ResolveFontResult | undefined>
+  /**
+   * Returns the properties available for a font family, or `undefined` when the
+   * provider does not know the family (so unifont consults later providers).
+   */
+  getFontProperties?: (family: string) => Awaitable<FontProperties | undefined>
   listFonts?: (() => Awaitable<string[] | undefined>) | undefined
 }
 

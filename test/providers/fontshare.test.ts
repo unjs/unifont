@@ -63,6 +63,18 @@ describe('fontshare', () => {
     expect(names!.length > 0).toEqual(true)
   })
 
+  it('handles getFontProperties correctly', async () => {
+    const unifont = await createUnifont([providers.fontshare()])
+    const result = await unifont.getFontProperties('Satoshi')
+    expect(result?.provider).toBe('fontshare')
+    expect(result?.formats).toEqual(['woff2', 'woff', 'ttf'])
+    expect(result?.styles).toEqual(expect.arrayContaining(['normal', 'italic']))
+    expect(result?.subsets).toBeUndefined()
+    expect(result?.weights).toEqual(expect.arrayContaining(['400', '300 900']))
+
+    expect(await unifont.getFontProperties('XXX')).toEqual(undefined)
+  })
+
   it('falls back to static weights', async () => {
     const unifont = await createUnifont([providers.fontshare()])
     const { fonts } = await unifont.resolveFont('Tanker', {

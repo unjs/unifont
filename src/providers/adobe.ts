@@ -1,4 +1,4 @@
-import type { ResolveFontOptions } from '../types'
+import type { FontStyles, ResolveFontOptions } from '../types'
 
 import { hash } from 'ohash'
 import { extractFontFaceData } from '../css/parse'
@@ -117,6 +117,25 @@ export default defineFontProvider('adobe', async (options: AdobeProviderOptions,
   return {
     listFonts() {
       return [...familyMap.keys()]
+    },
+    getFontProperties(family) {
+      for (const kit of fonts.kits) {
+        const font = kit.families.find(f => f.name === family)
+        if (!font) {
+          continue
+        }
+        const styles = new Set<FontStyles>()
+        const weights = new Set<string>()
+        // Variations are `fdd` slugs, e.g. `n4` (normal 400) or `i7` (italic 700).
+        for (const variation of font.variations) {
+          styles.add(variation.startsWith('i') ? 'italic' : 'normal')
+          weights.add(`${variation.slice(-1)}00`)
+        }
+        return {
+          styles: [...styles],
+          weights: [...weights],
+        }
+      }
     },
     async resolveFont(family, options) {
       // Check if family is in negative cache first (used to prevent unnecessary refreshes)

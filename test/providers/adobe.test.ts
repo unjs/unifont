@@ -28,6 +28,16 @@ describe('adobe', () => {
     expect(fonts.length).toBeGreaterThan(0)
   })
 
+  it('handles getFontProperties correctly', async () => {
+    const unifont = await createUnifont([providers.adobe({ id: 'sij5ufr' })])
+    const result = await unifont.getFontProperties('Aleo')
+    expect(result?.provider).toBe('adobe')
+    expect(result?.styles).toEqual(expect.arrayContaining(['normal']))
+    expect(result?.weights?.length).toBeGreaterThan(0)
+
+    expect(await unifont.getFontProperties('NonExistent Font')).toEqual(undefined)
+  })
+
   it('handles invalid JSON from adobe api', async () => {
     const error = vi.spyOn(console, 'error').mockImplementation(() => {})
 

@@ -458,6 +458,31 @@ describe('fontsource', () => {
     expect(names!.length > 0).toEqual(true)
   })
 
+  it('handles getFontProperties correctly', async () => {
+    const unifont = await createUnifont([providers.fontsource()])
+    const result = await unifont.getFontProperties('Roboto')
+    expect(result?.provider).toBe('fontsource')
+    expect(result?.formats).toEqual(['woff2', 'woff', 'ttf'])
+    expect(result?.styles).toEqual(expect.arrayContaining(['normal', 'italic']))
+    expect(result?.subsets).toEqual(expect.arrayContaining(['latin', 'latin-ext']))
+    expect(result?.weights).toEqual(expect.arrayContaining(['400', '100 900']))
+
+    expect(await unifont.getFontProperties('XXX')).toEqual(undefined)
+  })
+
+  it('omits the variable weight range from getFontProperties when axes metadata cannot be fetched', async () => {
+    const restoreFetch = mockFetchReturn(/\/variable\//, () => {
+      throw new Error('Not found')
+    })
+
+    const unifont = await createUnifont([providers.fontsource()])
+    const result = await unifont.getFontProperties('Roboto')
+    expect(result?.weights).toEqual(expect.arrayContaining(['400']))
+    expect(result?.weights?.every(weight => !weight.includes(' '))).toBe(true)
+
+    restoreFetch()
+  })
+
   it('falls back to static weights', async () => {
     const unifont = await createUnifont([providers.fontsource()])
     const { fonts } = await unifont.resolveFont('Roboto', {

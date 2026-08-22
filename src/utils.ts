@@ -1,4 +1,4 @@
-import type { FontFaceData, FontFormat, LocalFontSource, ProviderDefinition, ProviderFactory, RemoteFontSource } from './types'
+import type { FontFaceData, FontFormat, FontStyles, LocalFontSource, ProviderDefinition, ProviderFactory, RemoteFontSource } from './types'
 import { findAll, generate, parse } from 'css-tree'
 import { hash } from 'ohash'
 
@@ -18,6 +18,13 @@ export function defineFontProvider<
       _name: name,
       _options: options,
     })) as any
+}
+
+const KNOWN_STYLES = ['normal', 'italic', 'oblique'] as const
+
+/** Narrows provider metadata styles to the styles unifont understands. */
+export function filterKnownStyles(styles: string[]): FontStyles[] {
+  return styles.filter((s): s is FontStyles => (KNOWN_STYLES as readonly string[]).includes(s))
 }
 
 export function prepareWeights({

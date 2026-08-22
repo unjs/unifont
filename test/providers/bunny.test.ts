@@ -53,6 +53,18 @@ describe('bunny', () => {
     expect(names!.length > 0).toEqual(true)
   })
 
+  it('handles getFontProperties correctly', async () => {
+    const unifont = await createUnifont([providers.bunny()])
+    const result = await unifont.getFontProperties('Roboto')
+    expect(result?.provider).toBe('bunny')
+    expect(result?.formats).toEqual(['woff2', 'woff'])
+    expect(result?.styles).toEqual(expect.arrayContaining(['normal', 'italic']))
+    expect(result?.subsets).toEqual(expect.arrayContaining(['latin', 'latin-ext']))
+    expect(result?.weights).toEqual(expect.arrayContaining(['400', '700']))
+
+    expect(await unifont.getFontProperties('XXX')).toEqual(undefined)
+  })
+
   it('falls back to static weights', async () => {
     const unifont = await createUnifont([providers.bunny()])
     const { fonts } = await unifont.resolveFont('Alef', {

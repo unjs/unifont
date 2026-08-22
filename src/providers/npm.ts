@@ -6,7 +6,7 @@ import { hash } from 'ohash'
 
 import { extractFontFaceData } from '../css/parse'
 import { fetchWithRetries } from '../fetch'
-import { cleanFontFaces, defineFontProvider } from '../utils'
+import { cleanFontFaces, defineFontProvider, filterKnownStyles } from '../utils'
 
 export interface NpmProviderOptions {
   /**
@@ -489,6 +489,58 @@ export default defineFontProvider('npm', (providerOptions: NpmProviderOptions, c
         return undefined
       }
       return Array.from(fonts.values(), f => f.family)
+    },
+
+    async getFontProperties(family: string) {
+      const detected = (await getDetectedFonts()).get(family.toLowerCase())
+      const pkgName = detected?.pkgName ?? guessPackageForFamily(family)
+      const file = detected?.file
+      const cssFiles = file ? [file] : resolveCssFiles(pkgName, { weights: STANDARD_WEIGHTS, styles: ['normal', 'italic'] })
+
+      const allFormats: ResolveFontOptions['formats'] = ['woff2', 'woff', 'otf', 'ttf', 'eot']
+      const fonts = await ctx.storage.getItem(`npm:${pkgName}/properties.json`, async () => {
+        const candidates = cssFiles.includes(DEFAULT_CSS_FILE) ? [cssFiles] : [cssFiles, [DEFAULT_CSS_FILE]]
+
+        for (const files of candidates) {
+          const localResult = await resolveFromLocal(pkgName, files, family, allFormats)
+          if (localResult) {
+            return localResult
+          }
+        }
+
+        if (!remote) {
+          return null
+        }
+
+        for (const files of candidates) {
+          const cdnResult = await resolveFromCdn(pkgName, 'latest', files, family, allFormats)
+          if (cdnResult) {
+            return cdnResult
+          }
+        }
+
+        return null
+      })
+
+      if (!fonts || fonts.length === 0) {
+        return
+      }
+
+      const styles = new Set<string>()
+      const weights = new Set<string>()
+      for (const face of fonts) {
+        if (face.style) {
+          styles.add(face.style)
+        }
+        if (face.weight) {
+          weights.add(Array.isArray(face.weight) ? face.weight.join(' ') : String(face.weight))
+        }
+      }
+
+      return {
+        styles: filterKnownStyles([...styles]),
+        weights: [...weights],
+      }
     },
 
     async resolveFont(family: string, options: ResolveFontOptions<NpmFamilyOptions>) {
