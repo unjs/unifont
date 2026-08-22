@@ -51,6 +51,12 @@ describe('fontshare', () => {
     `)
   })
 
+  it('supports variable fonts', async () => {
+    const unifont = await createUnifont([providers.fontshare()])
+    const { fonts } = await unifont.resolveFont('Satoshi', { weights: ['300 900'] })
+    expect(fonts.some(fnt => Array.isArray(fnt.weight))).toBe(true)
+  })
+
   it('handles listFonts correctly', async () => {
     const unifont = await createUnifont([providers.fontshare()])
     const names = await unifont.listFonts()
@@ -134,6 +140,26 @@ describe('fontshare', () => {
       })
       expect(fonts.length).toBe(1)
       expect(fonts.flatMap(font => font.src.map(source => 'name' in source ? source.name : source.format))).toStrictEqual(['woff2', 'woff', 'truetype'])
+    })
+  })
+
+  describe('fallbacks', () => {
+    it('returns sans-serif fallback', async () => {
+      const unifont = await createUnifont([providers.fontshare()])
+      const { fallbacks } = await unifont.resolveFont('Epilogue')
+      expect(fallbacks).toStrictEqual(['sans-serif'])
+    })
+
+    it('returns serif fallback', async () => {
+      const unifont = await createUnifont([providers.fontshare()])
+      const { fallbacks } = await unifont.resolveFont('Rowan')
+      expect(fallbacks).toStrictEqual(['serif'])
+    })
+
+    it('does not return invalid fallback', async () => {
+      const unifont = await createUnifont([providers.fontshare()])
+      const { fallbacks } = await unifont.resolveFont('Kihim')
+      expect(fallbacks).toBeUndefined()
     })
   })
 })

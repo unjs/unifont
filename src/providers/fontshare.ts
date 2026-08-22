@@ -2,10 +2,19 @@ import type { ResolveFontOptions } from '../types'
 
 import { hash } from 'ohash'
 import { extractFontFaceData } from '../css/parse'
-import { $fetch } from '../fetch'
+import { fetchWithRetries } from '../fetch'
 import { cleanFontFaces, defineFontProvider, prepareWeights } from '../utils'
 
-const fontAPI = $fetch.create({ baseURL: 'https://api.fontshare.com/v2' })
+const BASE_URL = 'https://api.fontshare.com/v2'
+
+function getFallbacks(category: string): string[] | undefined {
+  if (category.includes('Serif'))
+    return ['serif']
+  if (category.includes('Sans'))
+    return ['sans-serif']
+  return undefined
+}
+
 export default defineFontProvider('fontshare', async (_options, ctx) => {
   const fontshareFamilies = new Set<string>()
 
@@ -14,13 +23,7 @@ export default defineFontProvider('fontshare', async (_options, ctx) => {
     let offset = 0
     let chunk
     do {
-      chunk = await fontAPI<{ fonts: FontshareFontMeta[], has_more: boolean }>('/fonts', {
-        responseType: 'json',
-        query: {
-          offset,
-          limit: 100,
-        },
-      })
+      chunk = await fetchWithRetries(`${BASE_URL}/fonts?offset=${offset}&limit=100`).then(res => res.json() as Promise<{ fonts: FontshareFontMeta[], has_more: boolean }>)
       fonts.push(...chunk.fonts)
       offset++
     } while (chunk.has_more)
@@ -31,14 +34,18 @@ export default defineFontProvider('fontshare', async (_options, ctx) => {
     fontshareFamilies.add(font.name)
   }
 
-  async function getFontDetails(family: string, options: ResolveFontOptions) {
-  // https://api.fontshare.com/v2/css?f[]=alpino@300
-    const font = fonts.find(f => f.name === family)!
+  async function getFontDetails(font: FontshareFontMeta, options: ResolveFontOptions) {
     const numbers: number[] = []
+
+    let axis
+    const hasVariable = font.styles.some(e => e.is_variable)
+    if (hasVariable) {
+      axis = font.axes.find(e => e.property === 'wght')
+    }
 
     const weights = prepareWeights({
       inputWeights: options.weights,
-      hasVariableWeights: false,
+      hasVariableWeights: hasVariable && !!axis,
       weights: font.styles.map(s => String(s.weight.weight)),
     }).map(w => w.weight)
 
@@ -49,7 +56,10 @@ export default defineFontProvider('fontshare', async (_options, ctx) => {
       if (!style.is_italic && !options.styles.includes('normal')) {
         continue
       }
-      if (!weights.includes(String(style.weight.weight))) {
+      if (style.is_variable && axis && !weights.includes(`${axis.range_left} ${axis.range_right}`)) {
+        continue
+      }
+      if (!style.is_variable && !weights.includes(String(style.weight.weight))) {
         continue
       }
       numbers.push(style.weight.number)
@@ -58,9 +68,8 @@ export default defineFontProvider('fontshare', async (_options, ctx) => {
     if (numbers.length === 0)
       return []
 
-    const css = await fontAPI<string>(`/css?f[]=${`${font.slug}@${numbers.join(',')}`}`)
+    const css = await fetchWithRetries(`${BASE_URL}/css?f[]=${font.slug}@${numbers.join(',')}`).then(res => res.text())
 
-    // TODO: support axes
     return cleanFontFaces(extractFontFaceData(css), options.formats)
   }
 
@@ -73,9 +82,13 @@ export default defineFontProvider('fontshare', async (_options, ctx) => {
         return
       }
 
-      const fonts = await ctx.storage.getItem(`fontshare:${fontFamily}-${hash(defaults)}-data.json`, () => getFontDetails(fontFamily, defaults))
+      // https://api.fontshare.com/v2/css?f[]=alpino@300
+      const font = fonts.find(f => f.name === fontFamily)!
 
-      return { fonts }
+      return {
+        fonts: await ctx.storage.getItem(`fontshare:${fontFamily}-${hash(defaults)}-data.json`, () => getFontDetails(font, defaults)),
+        fallbacks: getFallbacks(font.category),
+      }
     },
   }
 })
@@ -85,6 +98,7 @@ export default defineFontProvider('fontshare', async (_options, ctx) => {
 interface FontshareFontMeta {
   slug: string
   name: string
+  category: string
   styles: Array<{
     default: boolean
     file: string
@@ -108,5 +122,12 @@ interface FontshareFontMeta {
       number: number
       weight: number
     }
+  }>
+  axes: Array<{
+    name: string
+    property: 'wght' | 'ital' | 'opsz'
+    range_default: number
+    range_left: number
+    range_right: number
   }>
 }

@@ -1,8 +1,11 @@
 import type { FontFaceData, ResolveFontOptions } from '../types'
 
+import { dirname, resolve } from 'node:path'
+import { fileURLToPath, pathToFileURL } from 'node:url'
 import { hash } from 'ohash'
+
 import { extractFontFaceData } from '../css/parse'
-import { $fetch } from '../fetch'
+import { fetchWithRetries } from '../fetch'
 import { cleanFontFaces, defineFontProvider } from '../utils'
 
 export interface NpmProviderOptions {
@@ -15,7 +18,8 @@ export interface NpmProviderOptions {
    * Whether to fall back to fetching from the CDN when local resolution
    * fails or `readFile` is not provided.
    *
-   * Set to `false` to only resolve from locally installed packages.
+   * Set to `false` to only resolve from locally installed packages, emitting
+   * `file://` URLs for font files found in `node_modules`.
    * This is useful when another provider (e.g. `fontsource`) already
    * handles CDN resolution.
    *
@@ -39,8 +43,48 @@ export interface NpmProviderOptions {
    */
   readFile?: (path: string) => Promise<string | null>
   /**
+   * Optional function to check whether a file exists on the local filesystem.
+   * Used when resolving font files with `remote: false`; when not provided,
+   * `readFile` is used instead, which reads and decodes the whole font binary.
+   *
+   * @example
+   * ```ts
+   * import { access, readFile } from 'node:fs/promises'
+   * providers.npm({
+   *   readFile: path => readFile(path, 'utf-8').catch(() => null),
+   *   exists: path => access(path).then(() => true).catch(() => false),
+   *   remote: false,
+   * })
+   * ```
+   */
+  exists?: (path: string) => Promise<boolean>
+  /**
+   * Optional function to resolve a package-relative specifier (such as
+   * `@fontsource/roboto/index.css`) to an absolute path on disk.
+   *
+   * Return `null` (or throw) when the package is not installed; the provider
+   * treats that as "not available locally" and falls back to the CDN unless
+   * `remote` is `false`.
+   *
+   * When not provided, `import.meta.resolve` is used, falling back to
+   * `<root>/node_modules/<specifier>`. Supplying a resolver is necessary for
+   * layouts where the package is not linked into a `node_modules` directory
+   * under `root`: pnpm's isolated store, hoisting to a monorepo root, Yarn PnP,
+   * or a bundler alias.
+   *
+   * @example
+   * ```ts
+   * import { fileURLToPath } from 'node:url'
+   * providers.npm({
+   *   resolve: id => fileURLToPath(import.meta.resolve(id)),
+   * })
+   * ```
+   */
+  resolve?: (id: string) => string | null | Promise<string | null>
+  /**
    * Root directory of the project for resolving local packages.
-   * Used to find `package.json` and `node_modules`.
+   * Used to find `package.json`, and `node_modules` when no `resolve` function
+   * is provided.
    * @default '.' (current working directory)
    */
   root?: string
@@ -60,7 +104,10 @@ export interface NpmFamilyOptions {
   version?: string
   /**
    * The entry CSS file to parse from the package.
-   * @default 'index.css'
+   *
+   * When not specified, per-weight and per-style entry points
+   * (`<weight>.css`, `<weight>-italic.css`) are resolved for the requested
+   * weights and styles, falling back to `index.css`.
    */
   file?: string
 }
@@ -119,28 +166,123 @@ function familyToSlug(family: string): string {
 const VARIABLE_RE = / Variable$/
 
 /**
- * Guess the npm package name and CSS file for a font family that wasn't
- * found in the auto-detected packages. Uses fontsource conventions as fallback.
+ * Guess the npm package name for a font family that wasn't found in the
+ * auto-detected packages. Uses fontsource conventions as fallback.
  */
-function guessPackageForFamily(family: string): { pkgName: string, file: string } {
+function guessPackageForFamily(family: string): string {
   if (family.endsWith(' Variable')) {
-    return { pkgName: `@fontsource-variable/${familyToSlug(family.replace(VARIABLE_RE, ''))}`, file: 'index.css' }
+    return `@fontsource-variable/${familyToSlug(family.replace(VARIABLE_RE, ''))}`
   }
-  return { pkgName: `@fontsource/${familyToSlug(family)}`, file: 'index.css' }
+  return `@fontsource/${familyToSlug(family)}`
+}
+
+const DEFAULT_CSS_FILE = 'index.css'
+const STANDARD_WEIGHTS = ['100', '200', '300', '400', '500', '600', '700', '800', '900']
+
+/**
+ * `@fontsource/*` packages ship `index.css` with a single weight (400) alongside
+ * per-weight and per-style entry points, so the requested weights and styles are
+ * mapped onto those entry points. Other layouts (including
+ * `@fontsource-variable/*`, whose `index.css` covers the full weight range) use
+ * `index.css`.
+ */
+function resolveCssFiles(pkgName: string, options: Pick<ResolveFontOptions, 'weights' | 'styles'>): string[] {
+  if (!pkgName.startsWith('@fontsource/')) {
+    return [DEFAULT_CSS_FILE]
+  }
+
+  const weights = new Set<string>()
+  for (const weight of options.weights) {
+    if (weight.includes(' ')) {
+      const [min, max] = weight.split(' ').map(Number)
+      for (const standardWeight of STANDARD_WEIGHTS) {
+        if (Number(standardWeight) >= min! && Number(standardWeight) <= max!) {
+          weights.add(standardWeight)
+        }
+      }
+      continue
+    }
+    weights.add(weight)
+  }
+
+  const files: string[] = []
+  for (const weight of weights) {
+    for (const style of options.styles) {
+      files.push(style === 'normal' ? `${weight}.css` : `${weight}-${style}.css`)
+    }
+  }
+
+  return files.length > 0 ? files : [DEFAULT_CSS_FILE]
+}
+
+const URL_SUFFIX_RE = /[?#].*$/
+
+/**
+ * Remove any query string or fragment from a CSS `url()` value. Both are
+ * meaningless for a `file://` URL, so they are dropped rather than preserved.
+ */
+function stripUrlSuffix(url: string): string {
+  return url.replace(URL_SUFFIX_RE, '')
+}
+
+function stripTrailingSlashes(path: string): string {
+  let end = path.length
+  while (end > 1 && (path[end - 1] === '/' || path[end - 1] === '\\')) {
+    end--
+  }
+  return path.slice(0, end)
+}
+
+/**
+ * Strip the resolved CSS specifier back off to recover the package directory,
+ * which is where the stylesheet's relative font URLs are anchored.
+ */
+function packageDirFor(path: string, cssFile: string): string {
+  const suffix = `/${cssFile}`
+  if (path.replaceAll('\\', '/').endsWith(suffix)) {
+    return path.slice(0, path.length - suffix.length)
+  }
+  return dirname(path)
 }
 
 interface DetectedFont {
   family: string
   pkgName: string
-  file: string
+  file?: string
 }
 
 export default defineFontProvider('npm', (providerOptions: NpmProviderOptions, ctx) => {
   const cdn = providerOptions.cdn || DEFAULT_CDN
   const remote = providerOptions.remote ?? true
-  const npmFetch = $fetch.create({ baseURL: cdn })
   const readFile = providerOptions.readFile
-  const root = providerOptions.root || '.'
+  const exists = providerOptions.exists ?? (path => readFile!(path).then(contents => contents !== null))
+  const root = stripTrailingSlashes(providerOptions.root || '.')
+
+  // `import.meta.resolve` (which resolves relative to `unifont` itself) is only
+  // consulted when the default root is in use.
+  const resolveId = providerOptions.resolve ?? ((id: string) => {
+    if (!providerOptions.root && typeof import.meta.resolve === 'function') {
+      try {
+        const url = import.meta.resolve(id)
+        if (url.startsWith('file:')) {
+          return fileURLToPath(url)
+        }
+      }
+      catch {
+        // Not resolvable from `unifont`; fall through to `root`
+      }
+    }
+    return `${root}/node_modules/${id}`
+  })
+
+  async function resolvePath(id: string): Promise<string | null> {
+    try {
+      return await resolveId(id) ?? null
+    }
+    catch {
+      return null
+    }
+  }
 
   // Lazily computed and cached by package.json content hash
   let detectedFonts: Map<string, DetectedFont> | undefined
@@ -189,7 +331,7 @@ export default defineFontProvider('npm', (providerOptions: NpmProviderOptions, c
             detectedFonts.set(family.toLowerCase(), {
               family,
               pkgName: depName,
-              file: pattern.file || 'index.css',
+              file: pattern.file,
             })
             break
           }
@@ -223,18 +365,78 @@ export default defineFontProvider('npm', (providerOptions: NpmProviderOptions, c
     }
   }
 
-  async function resolveFromLocal(pkgName: string, cssFile: string, family: string, formats: ResolveFontOptions['formats']): Promise<FontFaceData[] | null> {
+  /**
+   * Rewrite relative URLs to `file://` URLs pointing at the installed package.
+   * Sources whose files are missing on disk are dropped rather than silently
+   * falling back to the CDN, which `remote: false` promises not to use.
+   */
+  async function resolveUrlsToLocalFiles(fontFaces: FontFaceData[], pkgDir: string): Promise<FontFaceData[]> {
+    const resolved: FontFaceData[] = []
+
+    for (const face of fontFaces) {
+      const src: FontFaceData['src'] = []
+      for (const source of face.src) {
+        if (!('url' in source)) {
+          src.push(source)
+          continue
+        }
+
+        const url = source.url
+        if (url.startsWith('http') || url.startsWith('data:') || url.startsWith('//')) {
+          src.push(source)
+          continue
+        }
+
+        const filePath = resolve(pkgDir, stripUrlSuffix(url))
+        const fileExists = await exists(filePath).catch(() => false)
+        if (!fileExists) {
+          console.warn(`Could not find \`${filePath}\` when resolving fonts locally. \`unifont\` will not include this font source.`)
+          continue
+        }
+
+        src.push({ ...source, url: pathToFileURL(filePath).href })
+      }
+
+      if (src.some(source => 'url' in source)) {
+        resolved.push({ ...face, src })
+      }
+    }
+
+    return resolved
+  }
+
+  async function resolveFromLocal(pkgName: string, cssFiles: string[], family: string, formats: ResolveFontOptions['formats']): Promise<FontFaceData[] | null> {
     if (!readFile) {
       return null
     }
 
-    const cssPath = `${root}/node_modules/${pkgName}/${cssFile}`
-    const css = await readFile(cssPath).catch(() => null)
-    if (!css) {
+    const stylesheets = await Promise.all(cssFiles.map(async (cssFile) => {
+      const path = await resolvePath(`${pkgName}/${cssFile}`)
+      if (!path) {
+        return null
+      }
+      const css = await readFile(path).catch(() => null)
+      return css ? { css, pkgDir: packageDirFor(path, cssFile) } : null
+    }))
+
+    const found = stylesheets.filter(entry => entry !== null)
+    if (found.length === 0) {
       return null
     }
 
-    const fontFaces = extractFontFaceData(css, family)
+    if (!remote) {
+      const localFaces: FontFaceData[] = []
+      for (const { css, pkgDir } of found) {
+        localFaces.push(...await resolveUrlsToLocalFiles(extractFontFaceData(css, family), pkgDir))
+      }
+      return localFaces.length > 0 ? cleanFontFaces(localFaces, formats) : null
+    }
+
+    const fontFaces: FontFaceData[] = []
+    for (const { css } of found) {
+      fontFaces.push(...extractFontFaceData(css, family))
+    }
+
     if (fontFaces.length === 0) {
       return null
     }
@@ -242,7 +444,7 @@ export default defineFontProvider('npm', (providerOptions: NpmProviderOptions, c
     // Resolve relative URLs to absolute CDN URLs using the installed version
     let version = 'latest'
     try {
-      const localPkgJson = await readFile(`${root}/node_modules/${pkgName}/package.json`)
+      const localPkgJson = await readFile(`${found[0]!.pkgDir}/package.json`)
       if (localPkgJson) {
         const parsed = JSON.parse(localPkgJson) as { version?: string }
         if (parsed.version) {
@@ -260,20 +462,20 @@ export default defineFontProvider('npm', (providerOptions: NpmProviderOptions, c
     return cleanFontFaces(fontFaces, formats)
   }
 
-  async function resolveFromCdn(pkgName: string, pkgVersion: string, cssFile: string, family: string, formats: ResolveFontOptions['formats']): Promise<FontFaceData[] | null> {
-    let css: string | null
-    try {
-      css = await npmFetch<string>(`${pkgName}@${pkgVersion}/${cssFile}`)
+  async function resolveFromCdn(pkgName: string, pkgVersion: string, cssFiles: string[], family: string, formats: ResolveFontOptions['formats']): Promise<FontFaceData[] | null> {
+    const stylesheets = await Promise.all(cssFiles.map(cssFile => fetchWithRetries(`${cdn}/${pkgName}@${pkgVersion}/${cssFile}`).then(res => res.text()).catch(() => null)))
+
+    const fontFaces: FontFaceData[] = []
+    for (const css of stylesheets) {
+      if (css) {
+        fontFaces.push(...extractFontFaceData(css, family))
+      }
     }
-    catch {
+
+    if (fontFaces.length === 0) {
       return null
     }
 
-    if (!css) {
-      return null
-    }
-
-    const fontFaces = extractFontFaceData(css, family)
     const baseUrl = `${cdn}/${pkgName}@${pkgVersion}/`
     resolveUrlsToAbsolute(fontFaces, baseUrl)
 
@@ -293,48 +495,48 @@ export default defineFontProvider('npm', (providerOptions: NpmProviderOptions, c
       const familyOptions = options.options || {} as NpmFamilyOptions
 
       let pkgName: string
-      let cssFile: string
-      let pkgVersion: string
+      let file: string | undefined
 
       if (familyOptions.package) {
         // Explicit package override
         pkgName = familyOptions.package
-        cssFile = familyOptions.file || 'index.css'
-        pkgVersion = familyOptions.version || 'latest'
+        file = familyOptions.file
       }
       else {
         // Check auto-detected fonts
         const fonts = await getDetectedFonts()
         const detected = fonts.get(family.toLowerCase())
-        if (detected) {
-          pkgName = detected.pkgName
-          cssFile = familyOptions.file || detected.file
-          pkgVersion = familyOptions.version || 'latest'
-        }
-        else {
-          // Guess package name using fontsource conventions
-          const guessed = guessPackageForFamily(family)
-          pkgName = guessed.pkgName
-          cssFile = familyOptions.file || guessed.file
-          pkgVersion = familyOptions.version || 'latest'
-        }
+        pkgName = detected?.pkgName ?? guessPackageForFamily(family)
+        file = familyOptions.file || detected?.file
       }
 
-      const key = `npm:${pkgName}/${cssFile}-${hash(options)}`
+      const pkgVersion = familyOptions.version || 'latest'
+      const cssFiles = file ? [file] : resolveCssFiles(pkgName, options)
+
+      const key = `npm:${pkgName}/${cssFiles.join(',')}-${hash(options)}.json`
 
       const fonts = await ctx.storage.getItem(key, async () => {
-        // Try local resolution first
-        const localResult = await resolveFromLocal(pkgName, cssFile, family, options.formats)
-        if (localResult) {
-          return localResult
+        const candidates = cssFiles.includes(DEFAULT_CSS_FILE) ? [cssFiles] : [cssFiles, [DEFAULT_CSS_FILE]]
+
+        for (const files of candidates) {
+          const localResult = await resolveFromLocal(pkgName, files, family, options.formats)
+          if (localResult) {
+            return localResult
+          }
         }
 
         if (!remote) {
           return null
         }
 
-        // Fall back to CDN
-        return await resolveFromCdn(pkgName, pkgVersion, cssFile, family, options.formats)
+        for (const files of candidates) {
+          const cdnResult = await resolveFromCdn(pkgName, pkgVersion, files, family, options.formats)
+          if (cdnResult) {
+            return cdnResult
+          }
+        }
+
+        return null
       })
 
       if (!fonts) {

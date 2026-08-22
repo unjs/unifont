@@ -2,10 +2,10 @@ import { describe, expect, it, vi } from 'vitest'
 import { createUnifont, providers } from '../../src'
 import { mockFetchReturn } from '../utils'
 
-// Disable $fetch retry logic
+// Disable fetch retry logic
 await vi.hoisted(async () => {
-  const { disable$fetchRetry } = await import('../utils')
-  await disable$fetchRetry()
+  const { disableFetchRetry } = await import('../utils')
+  await disableFetchRetry()
 })
 
 describe('fontsource', () => {
@@ -535,6 +535,32 @@ describe('fontsource', () => {
       })
       expect(fonts.length).toBe(1)
       expect(fonts.flatMap(font => font.src.map(source => 'name' in source ? source.name : source.format))).toStrictEqual(['woff2', 'woff', 'truetype'])
+    })
+  })
+
+  describe('fallbacks', () => {
+    it('returns sans-serif fallback', async () => {
+      const unifont = await createUnifont([providers.fontsource()])
+      const { fallbacks } = await unifont.resolveFont('ABeeZee')
+      expect(fallbacks).toStrictEqual(['sans-serif'])
+    })
+
+    it('returns serif fallback', async () => {
+      const unifont = await createUnifont([providers.fontsource()])
+      const { fallbacks } = await unifont.resolveFont('Abhaya Libre')
+      expect(fallbacks).toStrictEqual(['serif'])
+    })
+
+    it('returns monospace fallback', async () => {
+      const unifont = await createUnifont([providers.fontsource()])
+      const { fallbacks } = await unifont.resolveFont('Anonymous Pro')
+      expect(fallbacks).toStrictEqual(['monospace'])
+    })
+
+    it('does not return invalid fallback', async () => {
+      const unifont = await createUnifont([providers.fontsource()])
+      const { fallbacks } = await unifont.resolveFont('Aboreto')
+      expect(fallbacks).toBeUndefined()
     })
   })
 })
