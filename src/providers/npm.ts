@@ -1,4 +1,4 @@
-import type { FontFaceData, FontProperties, ResolveFontOptions } from '../types'
+import type { FontFaceData, ResolveFontOptions } from '../types'
 
 import { dirname, resolve } from 'node:path'
 import { fileURLToPath, pathToFileURL } from 'node:url'
@@ -528,7 +528,6 @@ export default defineFontProvider('npm', (providerOptions: NpmProviderOptions, c
 
       const styles = new Set<string>()
       const weights = new Set<string>()
-      const subsets = new Set<string>()
       for (const face of fonts) {
         if (face.style) {
           styles.add(face.style)
@@ -536,19 +535,12 @@ export default defineFontProvider('npm', (providerOptions: NpmProviderOptions, c
         if (face.weight) {
           weights.add(Array.isArray(face.weight) ? face.weight.join(' ') : String(face.weight))
         }
-        if (face.meta?.subset) {
-          subsets.add(face.meta.subset)
-        }
       }
 
-      const result: FontProperties = {
+      return {
         styles: filterKnownStyles([...styles]),
         weights: [...weights],
       }
-      if (subsets.size > 0) {
-        result.subsets = [...subsets]
-      }
-      return result
     },
 
     async resolveFont(family: string, options: ResolveFontOptions<NpmFamilyOptions>) {
