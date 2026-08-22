@@ -349,6 +349,41 @@ describe('google', () => {
     })
   })
 
+  describe('font-stretch', () => {
+    it('omits a single-value font-stretch when no width axis was requested', async () => {
+      const { restore } = mockCss2()
+      const unifont = await createUnifont([providers.google()])
+      const { fonts } = await unifont.resolveFont('Noto Sans', {
+        formats: ['woff2'],
+        styles: ['normal'],
+        weights: ['400'],
+      })
+
+      expect(fonts.every(font => font.stretch === undefined)).toBe(true)
+      restore()
+    })
+
+    it('keeps font-stretch when a width axis was requested', async () => {
+      const { restore } = mockCss2(MOCK_CSS.replace('100%', '62.5% 100%'))
+      const unifont = await createUnifont([providers.google()])
+      const { fonts } = await unifont.resolveFont('Noto Sans', {
+        formats: ['woff2'],
+        styles: ['normal'],
+        weights: ['400'],
+        options: {
+          google: {
+            experimental: {
+              variableAxis: { wdth: [['62', '100']] },
+            },
+          },
+        },
+      })
+
+      expect(fonts.map(font => font.stretch)).toStrictEqual(['62.5% 100%'])
+      restore()
+    })
+  })
+
   describe('formats', () => {
     it('woff2', async () => {
       const unifont = await createUnifont([providers.google()])

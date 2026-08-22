@@ -153,6 +153,10 @@ export default defineFontProvider('google', async (providerOptions: GoogleProvid
       for (const group of groups) {
         const data = extractFontFaceData(group.css)
         data.map((f) => {
+          // avoid accidental pinning to a single width
+          if (!resolvedVariableAxes.wdth && f.stretch && !f.stretch.includes(' ')) {
+            delete f.stretch
+          }
           f.meta ??= {}
           f.meta.priority = priority
           if (group.subset) {
