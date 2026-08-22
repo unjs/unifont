@@ -2,10 +2,10 @@ import { describe, expect, it, vi } from 'vitest'
 import { createUnifont, providers } from '../../src'
 import { mockFetchReturn, pickUniqueBy, sanitizeFontSource } from '../utils'
 
-// Disable $fetch retry logic
+// Disable fetch retry logic
 await vi.hoisted(async () => {
-  const { disable$fetchRetry } = await import('../utils')
-  await disable$fetchRetry()
+  const { disableFetchRetry } = await import('../utils')
+  await disableFetchRetry()
 })
 
 describe('adobe', () => {
