@@ -339,14 +339,15 @@ describe('npm', () => {
         return null
       })
 
-      const unifont = await createUnifont([providers.npm({ readFile, root: '.' })])
+      const unifont = await createUnifont([providers.npm({ readFile })])
       const { fonts } = await unifont.resolveFont('Roboto')
 
       expect(fonts.length).toBeGreaterThan(0)
+      // Should use pinned version from local package.json in CDN URLs
       for (const font of fonts) {
         for (const src of font.src) {
           if ('url' in src) {
-            expect(src.url).toContain('/node_modules/@fontsource/roboto/')
+            expect(src.url).toContain('@fontsource/roboto@5.2.9')
           }
         }
       }
@@ -392,11 +393,11 @@ describe('npm', () => {
         return null
       })
 
-      const unifont = await createUnifont([providers.npm({ readFile, root: '.' })])
+      const unifont = await createUnifont([providers.npm({ readFile })])
       const { fonts } = await unifont.resolveFont('Cal Sans')
 
       expect(fonts.length).toBe(1)
-      expect(fonts[0]!.src[0]).toHaveProperty('url', expect.stringContaining('/node_modules/cal-sans/'))
+      expect(fonts[0]!.src[0]).toHaveProperty('url', expect.stringContaining('cal-sans@1.0.1'))
     })
 
     it('auto-detects @fontsource-variable packages', async () => {
@@ -427,14 +428,26 @@ describe('npm', () => {
         return null
       })
 
-      let unifont = await createUnifont([providers.npm({ readFile, root: '/my/project' })])
-      let { fonts } = await unifont.resolveFont('Roboto')
+      const unifont = await createUnifont([providers.npm({ readFile, root: '/my/project' })])
+      const { fonts } = await unifont.resolveFont('Roboto')
 
       expect(fonts.length).toBeGreaterThan(0)
       expect(readFile).toHaveBeenCalledWith('/my/project/node_modules/@fontsource/roboto/index.css')
+    })
 
-      unifont = await createUnifont([providers.npm({ readFile, root: '/my/project/' })]);
-      ({ fonts } = await unifont.resolveFont('Roboto'))
+    it('ignores trailing slashes in the root directory', async () => {
+      const readFile = vi.fn(async (path: string) => {
+        if (path === '/my/project/package.json')
+          return MOCK_PACKAGE_JSON
+        if (path === '/my/project/node_modules/@fontsource/roboto/index.css')
+          return MOCK_ROBOTO_CSS
+        if (path === '/my/project/node_modules/@fontsource/roboto/package.json')
+          return MOCK_PKG_VERSION_JSON
+        return null
+      })
+
+      const unifont = await createUnifont([providers.npm({ readFile, root: '/my/project/' })])
+      const { fonts } = await unifont.resolveFont('Roboto')
 
       expect(fonts.length).toBeGreaterThan(0)
       expect(readFile).toHaveBeenCalledWith('/my/project/node_modules/@fontsource/roboto/index.css')
@@ -771,7 +784,7 @@ describe('npm', () => {
         return null
       })
 
-      const unifont = await createUnifont([providers.npm({ readFile, root: '.' })])
+      const unifont = await createUnifont([providers.npm({ readFile })])
       const names = await unifont.listFonts()
 
       expect(names).toBeDefined()
@@ -840,7 +853,7 @@ describe('npm', () => {
       })
 
       // Provider init should NOT read package.json
-      const unifont = await createUnifont([providers.npm({ readFile, root: '.' })])
+      const unifont = await createUnifont([providers.npm({ readFile })])
       expect(readFile).not.toHaveBeenCalledWith('./package.json')
 
       // First listFonts call triggers the read
@@ -863,7 +876,7 @@ describe('npm', () => {
         return null
       })
 
-      const unifont = await createUnifont([providers.npm({ readFile, root: '.' })])
+      const unifont = await createUnifont([providers.npm({ readFile })])
 
       const names1 = await unifont.listFonts()
       expect(names1).toStrictEqual(['Roboto'])

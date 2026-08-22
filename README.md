@@ -335,7 +335,7 @@ providers.npm({
 ##### `root`
 
 - Type: `string`
-- Default: `process.cwd()` (current working directory)
+- Default: `'.'`
 
 Root directory of the project, used to find `package.json` and `node_modules` when resolving local packages:
 

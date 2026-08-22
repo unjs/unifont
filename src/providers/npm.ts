@@ -1,7 +1,7 @@
 import type { FontFaceData, ResolveFontOptions } from '../types'
 
 import { resolve } from 'node:path'
-import { fileURLToPath, pathToFileURL } from 'node:url'
+import { pathToFileURL } from 'node:url'
 import { hash } from 'ohash'
 
 import { extractFontFaceData } from '../css/parse'
@@ -45,7 +45,7 @@ export interface NpmProviderOptions {
   /**
    * Root directory of the project for resolving local packages.
    * Used to find `package.json` and `node_modules`.
-   * @default process.cwd() (current working directory)
+   * @default '.' (current working directory)
    */
   root?: string
 }
@@ -175,11 +175,12 @@ function resolveCssFiles(pkgName: string, options: Pick<ResolveFontOptions, 'wei
   return files.length > 0 ? files : [DEFAULT_CSS_FILE]
 }
 
-function stripTrailingSlash(str: string): string {
-  if (str.endsWith('/')) {
-    return str.slice(0, -1)
+function stripTrailingSlashes(path: string): string {
+  let end = path.length
+  while (end > 1 && (path[end - 1] === '/' || path[end - 1] === '\\')) {
+    end--
   }
-  return str
+  return path.slice(0, end)
 }
 
 interface DetectedFont {
@@ -188,11 +189,11 @@ interface DetectedFont {
   file?: string
 }
 
-export default defineFontProvider('npm', async (providerOptions: NpmProviderOptions, ctx) => {
+export default defineFontProvider('npm', (providerOptions: NpmProviderOptions, ctx) => {
   const cdn = providerOptions.cdn || DEFAULT_CDN
   const remote = providerOptions.remote ?? true
   const readFile = providerOptions.readFile
-  const root = stripTrailingSlash(providerOptions.root || await import('node:process').then(m => m.cwd()))
+  const root = stripTrailingSlashes(providerOptions.root || '.')
 
   // Lazily computed and cached by package.json content hash
   let detectedFonts: Map<string, DetectedFont> | undefined
@@ -255,7 +256,7 @@ export default defineFontProvider('npm', async (providerOptions: NpmProviderOpti
     return detectedFonts
   }
 
-  function transformUrls(fontFaces: FontFaceData[], transform: (url: string) => string): void {
+  function resolveUrlsToAbsolute(fontFaces: FontFaceData[], baseUrl: string): void {
     for (const face of fontFaces) {
       if (Array.isArray(face.src)) {
         face.src = face.src.map((src) => {
@@ -266,7 +267,7 @@ export default defineFontProvider('npm', async (providerOptions: NpmProviderOpti
             }
             return {
               ...src,
-              url: transform(url),
+              url: new URL(url, baseUrl).href,
             }
           }
           return src
@@ -338,8 +339,23 @@ export default defineFontProvider('npm', async (providerOptions: NpmProviderOpti
       return localFaces.length > 0 ? cleanFontFaces(localFaces, formats) : null
     }
 
-    const baseUrl = pathToFileURL(`${root}/node_modules/${pkgName}/`)
-    transformUrls(fontFaces, url => fileURLToPath(new URL(url, baseUrl)))
+    // Resolve relative URLs to absolute CDN URLs using the installed version
+    let version = 'latest'
+    try {
+      const localPkgJson = await readFile(`${root}/node_modules/${pkgName}/package.json`)
+      if (localPkgJson) {
+        const parsed = JSON.parse(localPkgJson) as { version?: string }
+        if (parsed.version) {
+          version = parsed.version
+        }
+      }
+    }
+    catch {
+      // Use 'latest' as fallback
+    }
+
+    const baseUrl = `${cdn}/${pkgName}@${version}/`
+    resolveUrlsToAbsolute(fontFaces, baseUrl)
 
     return cleanFontFaces(fontFaces, formats)
   }
@@ -359,7 +375,7 @@ export default defineFontProvider('npm', async (providerOptions: NpmProviderOpti
     }
 
     const baseUrl = `${cdn}/${pkgName}@${pkgVersion}/`
-    transformUrls(fontFaces, url => new URL(url, baseUrl).href)
+    resolveUrlsToAbsolute(fontFaces, baseUrl)
 
     return cleanFontFaces(fontFaces, formats)
   }
