@@ -1,5 +1,6 @@
 import type { CachedProxy } from '../lib/forward'
 import { defineHandler, HTTPError } from 'nitro'
+import { assertMethod, isPreflightRequest, noContent } from 'nitro/h3'
 import { addRoute, createRouter, findRoute } from 'rou3'
 import { endpoints } from '../lib/endpoints'
 import { createCachedProxy, finalizeResponse } from '../lib/forward'
@@ -11,13 +12,11 @@ for (const endpoint of endpoints) {
 
 export default defineHandler(async (event) => {
   // A preflight has to succeed for the CORS headers from `routeRules` to be honoured.
-  if (event.req.method === 'OPTIONS') {
-    return new Response(null, { status: 204 })
+  if (isPreflightRequest(event)) {
+    return noContent()
   }
 
-  if (event.req.method !== 'GET' && event.req.method !== 'HEAD') {
-    throw new HTTPError({ status: 405, message: 'This proxy only serves `GET` and `HEAD` requests.' })
-  }
+  assertMethod(event, ['GET', 'HEAD'])
 
   const matched = findRoute(router, '', event.url.pathname)
   if (!matched) {

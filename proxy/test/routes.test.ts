@@ -33,16 +33,22 @@ describe('proxy route', () => {
   it('answers a CORS preflight so the browser proceeds to the real request', async () => {
     const fetchMock = mockUpstream()
 
-    const response = await call('/bunny/v1/list', { method: 'OPTIONS' })
+    const response = await call('/bunny/v1/list', {
+      method: 'OPTIONS',
+      headers: { 'origin': 'https://example.com', 'access-control-request-method': 'GET' },
+    })
 
     expect(response.status).toBe(204)
     expect(fetchMock).not.toHaveBeenCalled()
   })
 
-  it.each(['POST', 'PUT', 'DELETE', 'PATCH'])('rejects %s', async (method) => {
+  it.each(['POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'])('rejects %s, naming the methods it does allow', async (method) => {
     const fetchMock = mockUpstream()
 
-    await expect(call('/bunny/v1/list', { method })).rejects.toMatchObject({ status: 405 })
+    const error = await call('/bunny/v1/list', { method }).catch((error: any) => error)
+
+    expect(error.status).toBe(405)
+    expect(error.headers.get('allow')).toBe('GET, HEAD')
     expect(fetchMock).not.toHaveBeenCalled()
   })
 
