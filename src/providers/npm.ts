@@ -347,21 +347,19 @@ export default defineFontProvider('npm', (providerOptions: NpmProviderOptions, c
 
   function resolveUrlsToAbsolute(fontFaces: FontFaceData[], baseUrl: string): void {
     for (const face of fontFaces) {
-      if (Array.isArray(face.src)) {
-        face.src = face.src.map((src) => {
-          if ('url' in src) {
-            const url = src.url
-            if (url.startsWith('http') || url.startsWith('data:') || url.startsWith('//')) {
-              return src
-            }
-            return {
-              ...src,
-              url: new URL(url, baseUrl).href,
-            }
+      face.src = face.src.map((src) => {
+        if ('url' in src) {
+          const url = src.url
+          if (url.startsWith('http') || url.startsWith('data:') || url.startsWith('//')) {
+            return src
           }
-          return src
-        })
-      }
+          return {
+            ...src,
+            url: new URL(url, baseUrl).href,
+          }
+        }
+        return src
+      })
     }
   }
 
