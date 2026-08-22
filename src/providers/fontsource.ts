@@ -1,10 +1,10 @@
 import type { FontFaceData, ResolveFontOptions } from '../types'
 
 import { hash } from 'ohash'
-import { $fetch } from '../fetch'
+import { fetchWithRetries } from '../fetch'
 import { cleanFontFaces, defineFontProvider, prepareWeights } from '../utils'
 
-const fontAPI = $fetch.create({ baseURL: 'https://api.fontsource.org/v1' })
+const BASE_URL = 'https://api.fontsource.org/v1'
 
 // registered OpenType axes served via the fontsource `standard` variant
 const FONTSOURCE_REGISTERED_AXES = new Set(['wght', 'ital', 'slnt', 'wdth', 'opsz'])
@@ -21,16 +21,24 @@ function pickFontsourceAxisSlug(axes: string[]): 'wght' | 'standard' | 'full' {
   return hasRegisteredExtra ? 'standard' : 'wght'
 }
 
+// There are others like display and handwriting but these are not valid
+const VALID_FALLBACKS = ['sans-serif', 'serif', 'monospace']
+
+function getFallbacks(category: string): string[] | undefined {
+  if (VALID_FALLBACKS.includes(category))
+    return [category]
+  return undefined
+}
+
 export default defineFontProvider('fontsource', async (_options, ctx) => {
-  const fonts = await ctx.storage.getItem('fontsource:meta.json', () => fontAPI<FontsourceFontMeta[]>('/fonts', { responseType: 'json' }))
+  const fonts = await ctx.storage.getItem('fontsource:meta.json', () => fetchWithRetries(`${BASE_URL}/fonts`).then(res => res.json() as Promise<FontsourceFontMeta[]>))
   const familyMap = new Map<string, FontsourceFontMeta>()
 
   for (const meta of fonts) {
     familyMap.set(meta.family, meta)
   }
 
-  async function getFontDetails(family: string, options: ResolveFontOptions) {
-    const font = familyMap.get(family)!
+  async function getFontDetails(font: FontsourceFontMeta, options: ResolveFontOptions) {
     const weights = prepareWeights({
       inputWeights: options.weights,
       hasVariableWeights: font.variable,
@@ -41,7 +49,7 @@ export default defineFontProvider('fontsource', async (_options, ctx) => {
     if (weights.length === 0 || styles.length === 0)
       return []
 
-    const fontDetail = await fontAPI<FontsourceFontDetail>(`/fonts/${font.id}`, { responseType: 'json' })
+    const fontDetail = await fetchWithRetries(`${BASE_URL}/fonts/${font.id}`).then(res => res.json() as Promise<FontsourceFontDetail>)
     const fontFaceData: FontFaceData[] = []
 
     for (const subset of subsets) {
@@ -49,7 +57,7 @@ export default defineFontProvider('fontsource', async (_options, ctx) => {
         for (const { weight, variable } of weights) {
           if (variable) {
             try {
-              const variableAxes = await ctx.storage.getItem(`fontsource:${font.family}-axes.json`, () => fontAPI<FontsourceVariableFontDetail>(`/variable/${font.id}`, { responseType: 'json' }))
+              const variableAxes = await ctx.storage.getItem(`fontsource:${font.family}-axes.json`, () => fetchWithRetries(`${BASE_URL}/variable/${font.id}`).then(res => res.json() as Promise<FontsourceVariableFontDetail>))
               if (variableAxes && variableAxes.axes.wght) {
                 const axisSlug = pickFontsourceAxisSlug(Object.keys(variableAxes.axes))
                 fontFaceData.push({
@@ -89,12 +97,15 @@ export default defineFontProvider('fontsource', async (_options, ctx) => {
       return [...familyMap.keys()]
     },
     async resolveFont(fontFamily, options) {
-      if (!familyMap.has(fontFamily)) {
+      const font = familyMap.get(fontFamily)
+      if (!font) {
         return
       }
 
-      const fonts = await ctx.storage.getItem(`fontsource:${fontFamily}-${hash(options)}-data.json`, () => getFontDetails(fontFamily, options))
-      return { fonts }
+      return {
+        fonts: await ctx.storage.getItem(`fontsource:${fontFamily}-${hash(options)}-data.json`, () => getFontDetails(font, options)),
+        fallbacks: getFallbacks(font.category),
+      }
     },
   }
 })

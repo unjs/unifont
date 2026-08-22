@@ -2,7 +2,7 @@ import type { FontFaceData, FontFormat, ResolveFontOptions } from '../types'
 
 import { hash } from 'ohash'
 import { extractFontFaceData } from '../css/parse'
-import { $fetch } from '../fetch'
+import { fetchWithRetries } from '../fetch'
 import { cleanFontFaces, defineFontProvider, prepareWeights, splitCssIntoSubsets } from '../utils'
 
 type VariableAxis = 'opsz' | 'slnt' | 'wdth' | (string & {})
@@ -47,8 +47,22 @@ export const userAgents: Partial<Record<FontFormat, string>> = {
   woff2: 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/121.0.0.0 Safari/537.36',
 }
 
+// There are others like display and handwriting but these are not valid
+const VALID_FALLBACKS: Record<string, string> = {
+  'Sans Serif': 'sans-serif',
+  'Serif': 'serif',
+  'Monospace': 'monospace',
+}
+
+function getFallbacks(category: string): string[] | undefined {
+  const fallback = VALID_FALLBACKS[category]
+  if (fallback)
+    return [fallback]
+  return undefined
+}
+
 export default defineFontProvider('google', async (providerOptions: GoogleProviderOptions, ctx) => {
-  const googleFonts = await ctx.storage.getItem('google:meta.json', () => $fetch<{ familyMetadataList: FontIndexMeta[] }>('https://fonts.google.com/metadata/fonts', { responseType: 'json' }).then(r => r.familyMetadataList))
+  const { familyMetadataList: googleFonts } = await ctx.storage.getItem('google:meta.json', () => fetchWithRetries('https://fonts.google.com/metadata/fonts').then(res => res.json() as Promise<{ familyMetadataList: FontIndexMeta[] }>))
 
   const styleMap = {
     italic: '1',
@@ -56,38 +70,58 @@ export default defineFontProvider('google', async (providerOptions: GoogleProvid
     normal: '0',
   }
 
-  async function getFontDetails(family: string, options: ResolveFontOptions<GoogleFamilyOptions>) {
-    const font = googleFonts.find(font => font.family === family)!
+  async function getFontDetails(font: FontIndexMeta, options: ResolveFontOptions<GoogleFamilyOptions>) {
     const styles = [...new Set(options.styles.map(i => styleMap[i]))].sort()
-    const glyphs = (options.options?.experimental?.glyphs ?? providerOptions.experimental?.glyphs?.[family])?.join('')
-    const weights = prepareWeights({
+    const glyphs = (options.options?.experimental?.glyphs ?? providerOptions.experimental?.glyphs?.[font.family])?.join('')
+    // The `css2` endpoint instances the font down to the axes named in the request:
+    // any axis we omit is stripped from the delivered file, and any value outside a
+    // family's real axis range is a hard 400 rather than a partial result. So every
+    // requested axis value is clamped against the axis metadata before we build the URL.
+    const fontAxes = new Map(font.axes.map(axis => [axis.tag, axis]))
+    const weightAxis = fontAxes.get('wght')
+
+    const weights = dedupeBy(prepareWeights({
       inputWeights: options.weights,
-      hasVariableWeights: font.axes.some(a => a.tag === 'wght'),
+      hasVariableWeights: !!weightAxis,
       weights: Object.keys(font.fonts),
-    }).map(v => v.variable
-      ? ({
-          weight: v.weight.replace(' ', '..'),
-          variable: v.variable,
-        })
-      : v)
+    }).flatMap((v) => {
+      if (!v.variable)
+        return v
+      const [min, max] = v.weight.split(' ') as [string, string]
+      const clamped = clampAxisValue([min, max], weightAxis!)
+      if (!clamped)
+        return []
+      return { weight: clamped, variable: clamped.includes('..') }
+    }), v => v.weight)
 
     if (weights.length === 0 || styles.length === 0)
       return []
 
+    const variableAxis = options.options?.experimental?.variableAxis ?? providerOptions.experimental?.variableAxis?.[font.family]
+    const resolvedVariableAxes: Record<string, string[]> = {}
+    for (const [tag, values] of Object.entries(variableAxis ?? {})) {
+      const axis = fontAxes.get(tag)
+      if (!axis || !values)
+        continue
+      const resolved = [...new Set(values.flatMap(value => clampAxisValue(value, axis) ?? []))]
+      if (resolved.length > 0) {
+        resolvedVariableAxes[tag] = resolved
+      }
+    }
+
     const resolvedAxes = []
     let resolvedVariants: string[] = []
-    const variableAxis = options.options?.experimental?.variableAxis ?? providerOptions.experimental?.variableAxis?.[family]
     const candidateAxes = [
       'wght',
       'ital',
-      ...Object.keys(variableAxis ?? {}),
+      ...Object.keys(resolvedVariableAxes),
     ].sort(googleFlavoredSorting)
 
     for (const axis of candidateAxes) {
       const axisValue = ({
         wght: weights.map(v => v.weight),
         ital: styles,
-      })[axis] ?? variableAxis![axis]!.map(v => Array.isArray(v) ? `${v[0]}..${v[1]}` : v)
+      })[axis] ?? resolvedVariableAxes[axis]!
 
       if (resolvedVariants.length === 0) {
         resolvedVariants = axisValue
@@ -106,22 +140,23 @@ export default defineFontProvider('google', async (providerOptions: GoogleProvid
       if (!userAgent)
         continue
 
-      const rawCss = await $fetch<string>('/css2', {
-        baseURL: 'https://fonts.googleapis.com',
+      let url = `https://fonts.googleapis.com/css2?family=${font.family}:${resolvedAxes.join(',')}@${resolvedVariants.join(';')}`
+      if (glyphs) {
+        url += `&text=${encodeURIComponent(glyphs)}`
+      }
+      const rawCss = await fetchWithRetries(url, {
         headers: {
           'user-agent': userAgent,
         },
-        query: {
-          family: `${family}:${resolvedAxes.join(',')}@${resolvedVariants.join(
-            ';',
-          )}`,
-          ...(glyphs && { text: glyphs }),
-        },
-      })
+      }).then(res => res.text())
       const groups = splitCssIntoSubsets(rawCss).filter(group => group.subset ? options.subsets.includes(group.subset) : true)
       for (const group of groups) {
         const data = extractFontFaceData(group.css)
         data.map((f) => {
+          // avoid accidental pinning to a single width
+          if (!resolvedVariableAxes.wdth && f.stretch && !f.stretch.includes(' ')) {
+            delete f.stretch
+          }
           f.meta ??= {}
           f.meta.priority = priority
           if (group.subset) {
@@ -142,33 +177,74 @@ export default defineFontProvider('google', async (providerOptions: GoogleProvid
       return googleFonts.map(font => font.family)
     },
     async resolveFont(fontFamily, options: ResolveFontOptions<GoogleFamilyOptions>) {
-      if (!googleFonts.some(font => font.family === fontFamily)) {
+      const font = googleFonts.find(font => font.family === fontFamily)
+      if (!font) {
         return
       }
 
-      const fonts = await ctx.storage.getItem(`google:${fontFamily}-${hash(options)}-data.json`, () => getFontDetails(fontFamily, options))
-      return { fonts }
+      return {
+        fonts: await ctx.storage.getItem(`google:${fontFamily}-${hash(options)}-data.json`, () => getFontDetails(font, options)),
+        fallbacks: getFallbacks(font.category),
+      }
     },
   }
 })
 
 /** internal */
 
+interface FontAxis {
+  tag: string
+  min: number
+  max: number
+  defaultValue: number
+}
+
+function clampAxisValue(value: string | [string, string], axis: FontAxis): string | undefined {
+  if (!Array.isArray(value)) {
+    const parsed = Number(value)
+    if (!Number.isFinite(parsed))
+      return undefined
+    return String(clamp(parsed, axis))
+  }
+
+  const min = Number(value[0])
+  const max = Number(value[1])
+  if (!Number.isFinite(min) || !Number.isFinite(max) || min > max)
+    return undefined
+
+  // The requested range does not overlap the axis at all
+  if (max < axis.min || min > axis.max)
+    return undefined
+
+  const clampedMin = clamp(min, axis)
+  const clampedMax = clamp(max, axis)
+
+  return clampedMin === clampedMax ? String(clampedMin) : `${clampedMin}..${clampedMax}`
+}
+
+function clamp(value: number, axis: FontAxis) {
+  return Math.min(Math.max(value, axis.min), axis.max)
+}
+
+function dedupeBy<T>(items: T[], by: (item: T) => string): T[] {
+  const seen = new Set<string>()
+  return items.filter((item) => {
+    const key = by(item)
+    return !seen.has(key) && !!seen.add(key)
+  })
+}
+
 interface FontIndexMeta {
   family: string
   subsets: string[]
+  category: string
   fonts: Record<string, {
     thickness: number | null
     slant: number | null
     width: number | null
     lineHeight: number | null
   }>
-  axes: Array<{
-    tag: string
-    min: number
-    max: number
-    defaultValue: number
-  }>
+  axes: FontAxis[]
 }
 
 // Google wants lowercase letters to be in front of uppercase letters.

@@ -39,8 +39,10 @@ const unifont = await createUnifont([
 ])
 
 const availableFonts = await unifont.listFonts()
-const { fonts } = await unifont.resolveFont('Poppins')
+const { fonts, fallbacks } = await unifont.resolveFont('Poppins')
 ```
+
+`unifont` honours the `HTTPS_PROXY` / `HTTP_PROXY` (and lower-case) environment variables for outbound font metadata and binary fetches at build time, so it works behind corporate proxies without extra configuration.
 
 ## Built-in providers
 
@@ -306,7 +308,7 @@ providers.npm({ cdn: 'https://esm.sh' })
 - Type: `boolean`
 - Default: `true`
 
-Whether to fall back to fetching from the CDN when local resolution fails. Set to `false` to only resolve from locally installed packages:
+Whether to fall back to fetching from the CDN when local resolution fails. Set to `false` to only resolve from locally installed packages, in which case font sources are emitted as `file://` URLs pointing into `node_modules` and no CDN request is made:
 
 ```js
 import { providers } from 'unifont'
@@ -394,9 +396,9 @@ const { fonts } = await unifont.resolveFont('Roboto', {
 ##### `file`
 
 - Type: `string`
-- Default: `'index.css'`
+- Default: per-weight/per-style entry points, falling back to `'index.css'`
 
-The entry CSS file to parse from the package:
+The entry CSS file to parse from the package. When not set, `@fontsource/*` packages are resolved through their per-weight and per-style entry points (`<weight>.css`, `<weight>-italic.css`) for the requested weights and styles:
 
 ```js
 import { createUnifont, providers } from 'unifont'
@@ -481,7 +483,7 @@ const unifont = await createUnifont([
 
 - Type: `(fontFamily: string, options?: Partial<ResolveFontOptions>, providers?: T[]) => Promise<ResolveFontResult & { provider?: T }>`
 
-Retrieves font face data from available providers:
+Retrieves font face data and fallbacks from available providers:
 
 ```js
 import { createUnifont, providers } from 'unifont'
@@ -491,10 +493,12 @@ const unifont = await createUnifont([
   providers.fontsource(),
 ])
 
-const { fonts } = await unifont.resolveFont('Poppins')
+const { fonts, fallbacks } = await unifont.resolveFont('Poppins')
 ```
 
 It loops through all providers and returns the result of the first provider that can return some data.
+
+Fallbacks, if returned, contain the name of a [generic font family](https://developer.mozilla.org/en-US/docs/Web/CSS/Reference/Properties/font-family#generic-name). That can be useful, for example, to generate optimized fallbacks using font metrics.
 
 ##### Options
 
