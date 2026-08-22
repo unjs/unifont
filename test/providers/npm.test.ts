@@ -739,6 +739,48 @@ describe('npm', () => {
       expect(readFile).not.toHaveBeenCalledWith('./node_modules/css-tree/package.json')
     })
 
+    it('anchors font URLs on the parent directory when the resolved path is aliased', async () => {
+      const resolve = vi.fn(() => '/aliased/roboto.css')
+      const readFile = vi.fn(async (path: string) => {
+        if (path === '/aliased/roboto.css')
+          return MOCK_ROBOTO_CSS
+        if (path.startsWith('/aliased/files/'))
+          return 'binary'
+        return null
+      })
+
+      const unifont = await createUnifont([providers.npm({ readFile, resolve, remote: false })])
+      const { fonts } = await unifont.resolveFont('Roboto', { weights: ['400'], styles: ['normal'], formats: ['woff2'] })
+
+      expect(fonts[0]!.src[0]).toHaveProperty('url', 'file:///aliased/files/roboto-latin-400-normal.woff2')
+    })
+
+    it('falls back to the CDN when the resolved stylesheet has no matching family', async () => {
+      const resolve = vi.fn((id: string) => `/elsewhere/${id}`)
+      const readFile = vi.fn(async (path: string) => {
+        if (path.startsWith('/elsewhere/@fontsource/roboto/'))
+          return MOCK_MULTI_FAMILY_CSS.replace(/'Roboto'/, '"Other"')
+        return null
+      })
+
+      const restoreFetch = mockFetchReturn(/@fontsource\/roboto/, () =>
+        new Response(MOCK_ROBOTO_CSS))
+
+      const unifont = await createUnifont([providers.npm({ readFile, resolve })])
+      const { fonts } = await unifont.resolveFont('Roboto')
+
+      expect(fonts.length).toBe(3)
+      for (const font of fonts) {
+        for (const src of font.src) {
+          if ('url' in src) {
+            expect(src.url).toMatch(/^https:\/\/cdn\.jsdelivr\.net\/npm\//)
+          }
+        }
+      }
+
+      restoreFetch()
+    })
+
     it('supports asynchronous resolvers', async () => {
       const resolve = vi.fn(async (id: string) => `/elsewhere/${id}`)
       const readFile = vi.fn(async (path: string) => {
