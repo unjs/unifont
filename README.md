@@ -332,6 +332,21 @@ providers.npm({
 })
 ```
 
+##### `exists`
+
+- Type: `(path: string) => Promise<boolean>`
+
+Optional function to check whether a file exists. It is used when resolving font files with `remote: false`. When it is not provided, `readFile` is used for the check instead, which reads and decodes each candidate font file in full:
+
+```js
+import { access } from 'node:fs/promises'
+import { providers } from 'unifont'
+
+providers.npm({
+  exists: path => access(path).then(() => true).catch(() => false),
+})
+```
+
 ##### `root`
 
 - Type: `string`
