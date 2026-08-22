@@ -523,7 +523,7 @@ const { fonts } = await unifont.resolveFont('Poppins', {
 })
 ```
 
-If the family has no variable font covering the requested range, the range resolves to the closest available weights inside it: each endpoint, plus the weight nearest to `400` so that default-weight text still matches sensibly. So `500 900` resolves to two faces rather than every published weight in between. List the weights explicitly if you need the intermediate ones.
+If the family has no variable font covering the requested range, the range resolves to representative static weights: the available weights at each end of the range, plus the one nearest to `400` so that default-weight text still matches sensibly. So `500 900` resolves to two faces rather than every published weight in between. If no available weight falls inside the range at all (say `450 480` when only `400` and `500` are published), the closest available weight is used instead. List the weights explicitly if you need the intermediate ones.
 
 ###### `styles`
 
