@@ -48,28 +48,19 @@ describe('googleicons', () => {
     expect(names!.length > 0).toEqual(true)
   })
 
-  it('handles getAvailableFontProperties correctly', async () => {
+  it('handles getFontProperties correctly', async () => {
     const unifont = await createUnifont([providers.googleicons()])
-    let result = await unifont.getAvailableFontProperties('Material Symbols Outlined')
-    expect(result).toMatchInlineSnapshot(`{
-  "formats": [
-    "woff2",
-    "woff",
-    "ttf",
-    "eot",
-  ],
-  "provider": "googleicons",
-  "styles": [
-    "normal",
-  ],
-  "subsets": undefined,
-  "weights": [
-    "100",
-    "400",
-  ],
-}`)
-    result = await unifont.getAvailableFontProperties('XXX')
-    expect(result).toEqual(undefined)
+    const result = await unifont.getFontProperties('Material Symbols Outlined')
+    expect(result?.provider).toBe('googleicons')
+    expect(result?.formats).toEqual(['woff2', 'woff', 'ttf', 'eot'])
+    expect(result?.styles).toEqual(['normal'])
+    expect(result?.subsets).toBeUndefined()
+    expect(result?.weights).toEqual(['100 700'])
+
+    const legacy = await unifont.getFontProperties('Material Icons')
+    expect(legacy?.weights).toEqual(['400'])
+
+    expect(await unifont.getFontProperties('XXX')).toEqual(undefined)
   })
 
   it('respects provider glyphs option and resolves optimized Material Symbols', async () => {

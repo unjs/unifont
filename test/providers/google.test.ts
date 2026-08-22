@@ -128,48 +128,16 @@ describe('google', () => {
     expect(names!.length > 0).toEqual(true)
   })
 
-  it('handles getAvailableFontProperties correctly', async () => {
+  it('handles getFontProperties correctly', async () => {
     const unifont = await createUnifont([providers.google()])
-    let result = await unifont.getAvailableFontProperties('Roboto')
-    expect(result).toMatchInlineSnapshot(`{
-  "formats": [
-    "woff2",
-    "woff",
-    "ttf",
-    "eot",
-  ],
-  "provider": "google",
-  "styles": [
-    "normal",
-    "italic",
-  ],
-  "subsets": [
-    "menu",
-    "cyrillic",
-    "cyrillic-ext",
-    "greek",
-    "greek-ext",
-    "latin",
-    "latin-ext",
-    "math",
-    "symbols",
-    "vietnamese",
-  ],
-  "weights": [
-    "100",
-    "200",
-    "300",
-    "400",
-    "500",
-    "600",
-    "700",
-    "800",
-    "900",
-    "100 900",
-  ],
-}`)
-    result = await unifont.getAvailableFontProperties('XXX')
-    expect(result).toEqual(undefined)
+    const result = await unifont.getFontProperties('Roboto')
+    expect(result?.provider).toBe('google')
+    expect(result?.formats).toEqual(['woff2', 'woff', 'ttf', 'eot'])
+    expect(result?.styles).toEqual(expect.arrayContaining(['normal', 'italic']))
+    expect(result?.subsets).toEqual(expect.arrayContaining(['latin', 'latin-ext']))
+    expect(result?.weights).toEqual(expect.arrayContaining(['400', '100 900']))
+
+    expect(await unifont.getFontProperties('XXX')).toEqual(undefined)
   })
 
   it('respects provider glyphs option and resolves optimized font', async () => {

@@ -154,7 +154,7 @@ export default defineFontProvider('google', async (providerOptions: GoogleProvid
     listFonts() {
       return googleFonts.map(font => font.family)
     },
-    getAvailableFontProperties(fontFamily) {
+    getFontProperties(fontFamily) {
       const font = googleFonts.find(font => font.family === fontFamily)
       if (!font)
         return
@@ -167,9 +167,9 @@ export default defineFontProvider('google', async (providerOptions: GoogleProvid
           styles.add('italic')
         weights.add(weight)
       }
-      const axe = font.axes.find(e => e.tag === 'wght')
-      if (axe) {
-        weights.add(`${axe.min} ${axe.max}`)
+      const axis = font.axes.find(a => a.tag === 'wght')
+      if (axis) {
+        weights.add(`${axis.min} ${axis.max}`)
       }
       return {
         formats: ['woff2', 'woff', 'ttf', 'eot'],
@@ -205,7 +205,7 @@ interface FontIndexMeta {
     lineHeight: number | null
   }>
   axes: Array<{
-    tag: 'wght' | 'opsz'
+    tag: 'wght' | 'opsz' | 'slnt' | 'wdth' | (string & {})
     min: number
     max: number
     defaultValue: number

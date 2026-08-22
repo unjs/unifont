@@ -1,8 +1,8 @@
-import type { FontFaceData, FontStyles, ProviderContext, ResolveFontOptions } from '../types'
+import type { FontFaceData, ProviderContext, ResolveFontOptions } from '../types'
 
 import { hash } from 'ohash'
 import { $fetch } from '../fetch'
-import { cleanFontFaces, defineFontProvider, prepareWeights } from '../utils'
+import { cleanFontFaces, defineFontProvider, filterKnownStyles, prepareWeights } from '../utils'
 
 const fontAPI = $fetch.create({ baseURL: 'https://api.fontsource.org/v1' })
 
@@ -62,7 +62,7 @@ export default defineFontProvider('fontsource', async (_options, ctx) => {
           if (variable) {
             try {
               const variableAxes = await getVariableAxes(ctx, font)
-              if (variableAxes.axes.wght) {
+              if (variableAxes?.axes.wght) {
                 const axisSlug = pickFontsourceAxisSlug(Object.keys(variableAxes.axes))
                 fontFaceData.push({
                   style,
@@ -100,7 +100,7 @@ export default defineFontProvider('fontsource', async (_options, ctx) => {
     listFonts() {
       return [...familyMap.keys()]
     },
-    async getAvailableFontProperties(fontFamily) {
+    async getFontProperties(fontFamily) {
       const font = familyMap.get(fontFamily)
       if (!font)
         return
@@ -112,7 +112,7 @@ export default defineFontProvider('fontsource', async (_options, ctx) => {
       }
       return {
         formats: ['woff2', 'woff', 'ttf'],
-        styles: font.styles,
+        styles: filterKnownStyles(font.styles),
         subsets: font.subsets,
         weights,
       }
@@ -136,7 +136,7 @@ interface FontsourceFontMeta {
   family: string
   subsets: string[]
   weights: number[]
-  styles: FontStyles[]
+  styles: string[]
   defSubset: string
   variable: boolean
   lastModified: string

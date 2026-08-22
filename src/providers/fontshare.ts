@@ -83,7 +83,7 @@ export default defineFontProvider('fontshare', async (_options, ctx) => {
     listFonts() {
       return [...fontshareFamilies]
     },
-    getAvailableFontProperties(fontFamily) {
+    getFontProperties(fontFamily) {
       if (!fontshareFamilies.has(fontFamily))
         return
       const font = fonts.find(f => f.name === fontFamily)!
@@ -106,7 +106,6 @@ export default defineFontProvider('fontshare', async (_options, ctx) => {
       return {
         formats: ['woff2', 'woff', 'ttf'],
         styles: [...styles],
-        subsets: undefined,
         weights: [...weights],
       }
     },

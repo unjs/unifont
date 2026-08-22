@@ -115,6 +115,19 @@ describe('npm', () => {
       restoreFetch()
     })
 
+    it('handles getFontProperties correctly', async () => {
+      const restoreFetch = mockFetchReturn(/@fontsource\/roboto/, () =>
+        new Response(MOCK_ROBOTO_CSS))
+
+      const unifont = await createUnifont([providers.npm()])
+      const result = await unifont.getFontProperties('Roboto')
+      expect(result?.provider).toBe('npm')
+      expect(result?.styles).toEqual(expect.arrayContaining(['normal', 'italic']))
+      expect(result?.weights).toEqual(expect.arrayContaining(['400', '700']))
+
+      restoreFetch()
+    })
+
     it('returns empty fonts for nonexistent package', async () => {
       const restoreFetch = mockFetchReturn(/@fontsource\/nonexistent/, () => {
         throw new Error('Not found')

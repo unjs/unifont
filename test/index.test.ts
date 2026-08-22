@@ -191,12 +191,12 @@ describe('unifont', () => {
     })
   })
 
-  describe('getAvailableFontProperties', () => {
+  describe('getFontProperties', () => {
     it('works with no providers', async () => {
       const error = vi.spyOn(console, 'error').mockImplementation(() => {})
       // @ts-expect-error at least a provider is required
       const unifont = await createUnifont([])
-      const result = await unifont.getAvailableFontProperties('Foo')
+      const result = await unifont.getFontProperties('Foo')
       expect(result).toEqual(undefined)
       expect(console.error).not.toHaveBeenCalled()
       error.mockRestore()
@@ -206,14 +206,14 @@ describe('unifont', () => {
       const error = vi.spyOn(console, 'error').mockImplementation(() => {})
       const unifont = await createUnifont([
         defineFontProvider('stub', () => ({
-          getAvailableFontProperties() {
+          getFontProperties() {
             return { formats: ['woff2'] }
           },
           resolveFont() {
             return { fonts: [] }
           },
         }))()])
-      const result = await unifont.getAvailableFontProperties('Foo')
+      const result = await unifont.getFontProperties('Foo')
       expect(result).toMatchInlineSnapshot(`{
   "formats": [
     "woff2",
@@ -228,7 +228,7 @@ describe('unifont', () => {
       const error = vi.spyOn(console, 'error').mockImplementation(() => {})
       const unifont = await createUnifont([
         defineFontProvider('bad-provider', () => ({
-          getAvailableFontProperties() {
+          getFontProperties() {
             throw new Error('test')
           },
           resolveFont() {
@@ -236,10 +236,10 @@ describe('unifont', () => {
           },
         }))(),
       ])
-      const result = await unifont.getAvailableFontProperties('Foo')
+      const result = await unifont.getFontProperties('Foo')
       expect(result).toEqual(undefined)
       expect(console.error).toHaveBeenCalledWith(
-        'Could not get available properties for `Foo` from `bad-provider` provider.',
+        'Could not get font properties for `Foo` from `bad-provider` provider.',
         expect.objectContaining({}),
       )
       error.mockRestore()
@@ -253,7 +253,7 @@ describe('unifont', () => {
               resolveFont() {
                 return { fonts: [] }
               },
-              getAvailableFontProperties() {
+              getFontProperties() {
                 throw new Error('test')
               },
             }
@@ -261,7 +261,7 @@ describe('unifont', () => {
         ],
         { throwOnError: true },
       )
-      await expect(() => unifont.getAvailableFontProperties('Foo')).rejects.toThrow()
+      await expect(() => unifont.getFontProperties('Foo')).rejects.toThrow()
     })
   })
 

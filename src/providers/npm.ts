@@ -1,9 +1,9 @@
-import type { FontFaceData, ResolveFontOptions } from '../types'
+import type { FontFaceData, FontProperties, ResolveFontOptions } from '../types'
 
 import { hash } from 'ohash'
 import { extractFontFaceData } from '../css/parse'
 import { $fetch } from '../fetch'
-import { cleanFontFaces, defineFontProvider } from '../utils'
+import { cleanFontFaces, defineFontProvider, filterKnownStyles } from '../utils'
 
 export interface NpmProviderOptions {
   /**
@@ -280,6 +280,29 @@ export default defineFontProvider('npm', (providerOptions: NpmProviderOptions, c
     return cleanFontFaces(fontFaces, formats)
   }
 
+  function resolvePackage(family: string, familyOptions: NpmFamilyOptions, detected?: DetectedFont): { pkgName: string, cssFile: string, pkgVersion: string } {
+    if (familyOptions.package) {
+      return {
+        pkgName: familyOptions.package,
+        cssFile: familyOptions.file || 'index.css',
+        pkgVersion: familyOptions.version || 'latest',
+      }
+    }
+    if (detected) {
+      return {
+        pkgName: detected.pkgName,
+        cssFile: familyOptions.file || detected.file,
+        pkgVersion: familyOptions.version || 'latest',
+      }
+    }
+    const guessed = guessPackageForFamily(family)
+    return {
+      pkgName: guessed.pkgName,
+      cssFile: familyOptions.file || guessed.file,
+      pkgVersion: familyOptions.version || 'latest',
+    }
+  }
+
   return {
     async listFonts() {
       const fonts = await getDetectedFonts()
@@ -289,36 +312,55 @@ export default defineFontProvider('npm', (providerOptions: NpmProviderOptions, c
       return Array.from(fonts.values(), f => f.family)
     },
 
+    async getFontProperties(family: string) {
+      const detected = (await getDetectedFonts()).get(family.toLowerCase())
+      const { pkgName, cssFile, pkgVersion } = resolvePackage(family, {}, detected)
+
+      const allFormats: ResolveFontOptions['formats'] = ['woff2', 'woff', 'otf', 'ttf', 'eot']
+      const fonts = await ctx.storage.getItem(`npm:${pkgName}/${cssFile}-properties`, async () => {
+        const localResult = await resolveFromLocal(pkgName, cssFile, family, allFormats)
+        if (localResult) {
+          return localResult
+        }
+        if (!remote) {
+          return null
+        }
+        return await resolveFromCdn(pkgName, pkgVersion, cssFile, family, allFormats)
+      })
+
+      if (!fonts || fonts.length === 0) {
+        return
+      }
+
+      const styles = new Set<string>()
+      const weights = new Set<string>()
+      const subsets = new Set<string>()
+      for (const face of fonts) {
+        if (face.style) {
+          styles.add(face.style)
+        }
+        if (face.weight) {
+          weights.add(Array.isArray(face.weight) ? face.weight.join(' ') : String(face.weight))
+        }
+        if (face.meta?.subset) {
+          subsets.add(face.meta.subset)
+        }
+      }
+
+      const result: FontProperties = {
+        styles: filterKnownStyles([...styles]),
+        weights: [...weights],
+      }
+      if (subsets.size > 0) {
+        result.subsets = [...subsets]
+      }
+      return result
+    },
+
     async resolveFont(family: string, options: ResolveFontOptions<NpmFamilyOptions>) {
       const familyOptions = options.options || {} as NpmFamilyOptions
-
-      let pkgName: string
-      let cssFile: string
-      let pkgVersion: string
-
-      if (familyOptions.package) {
-        // Explicit package override
-        pkgName = familyOptions.package
-        cssFile = familyOptions.file || 'index.css'
-        pkgVersion = familyOptions.version || 'latest'
-      }
-      else {
-        // Check auto-detected fonts
-        const fonts = await getDetectedFonts()
-        const detected = fonts.get(family.toLowerCase())
-        if (detected) {
-          pkgName = detected.pkgName
-          cssFile = familyOptions.file || detected.file
-          pkgVersion = familyOptions.version || 'latest'
-        }
-        else {
-          // Guess package name using fontsource conventions
-          const guessed = guessPackageForFamily(family)
-          pkgName = guessed.pkgName
-          cssFile = familyOptions.file || guessed.file
-          pkgVersion = familyOptions.version || 'latest'
-        }
-      }
+      const detected = familyOptions.package ? undefined : (await getDetectedFonts()).get(family.toLowerCase())
+      const { pkgName, cssFile, pkgVersion } = resolvePackage(family, familyOptions, detected)
 
       const key = `npm:${pkgName}/${cssFile}-${hash(options)}`
 

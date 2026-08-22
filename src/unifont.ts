@@ -1,5 +1,5 @@
 import type { Storage } from './cache'
-import type { GetAvailableFontPropertiesResult, InitializedProvider, Provider, ProviderContext, ResolveFontOptions, ResolveFontResult } from './types'
+import type { FontProperties, InitializedProvider, Provider, ProviderContext, ResolveFontOptions, ResolveFontResult } from './types'
 import { createAsyncStorage, memoryStorage } from './cache'
 import { installProxyDispatcher } from './proxy'
 
@@ -21,7 +21,7 @@ export interface Unifont<T extends Provider[]> {
     }>>,
     providers?: T[number]['_name'][],
   ) => Promise<ResolveFontResult & { provider?: T[number]['_name'] }>
-  getAvailableFontProperties: (fontFamily: string, providers?: T[number]['_name'][]) => Promise<(GetAvailableFontPropertiesResult & { provider?: T[number]['_name'] }) | undefined>
+  getFontProperties: (fontFamily: string, providers?: T[number]['_name'][]) => Promise<(FontProperties & { provider?: T[number]['_name'] }) | undefined>
   listFonts: (providers?: T[number]['_name'][]) => Promise<string[] | undefined>
 }
 
@@ -117,17 +117,17 @@ export async function createUnifont<T extends [Provider, ...Provider[]]>(provide
     return { fonts: [] }
   }
 
-  async function getAvailableFontProperties(
+  async function getFontProperties(
     fontFamily: string,
     providers: T[number]['_name'][] = allProviders,
   ): Promise<
-    (GetAvailableFontPropertiesResult & { provider?: T[number]['_name'] }) | undefined
+    (FontProperties & { provider?: T[number]['_name'] }) | undefined
   > {
     for (const id of providers) {
       const provider = stack[id]
 
       try {
-        const result = await provider?.getAvailableFontProperties?.(fontFamily)
+        const result = await provider?.getFontProperties?.(fontFamily)
         if (result) {
           return {
             ...result,
@@ -136,7 +136,7 @@ export async function createUnifont<T extends [Provider, ...Provider[]]>(provide
         }
       }
       catch (cause) {
-        const message = `Could not get available properties for \`${fontFamily}\` from \`${id}\` provider.`
+        const message = `Could not get font properties for \`${fontFamily}\` from \`${id}\` provider.`
         if (unifontOptions?.throwOnError) {
           throw new Error(message, { cause })
         }
@@ -171,7 +171,7 @@ export async function createUnifont<T extends [Provider, ...Provider[]]>(provide
 
   return {
     resolveFont,
-    getAvailableFontProperties,
+    getFontProperties,
     listFonts,
   }
 }
