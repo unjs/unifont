@@ -11,8 +11,25 @@ export default defineConfig({
   },
   test: {
     testTimeout: 10_000,
+    projects: [
+      {
+        extends: true,
+        test: {
+          name: 'unifont',
+          include: ['test/**/*.test.ts'],
+        },
+      },
+      {
+        extends: true,
+        test: {
+          name: 'proxy',
+          root: './proxy',
+          include: ['test/**/*.test.ts'],
+        },
+      },
+    ],
     coverage: {
-      include: ['src'],
+      include: ['src', 'proxy/lib', 'proxy/routes'],
       reporter: ['text', 'json', 'html'],
     },
   },

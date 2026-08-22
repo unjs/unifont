@@ -34,6 +34,7 @@
   "dependencies": {
     "css-tree": "^3.1.0",
     "ohash": "^2.0.11",
+    "std-env": "^4.2.0",
     "undici": "^8.0.0"
   },
   "devDependencies": {
@@ -45,6 +46,7 @@
     "changelogithub": "15.0.4",
     "eslint": "10.8.1",
     "lint-staged": "17.3.0",
+    "rou3": "^0.8.1",
     "simple-git-hooks": "2.13.1",
     "tsdown": "0.22.14",
     "typescript": "6.0.3",

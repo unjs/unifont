@@ -1,0 +1,17 @@
+{
+  "name": "unifont-proxy",
+  "type": "module",
+  "private": true,
+  "scripts": {
+    "build": "nitro build",
+    "dev": "nitro dev",
+    "preview": "nitro preview"
+  },
+  "dependencies": {
+    "ocache": "^0.3.0",
+    "rou3": "^0.8.1"
+  },
+  "devDependencies": {
+    "nitro": "3.0.260610-beta"
+  }
+}

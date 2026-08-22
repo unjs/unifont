@@ -1,0 +1,8 @@
+node_modules
+.data
+.nitro
+.cache
+.output
+.vercel
+.env
+.env.local

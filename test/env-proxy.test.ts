@@ -1,10 +1,18 @@
-import { Agent, EnvHttpProxyAgent, getGlobalDispatcher, ProxyAgent, setGlobalDispatcher } from 'undici'
+import { getGlobalDispatcher, ProxyAgent, setGlobalDispatcher } from 'undici'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
 async function freshInstall(): Promise<() => Promise<void>> {
   vi.resetModules()
-  const { installProxyDispatcher } = await import('../src/proxy')
+  const { installProxyDispatcher } = await import('../src/env-proxy')
   return installProxyDispatcher
+}
+
+/**
+ * `vi.resetModules()` gives the module under test its own copy of `undici`, so the dispatcher it
+ * installs is not an `instanceof` the classes imported here.
+ */
+function dispatcherName(): string {
+  return getGlobalDispatcher().constructor.name
 }
 
 describe('installProxyDispatcher', () => {
@@ -40,21 +48,21 @@ describe('installProxyDispatcher', () => {
     process.env.HTTPS_PROXY = 'http://127.0.0.1:9999'
     const install = await freshInstall()
     await install()
-    expect(getGlobalDispatcher()).toBeInstanceOf(EnvHttpProxyAgent)
+    expect(dispatcherName()).toBe('EnvHttpProxyAgent')
   })
 
   it('honours lower-case https_proxy', async () => {
     process.env.https_proxy = 'http://127.0.0.1:9999'
     const install = await freshInstall()
     await install()
-    expect(getGlobalDispatcher()).toBeInstanceOf(EnvHttpProxyAgent)
+    expect(dispatcherName()).toBe('EnvHttpProxyAgent')
   })
 
   it('honours HTTP_PROXY when HTTPS_PROXY is unset', async () => {
     process.env.HTTP_PROXY = 'http://127.0.0.1:9999'
     const install = await freshInstall()
     await install()
-    expect(getGlobalDispatcher()).toBeInstanceOf(EnvHttpProxyAgent)
+    expect(dispatcherName()).toBe('EnvHttpProxyAgent')
   })
 
   it('does not trample a user-installed custom dispatcher', async () => {
@@ -64,7 +72,7 @@ describe('installProxyDispatcher', () => {
     const install = await freshInstall()
     await install()
     expect(getGlobalDispatcher()).toBe(custom)
-    expect(getGlobalDispatcher()).not.toBeInstanceOf(EnvHttpProxyAgent)
+    expect(dispatcherName()).toBe('ProxyAgent')
   })
 
   it('is idempotent across repeated calls', async () => {
@@ -78,12 +86,12 @@ describe('installProxyDispatcher', () => {
 
   it('retries if env vars are not present on the first call', async () => {
     const install = await freshInstall()
+    const before = getGlobalDispatcher()
     await install()
-    expect(getGlobalDispatcher()).toBeInstanceOf(Agent)
-    expect(getGlobalDispatcher()).not.toBeInstanceOf(EnvHttpProxyAgent)
+    expect(getGlobalDispatcher()).toBe(before)
 
     process.env.HTTPS_PROXY = 'http://127.0.0.1:9999'
     await install()
-    expect(getGlobalDispatcher()).toBeInstanceOf(EnvHttpProxyAgent)
+    expect(dispatcherName()).toBe('EnvHttpProxyAgent')
   })
 })

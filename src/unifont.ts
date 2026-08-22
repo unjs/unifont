@@ -1,11 +1,26 @@
 import type { Storage } from './cache'
 import type { FontProperties, InitializedProvider, Provider, ProviderContext, ResolveFontOptions, ResolveFontResult } from './types'
+import { createAPIFetch } from './api-base'
 import { createAsyncStorage, memoryStorage } from './cache'
-import { installProxyDispatcher } from './proxy'
+import { installProxyDispatcher } from './env-proxy'
 
 export interface UnifontOptions {
   storage?: Storage
   throwOnError?: boolean
+  /**
+   * Base URL of a `unifont` proxy to route provider API requests through, for environments
+   * (browsers, web containers) that cannot call the provider APIs directly. Providers whose APIs
+   * are already reachable cross-origin, such as `npm`, are unaffected.
+   *
+   * Defaults to `https://proxy.unifont.dev` in a browser or a StackBlitz web container, where the
+   * provider APIs are unreachable anyway, and to no proxy elsewhere. Pass `false` to always
+   * request the provider APIs directly.
+   *
+   * **Experimental.** `https://proxy.unifont.dev` is best-effort, rate-limited at our discretion,
+   * and may change or disappear without notice. Deploy your own if you need one in production.
+   * @example 'https://proxy.unifont.dev'
+   */
+  apiBase?: string | false
 }
 
 type ExtractFamilyOptions<T extends Provider> = Exclude<
@@ -46,6 +61,7 @@ export async function createUnifont<T extends [Provider, ...Provider[]]>(provide
   const stack: Record<string, InitializedProvider> = {}
 
   const storage = unifontOptions?.storage ?? memoryStorage()
+  const fetch = createAPIFetch(unifontOptions?.apiBase)
 
   // preserve provider order
   for (const provider of providers) {
@@ -59,6 +75,7 @@ export async function createUnifont<T extends [Provider, ...Provider[]]>(provide
       storage: createAsyncStorage(storage, {
         cachedBy: [provider._name, provider._options],
       }),
+      fetch,
     }
     try {
       const initializedProvider = await provider(context)

@@ -1,7 +1,6 @@
 import type { ResolveFontOptions } from '../types'
 import { hash } from 'ohash'
 import { extractFontFaceData } from '../css/parse'
-import { fetchWithRetries } from '../fetch'
 import { cleanFontFaces, defineFontProvider } from '../utils'
 import { userAgents } from './google'
 
@@ -33,7 +32,7 @@ export interface GoogleiconsFamilyOptions {
 
 export default defineFontProvider('googleicons', async (providerOptions: GoogleiconsProviderOptions, ctx) => {
   const googleIcons = await ctx.storage.getItem('googleicons:meta.json', async () => {
-    const data = await fetchWithRetries(
+    const data = await ctx.fetch(
       'https://fonts.google.com/metadata/icons?key=material_symbols&incomplete=true',
     ).then(res => res.text())
     const response: { families: string[] } = JSON.parse(
@@ -56,7 +55,7 @@ export default defineFontProvider('googleicons', async (providerOptions: Googlei
 
       // Legacy Material Icons
       if (family.includes('Icons')) {
-        css += await fetchWithRetries(`https://fonts.googleapis.com/icon?family=${family}`, {
+        css += await ctx.fetch(`https://fonts.googleapis.com/icon?family=${family}`, {
           headers: { 'user-agent': userAgent },
         }).then(res => res.text())
       }
@@ -66,7 +65,7 @@ export default defineFontProvider('googleicons', async (providerOptions: Googlei
         if (iconNames) {
           url += `&icon_names=${iconNames}`
         }
-        css += await fetchWithRetries(url, {
+        css += await ctx.fetch(url, {
           headers: { 'user-agent': userAgent },
         }).then(res => res.text())
       }
