@@ -1,7 +1,36 @@
 import type { ResolveFontOptions } from '../../src'
-import { describe, expect, it } from 'vitest'
+import { describe, expect, it, vi } from 'vitest'
 import { createUnifont, providers } from '../../src'
-import { getOptimizerIdentityFromUrl, groupBy, pickUniqueBy } from '../utils'
+import { getOptimizerIdentityFromUrl, groupBy, mockFetchReturn, pickUniqueBy } from '../utils'
+
+const MOCK_CSS = `/* latin */
+@font-face {
+  font-family: 'Mock';
+  font-style: normal;
+  font-weight: 100 700;
+  font-stretch: 100%;
+  src: url(https://fonts.gstatic.com/s/mock/v1/mock.woff2) format('woff2');
+  unicode-range: U+0000-00FF;
+}`
+
+function mockCss2(css = MOCK_CSS) {
+  const requests = vi.fn()
+  const restore = mockFetchReturn(/fonts\.googleapis\.com\/css2/, () => new Response(css))
+  const originalFetch = globalThis.fetch
+  globalThis.fetch = (...args: Parameters<typeof fetch>) => {
+    if (/fonts\.googleapis\.com\/css2/.test(args[0] as string)) {
+      requests(decodeURIComponent(args[0] as string))
+    }
+    return originalFetch(...args)
+  }
+  return {
+    requests,
+    restore: () => {
+      globalThis.fetch = originalFetch
+      restore()
+    },
+  }
+}
 
 describe('google', () => {
   it('correctly types options', async () => {
@@ -233,6 +262,178 @@ describe('google', () => {
       weights: ['400 1100'],
     })
     expect(fonts.length).toBe(12)
+  })
+
+  describe('axis clamping', () => {
+    it('clamps a variable weight range to the axis range', async () => {
+      const { requests, restore } = mockCss2()
+      const unifont = await createUnifont([providers.google()])
+      await unifont.resolveFont('IBM Plex Sans', {
+        formats: ['woff2'],
+        styles: ['normal'],
+        weights: ['100 900'],
+      })
+
+      expect(requests).toHaveBeenCalledWith('https://fonts.googleapis.com/css2?family=IBM Plex Sans:ital,wght@0,100..700')
+      restore()
+    })
+
+    it('collapses a range that only touches the axis to a static value', async () => {
+      const { requests, restore } = mockCss2()
+      const unifont = await createUnifont([providers.google()])
+      await unifont.resolveFont('IBM Plex Sans', {
+        formats: ['woff2'],
+        styles: ['normal'],
+        weights: ['700 1000'],
+      })
+
+      expect(requests).toHaveBeenCalledWith('https://fonts.googleapis.com/css2?family=IBM Plex Sans:ital,wght@0,700')
+      restore()
+    })
+
+    it('drops a weight range that does not overlap the axis', async () => {
+      const { requests, restore } = mockCss2()
+      const unifont = await createUnifont([providers.google()])
+      const { fonts } = await unifont.resolveFont('IBM Plex Sans', {
+        formats: ['woff2'],
+        styles: ['normal'],
+        weights: ['800 1000'],
+      })
+
+      expect(fonts).toStrictEqual([])
+      expect(requests).not.toHaveBeenCalled()
+      restore()
+    })
+
+    it('clamps variable axis values and drops unknown axes', async () => {
+      const { requests, restore } = mockCss2()
+      const unifont = await createUnifont([providers.google({
+        experimental: {
+          variableAxis: {
+            'Noto Sans': {
+              wdth: [['62', '100']],
+              slnt: [['-15', '0']],
+            },
+          },
+        },
+      })])
+      await unifont.resolveFont('Noto Sans', {
+        formats: ['woff2'],
+        styles: ['normal'],
+        weights: ['400'],
+      })
+
+      expect(requests).toHaveBeenCalledWith('https://fonts.googleapis.com/css2?family=Noto Sans:ital,wdth,wght@0,62.5..100,400')
+      restore()
+    })
+
+    it('clamps a single axis value into range and drops non-numeric ones', async () => {
+      const { requests, restore } = mockCss2()
+      const unifont = await createUnifont([providers.google()])
+      await unifont.resolveFont('Archivo', {
+        formats: ['woff2'],
+        styles: ['normal'],
+        weights: ['400'],
+        options: {
+          google: {
+            experimental: {
+              variableAxis: { wdth: ['200', 'not-a-number'] },
+            },
+          },
+        },
+      })
+
+      expect(requests).toHaveBeenCalledWith('https://fonts.googleapis.com/css2?family=Archivo:ital,wdth,wght@0,125,400')
+      restore()
+    })
+
+    it('dedupes weight ranges that clamp onto the same value', async () => {
+      const { requests, restore } = mockCss2()
+      const unifont = await createUnifont([providers.google()])
+      await unifont.resolveFont('IBM Plex Sans', {
+        formats: ['woff2'],
+        styles: ['normal'],
+        weights: ['700 800', '700 1000'],
+      })
+
+      expect(requests).toHaveBeenCalledWith('https://fonts.googleapis.com/css2?family=IBM Plex Sans:ital,wght@0,700')
+      restore()
+    })
+
+    it('drops a descending range', async () => {
+      const { requests, restore } = mockCss2()
+      const unifont = await createUnifont([providers.google()])
+      await unifont.resolveFont('Archivo', {
+        formats: ['woff2'],
+        styles: ['normal'],
+        weights: ['400'],
+        options: {
+          google: {
+            experimental: {
+              variableAxis: { wdth: [['125', '62']] },
+            },
+          },
+        },
+      })
+
+      expect(requests).toHaveBeenCalledWith('https://fonts.googleapis.com/css2?family=Archivo:ital,wght@0,400')
+      restore()
+    })
+
+    it('leaves in-range variable axis values untouched', async () => {
+      const { requests, restore } = mockCss2()
+      const unifont = await createUnifont([providers.google()])
+      await unifont.resolveFont('Archivo', {
+        formats: ['woff2'],
+        styles: ['normal'],
+        weights: ['100 900'],
+        options: {
+          google: {
+            experimental: {
+              variableAxis: { wdth: [['62', '125']] },
+            },
+          },
+        },
+      })
+
+      expect(requests).toHaveBeenCalledWith('https://fonts.googleapis.com/css2?family=Archivo:ital,wdth,wght@0,62..125,100..900')
+      restore()
+    })
+  })
+
+  describe('font-stretch', () => {
+    it('omits a single-value font-stretch when no width axis was requested', async () => {
+      const { restore } = mockCss2()
+      const unifont = await createUnifont([providers.google()])
+      const { fonts } = await unifont.resolveFont('Noto Sans', {
+        formats: ['woff2'],
+        styles: ['normal'],
+        weights: ['400'],
+      })
+
+      expect(fonts.every(font => font.stretch === undefined)).toBe(true)
+      restore()
+    })
+
+    it('keeps font-stretch when a width axis was requested', async () => {
+      const { restore } = mockCss2(MOCK_CSS.replace('100%', '62.5% 100%'))
+      const unifont = await createUnifont([providers.google()])
+      const { fonts } = await unifont.resolveFont('Noto Sans', {
+        formats: ['woff2'],
+        styles: ['normal'],
+        weights: ['400'],
+        options: {
+          google: {
+            experimental: {
+              variableAxis: { wdth: [['62', '100']] },
+            },
+          },
+        },
+      })
+
+      expect(fonts.map(font => font.stretch)).toStrictEqual(['62.5% 100%'])
+      restore()
+    })
   })
 
   describe('formats', () => {
