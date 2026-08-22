@@ -312,7 +312,6 @@ describe('google', () => {
           variableAxis: {
             'Noto Sans': {
               wdth: [['62', '100']],
-              // @ts-expect-error Noto Sans has no `slnt` axis
               slnt: [['-15', '0']],
             },
           },
@@ -325,6 +324,26 @@ describe('google', () => {
       })
 
       expect(requests).toHaveBeenCalledWith('https://fonts.googleapis.com/css2?family=Noto Sans:ital,wdth,wght@0,62.5..100,400')
+      restore()
+    })
+
+    it('drops a descending range', async () => {
+      const { requests, restore } = mockCss2()
+      const unifont = await createUnifont([providers.google()])
+      await unifont.resolveFont('Archivo', {
+        formats: ['woff2'],
+        styles: ['normal'],
+        weights: ['400'],
+        options: {
+          google: {
+            experimental: {
+              variableAxis: { wdth: [['125', '62']] },
+            },
+          },
+        },
+      })
+
+      expect(requests).toHaveBeenCalledWith('https://fonts.googleapis.com/css2?family=Archivo:ital,wght@0,400')
       restore()
     })
 

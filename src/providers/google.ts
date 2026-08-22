@@ -202,14 +202,14 @@ interface FontAxis {
 function clampAxisValue(value: string | [string, string], axis: FontAxis): string | undefined {
   if (!Array.isArray(value)) {
     const parsed = Number(value)
-    if (Number.isNaN(parsed))
+    if (!Number.isFinite(parsed))
       return undefined
     return String(clamp(parsed, axis))
   }
 
   const min = Number(value[0])
   const max = Number(value[1])
-  if (Number.isNaN(min) || Number.isNaN(max))
+  if (!Number.isFinite(min) || !Number.isFinite(max) || min > max)
     return undefined
 
   // The requested range does not overlap the axis at all
