@@ -49,8 +49,8 @@ importers:
         specifier: 17.3.0
         version: 17.3.0
       rou3:
-        specifier: ^0.8.1
-        version: 0.8.1
+        specifier: ^0.9.0
+        version: 0.9.2
       simple-git-hooks:
         specifier: 2.13.1
         version: 2.13.1
@@ -86,8 +86,8 @@ importers:
         specifier: ^0.3.0
         version: 0.3.0
       rou3:
-        specifier: ^0.8.1
-        version: 0.8.1
+        specifier: ^0.9.0
+        version: 0.9.2
     devDependencies:
       nitro:
         specifier: 3.0.260610-beta
@@ -2107,6 +2107,9 @@ packages:
 
   rou3@0.8.1:
     resolution: {integrity: sha512-ePa+XGk00/3HuCqrEnK3LxJW7I0SdNg6EFzKUJG73hMAdDcOUC/i/aSz7LSDwLrGr33kal/rqOGydzwl6U7zBA==}
+
+  rou3@0.9.2:
+    resolution: {integrity: sha512-3SOzvaAg8rkHrXtRjpCvCvbyO5to9oOO27Z/XqHEYXfMRVSw/qMIVdmaOk9W2lcRLtR6dlqTjo9hDeJk70QBYQ==}
 
   run-applescript@7.1.0:
     resolution: {integrity: sha512-DPe5pVFaAsinSaV6QjQ6gdiedWDcRCbUuiQfQa2wmWV7+xC9bGulGI8+TdRmoFkAPaBXk8CrAbnlY2ISniJ47Q==}
@@ -4738,6 +4741,8 @@ snapshots:
       '@rolldown/binding-win32-x64-msvc': 1.2.5
 
   rou3@0.8.1: {}
+
+  rou3@0.9.2: {}
 
   run-applescript@7.1.0: {}
 
