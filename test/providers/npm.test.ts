@@ -143,6 +143,30 @@ describe('npm', () => {
       restoreFetch()
     })
 
+    it('handles getFontProperties correctly', async () => {
+      const restoreFetch = mockFetchReturn(/@fontsource\/roboto/, () =>
+        new Response(MOCK_ROBOTO_CSS))
+
+      const unifont = await createUnifont([providers.npm()])
+      const result = await unifont.getFontProperties('Roboto')
+      expect(result?.provider).toBe('npm')
+      expect(result?.styles).toEqual(expect.arrayContaining(['normal', 'italic']))
+      expect(result?.weights).toEqual(expect.arrayContaining(['400', '700']))
+
+      restoreFetch()
+    })
+
+    it('returns undefined from getFontProperties when the package cannot be fetched', async () => {
+      const restoreFetch = mockFetchReturn(/@fontsource\/nonexistent/, () => {
+        throw new Error('Not found')
+      })
+
+      const unifont = await createUnifont([providers.npm()])
+      expect(await unifont.getFontProperties('Nonexistent')).toEqual(undefined)
+
+      restoreFetch()
+    })
+
     it('returns empty fonts for nonexistent package', async () => {
       const restoreFetch = mockFetchReturn(/@fontsource\/nonexistent/, () => {
         throw new Error('Not found')
@@ -353,6 +377,68 @@ describe('npm', () => {
       }
       // Should have read the local CSS file
       expect(readFile).toHaveBeenCalledWith('./node_modules/@fontsource/roboto/index.css')
+    })
+
+    it('resolves getFontProperties from local node_modules', async () => {
+      const readFile = vi.fn(async (path: string) => {
+        if (path === './package.json')
+          return MOCK_PACKAGE_JSON
+        if (path === './node_modules/@fontsource/roboto/index.css')
+          return MOCK_ROBOTO_CSS
+        if (path === './node_modules/@fontsource/roboto/package.json')
+          return MOCK_PKG_VERSION_JSON
+        return null
+      })
+
+      const unifont = await createUnifont([providers.npm({ readFile })])
+      const result = await unifont.getFontProperties('Roboto')
+      expect(result?.provider).toBe('npm')
+      expect(result?.styles).toEqual(expect.arrayContaining(['normal', 'italic']))
+      expect(result?.weights).toEqual(expect.arrayContaining(['400', '700']))
+      expect(readFile).toHaveBeenCalledWith('./node_modules/@fontsource/roboto/index.css')
+    })
+
+    it('resolves getFontProperties for a package served entirely from index.css', async () => {
+      const css = `
+        @font-face {
+          font-family: 'Inter Variable';
+          font-style: normal;
+          font-weight: 100 900;
+          src: url(./files/inter-latin-wght-normal.woff2) format('woff2-variations');
+        }
+        @font-face {
+          font-family: 'Inter Variable';
+          src: url(./files/inter-latin-wght-italic.woff2) format('woff2-variations');
+        }
+      `
+
+      const readFile = vi.fn(async (path: string) => {
+        if (path === './package.json')
+          return MOCK_PACKAGE_JSON
+        if (path === './node_modules/@fontsource-variable/inter/index.css')
+          return css
+        if (path === './node_modules/@fontsource-variable/inter/package.json')
+          return MOCK_PKG_VERSION_JSON
+        return null
+      })
+
+      const unifont = await createUnifont([providers.npm({ readFile })])
+      const result = await unifont.getFontProperties('Inter Variable')
+
+      expect(result?.provider).toBe('npm')
+      expect(result?.weights).toEqual(['100 900'])
+      expect(result?.styles).toEqual(['normal'])
+    })
+
+    it('returns undefined from getFontProperties when local resolution fails and remote is disabled', async () => {
+      const readFile = vi.fn(async (path: string) => {
+        if (path === './package.json')
+          return MOCK_PACKAGE_JSON
+        return null
+      })
+
+      const unifont = await createUnifont([providers.npm({ readFile, remote: false })])
+      expect(await unifont.getFontProperties('Roboto')).toEqual(undefined)
     })
 
     it('falls back to CDN when local read fails', async () => {

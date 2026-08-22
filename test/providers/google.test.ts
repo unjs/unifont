@@ -157,6 +157,38 @@ describe('google', () => {
     expect(names!.length > 0).toEqual(true)
   })
 
+  it('handles getFontProperties correctly', async () => {
+    const unifont = await createUnifont([providers.google()])
+    const result = await unifont.getFontProperties('Roboto')
+    expect(result?.provider).toBe('google')
+    expect(result?.formats).toEqual(['woff2', 'woff', 'ttf', 'eot'])
+    expect(result?.styles).toEqual(expect.arrayContaining(['normal', 'italic']))
+    expect(result?.subsets).toEqual(expect.arrayContaining(['latin', 'latin-ext']))
+    expect(result?.weights).toEqual(expect.arrayContaining(['400', '100 900']))
+
+    expect(await unifont.getFontProperties('XXX')).toEqual(undefined)
+  })
+
+  it('omits a variable weight range when the family has no wght axis', async () => {
+    const restore = mockFetchReturn(/fonts\.google\.com\/metadata\/fonts/, () => new Response(JSON.stringify({
+      familyMetadataList: [{
+        family: 'No Wght',
+        fonts: { 400: {} },
+        subsets: ['latin'],
+        axes: [{ tag: 'wdth', min: 75, max: 125, defaultValue: 100 }],
+      }],
+    })))
+
+    try {
+      const unifont = await createUnifont([providers.google()])
+      const result = await unifont.getFontProperties('No Wght')
+      expect(result?.weights).toEqual(['400'])
+    }
+    finally {
+      restore()
+    }
+  })
+
   it('respects provider glyphs option and resolves optimized font', async () => {
     const unifont = await createUnifont([providers.google({
       experimental: {
@@ -256,12 +288,12 @@ describe('google', () => {
     expect(fonts.length).toEqual(2)
   })
 
-  it('falls back to static weights', async () => {
+  it('falls back to the endpoints of the range for static families', async () => {
     const unifont = await createUnifont([providers.google()])
     const { fonts } = await unifont.resolveFont('Lato', {
       weights: ['400 1100'],
     })
-    expect(fonts.length).toBe(12)
+    expect(pickUniqueBy(fonts, fnt => String(fnt.weight)).sort()).toEqual(['400', '900'])
   })
 
   describe('axis clamping', () => {

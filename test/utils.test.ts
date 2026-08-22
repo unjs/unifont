@@ -19,17 +19,67 @@ describe('utils', () => {
       })).toEqual([])
     })
 
-    it('returns standard weights as fallbacks for a variable font if available', () => {
+    it('returns the range endpoints as fallbacks for a static family', () => {
       expect(
         prepareWeights({
-          inputWeights: ['400 600'],
+          inputWeights: ['500 700'],
           hasVariableWeights: false,
           weights: ['300', '400', '500', '600', '700'],
         }),
       ).toEqual([
-        { weight: '400', variable: false },
         { weight: '500', variable: false },
-        { weight: '600', variable: false },
+        { weight: '700', variable: false },
+      ])
+    })
+
+    it('keeps the weight nearest to 400 as well as the range endpoints', () => {
+      expect(
+        prepareWeights({
+          inputWeights: ['100 900'],
+          hasVariableWeights: false,
+          weights: ['100', '300', '400', '700', '900'],
+        }),
+      ).toEqual([
+        { weight: '100', variable: false },
+        { weight: '400', variable: false },
+        { weight: '900', variable: false },
+      ])
+    })
+
+    it('clamps range endpoints to the closest available static weights', () => {
+      expect(
+        prepareWeights({
+          inputWeights: ['100 900'],
+          hasVariableWeights: false,
+          weights: ['700', '400', '500'],
+        }),
+      ).toEqual([
+        { weight: '400', variable: false },
+        { weight: '700', variable: false },
+      ])
+    })
+
+    it('falls back to the nearest weight outside the range when none is inside it', () => {
+      expect(
+        prepareWeights({
+          inputWeights: ['450 480'],
+          hasVariableWeights: false,
+          weights: ['400', '500'],
+        }),
+      ).toEqual([
+        { weight: '400', variable: false },
+      ])
+    })
+
+    it('returns a single weight when only one is available in the range', () => {
+      expect(
+        prepareWeights({
+          inputWeights: ['400 700'],
+          hasVariableWeights: false,
+          weights: ['300', '500'],
+        }),
+      ).toEqual([
+        { weight: '500', variable: false },
       ])
     })
 

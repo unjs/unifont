@@ -2,7 +2,7 @@ import type { FontFaceData, ResolveFontOptions } from '../types'
 
 import { hash } from 'ohash'
 import { extractFontFaceData } from '../css/parse'
-import { cleanFontFaces, defineFontProvider, prepareWeights, splitCssIntoSubsets } from '../utils'
+import { cleanFontFaces, defineFontProvider, filterKnownStyles, prepareWeights, splitCssIntoSubsets } from '../utils'
 
 const BASE_URL = 'https://fonts.bunny.net'
 
@@ -64,6 +64,18 @@ export default defineFontProvider('bunny', async (_options, ctx) => {
     listFonts() {
       return [...familyMap.keys()]
     },
+    getFontProperties(fontFamily) {
+      const id = familyMap.get(fontFamily)
+      if (!id)
+        return
+      const font = fonts[id]!
+      return {
+        formats: ['woff2', 'woff'],
+        styles: filterKnownStyles(font.styles),
+        subsets: Object.keys(font.variants),
+        weights: font.weights.map(String),
+      }
+    },
     async resolveFont(fontFamily, defaults) {
       const id = familyMap.get(fontFamily)
       if (!id) {
@@ -89,6 +101,7 @@ interface BunnyFontMeta {
     familyName: string
     isVariable: boolean
     styles: string[]
+    /** Keyed by subset name (`latin`, `cyrillic-ext`, ...). */
     variants: Record<string, number>
     weights: number[]
   }

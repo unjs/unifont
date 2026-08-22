@@ -117,5 +117,19 @@ describe('cache storage', () => {
       const cacheKey = storage.setItem.mock.calls.at(0)?.at(0) as string | undefined
       expect(cacheKey).not.toContain(input)
     })
+
+    it('sanitizes an empty string fragment to an empty segment', async () => {
+      const storage = {
+        getItem: vi.fn(),
+        setItem: vi.fn(),
+      }
+      const cached = createAsyncStorage(storage, {
+        cachedBy: ['', 'provider'],
+      })
+
+      await cached.setItem('test-key', 'data')
+
+      expect(storage.setItem).toHaveBeenCalledWith(':provider:test-key', expect.anything())
+    })
   })
 })

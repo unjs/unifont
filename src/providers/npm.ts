@@ -5,7 +5,7 @@ import { fileURLToPath, pathToFileURL } from 'node:url'
 import { hash } from 'ohash'
 
 import { extractFontFaceData } from '../css/parse'
-import { cleanFontFaces, defineFontProvider } from '../utils'
+import { cleanFontFaces, defineFontProvider, filterKnownStyles } from '../utils'
 
 export interface NpmProviderOptions {
   /**
@@ -118,12 +118,10 @@ const DEFAULT_CDN = 'https://cdn.jsdelivr.net/npm'
  *
  * - `match`: regex to match against dependency names in package.json
  * - `family`: extracts the font family name from the package name
- * - `file`: CSS entry file to parse (default: 'index.css')
  */
 interface KnownFontPackage {
   match: RegExp
   family: (pkgName: string) => string
-  file?: string
 }
 
 const KNOWN_FONT_PACKAGES: KnownFontPackage[] = [
@@ -247,7 +245,6 @@ function packageDirFor(path: string, cssFile: string): string {
 interface DetectedFont {
   family: string
   pkgName: string
-  file?: string
 }
 
 export default defineFontProvider('npm', (providerOptions: NpmProviderOptions, ctx) => {
@@ -330,7 +327,6 @@ export default defineFontProvider('npm', (providerOptions: NpmProviderOptions, c
             detectedFonts.set(family.toLowerCase(), {
               family,
               pkgName: depName,
-              file: pattern.file,
             })
             break
           }
@@ -346,21 +342,19 @@ export default defineFontProvider('npm', (providerOptions: NpmProviderOptions, c
 
   function resolveUrlsToAbsolute(fontFaces: FontFaceData[], baseUrl: string): void {
     for (const face of fontFaces) {
-      if (Array.isArray(face.src)) {
-        face.src = face.src.map((src) => {
-          if ('url' in src) {
-            const url = src.url
-            if (url.startsWith('http') || url.startsWith('data:') || url.startsWith('//')) {
-              return src
-            }
-            return {
-              ...src,
-              url: new URL(url, baseUrl).href,
-            }
+      face.src = face.src.map((src) => {
+        if ('url' in src) {
+          const url = src.url
+          if (url.startsWith('http') || url.startsWith('data:') || url.startsWith('//')) {
+            return src
           }
-          return src
-        })
-      }
+          return {
+            ...src,
+            url: new URL(url, baseUrl).href,
+          }
+        }
+        return src
+      })
     }
   }
 
@@ -490,6 +484,57 @@ export default defineFontProvider('npm', (providerOptions: NpmProviderOptions, c
       return Array.from(fonts.values(), f => f.family)
     },
 
+    async getFontProperties(family: string) {
+      const detected = (await getDetectedFonts()).get(family.toLowerCase())
+      const pkgName = detected?.pkgName ?? guessPackageForFamily(family)
+      const cssFiles = resolveCssFiles(pkgName, { weights: STANDARD_WEIGHTS, styles: ['normal', 'italic'] })
+
+      const allFormats: ResolveFontOptions['formats'] = ['woff2', 'woff', 'otf', 'ttf', 'eot']
+      const fonts = await ctx.storage.getItem(`npm:${pkgName}/properties.json`, async () => {
+        const candidates = cssFiles.includes(DEFAULT_CSS_FILE) ? [cssFiles] : [cssFiles, [DEFAULT_CSS_FILE]]
+
+        for (const files of candidates) {
+          const localResult = await resolveFromLocal(pkgName, files, family, allFormats)
+          if (localResult) {
+            return localResult
+          }
+        }
+
+        if (!remote) {
+          return null
+        }
+
+        for (const files of candidates) {
+          const cdnResult = await resolveFromCdn(pkgName, 'latest', files, family, allFormats)
+          if (cdnResult) {
+            return cdnResult
+          }
+        }
+
+        return null
+      })
+
+      if (!fonts || fonts.length === 0) {
+        return
+      }
+
+      const styles = new Set<string>()
+      const weights = new Set<string>()
+      for (const face of fonts) {
+        if (face.style) {
+          styles.add(face.style)
+        }
+        if (face.weight) {
+          weights.add(Array.isArray(face.weight) ? face.weight.join(' ') : String(face.weight))
+        }
+      }
+
+      return {
+        styles: filterKnownStyles([...styles]),
+        weights: [...weights],
+      }
+    },
+
     async resolveFont(family: string, options: ResolveFontOptions<NpmFamilyOptions>) {
       const familyOptions = options.options || {} as NpmFamilyOptions
 
@@ -506,7 +551,7 @@ export default defineFontProvider('npm', (providerOptions: NpmProviderOptions, c
         const fonts = await getDetectedFonts()
         const detected = fonts.get(family.toLowerCase())
         pkgName = detected?.pkgName ?? guessPackageForFamily(family)
-        file = familyOptions.file || detected?.file
+        file = familyOptions.file
       }
 
       const pkgVersion = familyOptions.version || 'latest'

@@ -1,7 +1,7 @@
-import type { FontFaceData, ResolveFontOptions } from '../types'
+import type { FontFaceData, ProviderContext, ResolveFontOptions } from '../types'
 
 import { hash } from 'ohash'
-import { cleanFontFaces, defineFontProvider, prepareWeights } from '../utils'
+import { cleanFontFaces, defineFontProvider, filterKnownStyles, prepareWeights } from '../utils'
 
 const BASE_URL = 'https://api.fontsource.org/v1'
 
@@ -18,6 +18,10 @@ function pickFontsourceAxisSlug(axes: string[]): 'wght' | 'standard' | 'full' {
     hasRegisteredExtra = true
   }
   return hasRegisteredExtra ? 'standard' : 'wght'
+}
+
+async function getVariableAxes(ctx: ProviderContext, font: FontsourceFontMeta) {
+  return await ctx.storage.getItem(`fontsource:${font.family}-axes.json`, () => ctx.fetch(`${BASE_URL}/variable/${font.id}`).then(res => res.json() as Promise<FontsourceVariableFontDetail>))
 }
 
 // There are others like display and handwriting but these are not valid
@@ -56,8 +60,8 @@ export default defineFontProvider('fontsource', async (_options, ctx) => {
         for (const { weight, variable } of weights) {
           if (variable) {
             try {
-              const variableAxes = await ctx.storage.getItem(`fontsource:${font.family}-axes.json`, () => ctx.fetch(`${BASE_URL}/variable/${font.id}`).then(res => res.json() as Promise<FontsourceVariableFontDetail>))
-              if (variableAxes && variableAxes.axes.wght) {
+              const variableAxes = await getVariableAxes(ctx, font)
+              if (variableAxes?.axes.wght) {
                 const axisSlug = pickFontsourceAxisSlug(Object.keys(variableAxes.axes))
                 fontFaceData.push({
                   style,
@@ -94,6 +98,23 @@ export default defineFontProvider('fontsource', async (_options, ctx) => {
   return {
     listFonts() {
       return [...familyMap.keys()]
+    },
+    async getFontProperties(fontFamily) {
+      const font = familyMap.get(fontFamily)
+      if (!font)
+        return
+      const weights = [...font.weights.map(String)]
+      if (font.variable) {
+        const variableAxes = await getVariableAxes(ctx, font).catch(() => undefined)
+        if (variableAxes?.axes.wght)
+          weights.push(`${variableAxes.axes.wght.min} ${variableAxes.axes.wght.max}`)
+      }
+      return {
+        formats: ['woff2', 'woff', 'ttf'],
+        styles: filterKnownStyles(font.styles),
+        subsets: font.subsets,
+        weights,
+      }
     },
     async resolveFont(fontFamily, options) {
       const font = familyMap.get(fontFamily)

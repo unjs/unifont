@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { createUnifont, providers } from '../../src'
-import { sanitizeFontSource } from '../utils'
+import { mockFetchReturn, sanitizeFontSource } from '../utils'
 
 describe('fontshare', () => {
   it('works', async () => {
@@ -61,6 +61,39 @@ describe('fontshare', () => {
     const unifont = await createUnifont([providers.fontshare()])
     const names = await unifont.listFonts()
     expect(names!.length > 0).toEqual(true)
+  })
+
+  it('handles getFontProperties correctly', async () => {
+    const unifont = await createUnifont([providers.fontshare()])
+    const result = await unifont.getFontProperties('Satoshi')
+    expect(result?.provider).toBe('fontshare')
+    expect(result?.formats).toEqual(['woff2', 'woff', 'ttf'])
+    expect(result?.styles).toEqual(expect.arrayContaining(['normal', 'italic']))
+    expect(result?.subsets).toBeUndefined()
+    expect(result?.weights).toEqual(expect.arrayContaining(['400', '300 900']))
+
+    expect(await unifont.getFontProperties('XXX')).toEqual(undefined)
+  })
+
+  it('omits a variable weight range when the family has no wght axis', async () => {
+    const restore = mockFetchReturn(/api\.fontshare\.com\/v2\/fonts\?/, () => new Response(JSON.stringify({
+      has_more: false,
+      fonts: [{
+        name: 'No Wght',
+        slug: 'no-wght',
+        axes: [{ property: 'opsz', range_left: 8, range_right: 144, default: 14 }],
+        styles: [{ is_italic: false, is_variable: true, weight: { weight: 400, number: 400 } }],
+      }],
+    })))
+
+    try {
+      const unifont = await createUnifont([providers.fontshare()])
+      const result = await unifont.getFontProperties('No Wght')
+      expect(result?.weights).toEqual([])
+    }
+    finally {
+      restore()
+    }
   })
 
   it('falls back to static weights', async () => {

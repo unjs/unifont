@@ -628,5 +628,19 @@ describe('css font-face extraction', () => {
       // Ensure sorting still works with fallback values
       expect(sources[0]!.url).toContain('woff') // Should be prioritized over ttf
     })
+
+    it('ignores format() and tech() arguments that are neither strings nor identifiers', () => {
+      const result = extractFontFaceData(`
+        @font-face {
+          font-family: 'Test Font';
+          src: url('/font.woff2') format(2) tech(3);
+        }
+      `)
+
+      expect(result).toHaveLength(1)
+      const sources = result[0]!.src as RemoteFontSource[]
+      expect(sources).toHaveLength(1)
+      expect(sources[0]).toEqual({ url: '/font.woff2' })
+    })
   })
 })

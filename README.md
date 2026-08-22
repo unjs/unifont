@@ -39,6 +39,7 @@ const unifont = await createUnifont([
 ])
 
 const availableFonts = await unifont.listFonts()
+const properties = await unifont.getFontProperties('Poppins')
 const { fonts, fallbacks } = await unifont.resolveFont('Poppins')
 ```
 
@@ -521,6 +522,7 @@ Allows throwing on error if a font provider:
 - Fails to initialize
 - Fails while calling `resolveFont()`
 - Fails while calling `listFonts()`
+- Fails while calling `getFontProperties()`
 
 If set to `false` (default), an error will be logged to the console instead:
 
@@ -577,6 +579,8 @@ const { fonts } = await unifont.resolveFont('Poppins', {
   weights: ['300', '500 900']
 })
 ```
+
+If the family has no variable font covering the requested range, the range resolves to representative static weights: the available weights at each end of the range, plus the one nearest to `400` so that default-weight text still matches sensibly. So `500 900` resolves to two faces rather than every published weight in between. If no available weight falls inside the range at all (say `450 480` when only `400` and `500` are published), the closest available weight is used instead. List the weights explicitly if you need the intermediate ones.
 
 ###### `styles`
 
@@ -711,6 +715,48 @@ const unifont = await createUnifont([
 const availableFonts = await unifont.listFont(['google'])
 ```
 
+#### `getFontProperties()`
+
+- Type: `(fontFamily: string, providers?: T[number]['_name'][]) => Promise<(FontProperties & { provider?: T[number]['_name'] }) | undefined>`
+
+Retrieves the properties (weights, styles, subsets and formats) available for the specified font family:
+
+```js
+import { createUnifont, providers } from 'unifont'
+
+const unifont = await createUnifont([
+  providers.google(),
+])
+
+const properties = await unifont.getFontProperties('Roboto')
+```
+
+It loops through all providers and returns the result of the first provider that knows the family, along with a `provider` key identifying it.
+
+A few things to keep in mind when consuming the result:
+
+- `weights` mixes discrete values (`'400'`) and variable ranges expressed as `'<min> <max>'` (`'100 900'`).
+- A missing field (e.g. `subsets`) means the provider does not expose that information, not that nothing is available.
+- `formats` reflects what the provider can serve in general, not per-family availability, so a given format may still be unavailable for a specific family.
+- A top-level `undefined` means no queried provider knows the family.
+
+##### Providers
+
+- Type: `string[]`
+
+By default it uses all the providers provided to `createUnifont()`. However you can restrict usage to only a subset:
+
+```js
+import { createUnifont, providers } from 'unifont'
+
+const unifont = await createUnifont([
+  providers.google(),
+  providers.fontsource(),
+])
+
+const properties = await unifont.getFontProperties('Roboto', ['google'])
+```
+
 ## Building your own provider
 
 ### Defining a provider
@@ -778,6 +824,30 @@ export const myProvider = defineFontProvider('my-provider', async (options, ctx)
   return {
     listFonts() {
       return fonts.map(font => font.name)
+    }
+    // ...
+  }
+})
+```
+
+### `getFontProperties()`
+
+While optional, it's usually easy to implement this method as it shares logic with `resolveFont()`. Return `undefined` when the family is unknown, so unifont moves on to the next provider:
+
+```ts
+import type { FontProperties } from 'unifont'
+import { defineFontProvider } from 'unifont'
+
+export const myProvider = defineFontProvider('my-provider', async (options, ctx) => {
+  const fonts: { name: string, properties: FontProperties }[] = [/* ... */]
+
+  return {
+    getFontProperties(fontFamily) {
+      const font = fonts.find(font => font.name === fontFamily)
+      if (!font) {
+        return undefined
+      }
+      return font.properties
     }
     // ...
   }

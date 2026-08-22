@@ -1,7 +1,29 @@
 import { describe, expect, it } from 'vitest'
 import { createUnifont, providers } from '../../src'
+import { mockFetchReturn } from '../utils'
 
 describe('bunny', () => {
+  it('resolves css that carries no subset comments', async () => {
+    const restore = mockFetchReturn(/fonts\.bunny\.net\/css\?/, () => new Response(`
+      @font-face {
+        font-family: 'Abel';
+        font-style: normal;
+        font-weight: 400;
+        src: url(https://fonts.bunny.net/abel/files/abel-latin-400-normal.woff2) format('woff2');
+      }
+    `))
+
+    try {
+      const unifont = await createUnifont([providers.bunny()])
+      const { fonts } = await unifont.resolveFont('Abel', { weights: ['400'], styles: ['normal'] })
+      expect(fonts).toHaveLength(1)
+      expect(fonts[0]!.meta).toEqual({})
+    }
+    finally {
+      restore()
+    }
+  })
+
   it('works', async () => {
     const unifont = await createUnifont([providers.bunny()])
     expect(await unifont.resolveFont('NonExistent Font').then(r => r.fonts)).toMatchInlineSnapshot(`[]`)
@@ -51,6 +73,18 @@ describe('bunny', () => {
     const unifont = await createUnifont([providers.bunny()])
     const names = await unifont.listFonts()
     expect(names!.length > 0).toEqual(true)
+  })
+
+  it('handles getFontProperties correctly', async () => {
+    const unifont = await createUnifont([providers.bunny()])
+    const result = await unifont.getFontProperties('Roboto')
+    expect(result?.provider).toBe('bunny')
+    expect(result?.formats).toEqual(['woff2', 'woff'])
+    expect(result?.styles).toEqual(expect.arrayContaining(['normal', 'italic']))
+    expect(result?.subsets).toEqual(expect.arrayContaining(['latin', 'latin-ext']))
+    expect(result?.weights).toEqual(expect.arrayContaining(['400', '700']))
+
+    expect(await unifont.getFontProperties('XXX')).toEqual(undefined)
   })
 
   it('falls back to static weights', async () => {

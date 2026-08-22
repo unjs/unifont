@@ -78,6 +78,18 @@ export default defineFontProvider('googleicons', async (providerOptions: Googlei
     listFonts() {
       return googleIcons
     },
+    getFontProperties(fontFamily) {
+      if (!googleIcons.includes(fontFamily)) {
+        return
+      }
+      return {
+        formats: ['woff2', 'woff', 'ttf', 'eot'],
+        styles: ['normal'],
+        // Material Symbols are served with a variable wght axis (100..700);
+        // legacy Material Icons only ship a single 400 weight.
+        weights: fontFamily.includes('Icons') ? ['400'] : ['100 700'],
+      }
+    },
     async resolveFont(fontFamily, options: ResolveFontOptions<GoogleiconsFamilyOptions>) {
       if (!googleIcons.includes(fontFamily)) {
         return
