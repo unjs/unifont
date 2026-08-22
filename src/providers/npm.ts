@@ -60,7 +60,10 @@ export interface NpmFamilyOptions {
   version?: string
   /**
    * The entry CSS file to parse from the package.
-   * @default 'index.css'
+   *
+   * When not specified, per-weight and per-style entry points
+   * (`<weight>.css`, `<weight>-italic.css`) are resolved for the requested
+   * weights and styles, falling back to `index.css`.
    */
   file?: string
 }
@@ -119,20 +122,59 @@ function familyToSlug(family: string): string {
 const VARIABLE_RE = / Variable$/
 
 /**
- * Guess the npm package name and CSS file for a font family that wasn't
- * found in the auto-detected packages. Uses fontsource conventions as fallback.
+ * Guess the npm package name for a font family that wasn't found in the
+ * auto-detected packages. Uses fontsource conventions as fallback.
  */
-function guessPackageForFamily(family: string): { pkgName: string, file: string } {
+function guessPackageForFamily(family: string): string {
   if (family.endsWith(' Variable')) {
-    return { pkgName: `@fontsource-variable/${familyToSlug(family.replace(VARIABLE_RE, ''))}`, file: 'index.css' }
+    return `@fontsource-variable/${familyToSlug(family.replace(VARIABLE_RE, ''))}`
   }
-  return { pkgName: `@fontsource/${familyToSlug(family)}`, file: 'index.css' }
+  return `@fontsource/${familyToSlug(family)}`
+}
+
+const DEFAULT_CSS_FILE = 'index.css'
+const STANDARD_WEIGHTS = ['100', '200', '300', '400', '500', '600', '700', '800', '900']
+
+/**
+ * `@fontsource/*` packages ship `index.css` with a single weight (400) alongside
+ * per-weight and per-style entry points, so the requested weights and styles are
+ * mapped onto those entry points. Other layouts (including
+ * `@fontsource-variable/*`, whose `index.css` covers the full weight range) use
+ * `index.css`.
+ */
+function resolveCssFiles(pkgName: string, options: Pick<ResolveFontOptions, 'weights' | 'styles'>): string[] {
+  if (!pkgName.startsWith('@fontsource/')) {
+    return [DEFAULT_CSS_FILE]
+  }
+
+  const weights = new Set<string>()
+  for (const weight of options.weights) {
+    if (weight.includes(' ')) {
+      const [min, max] = weight.split(' ').map(Number)
+      for (const standardWeight of STANDARD_WEIGHTS) {
+        if (Number(standardWeight) >= min! && Number(standardWeight) <= max!) {
+          weights.add(standardWeight)
+        }
+      }
+      continue
+    }
+    weights.add(weight)
+  }
+
+  const files: string[] = []
+  for (const weight of weights) {
+    for (const style of options.styles) {
+      files.push(style === 'normal' ? `${weight}.css` : `${weight}-${style}.css`)
+    }
+  }
+
+  return files.length > 0 ? files : [DEFAULT_CSS_FILE]
 }
 
 interface DetectedFont {
   family: string
   pkgName: string
-  file: string
+  file?: string
 }
 
 export default defineFontProvider('npm', (providerOptions: NpmProviderOptions, ctx) => {
@@ -188,7 +230,7 @@ export default defineFontProvider('npm', (providerOptions: NpmProviderOptions, c
             detectedFonts.set(family.toLowerCase(), {
               family,
               pkgName: depName,
-              file: pattern.file || 'index.css',
+              file: pattern.file,
             })
             break
           }
@@ -222,18 +264,20 @@ export default defineFontProvider('npm', (providerOptions: NpmProviderOptions, c
     }
   }
 
-  async function resolveFromLocal(pkgName: string, cssFile: string, family: string, formats: ResolveFontOptions['formats']): Promise<FontFaceData[] | null> {
+  async function resolveFromLocal(pkgName: string, cssFiles: string[], family: string, formats: ResolveFontOptions['formats']): Promise<FontFaceData[] | null> {
     if (!readFile) {
       return null
     }
 
-    const cssPath = `${root}/node_modules/${pkgName}/${cssFile}`
-    const css = await readFile(cssPath).catch(() => null)
-    if (!css) {
-      return null
+    const stylesheets = await Promise.all(cssFiles.map(cssFile => readFile(`${root}/node_modules/${pkgName}/${cssFile}`).catch(() => null)))
+
+    const fontFaces: FontFaceData[] = []
+    for (const css of stylesheets) {
+      if (css) {
+        fontFaces.push(...extractFontFaceData(css, family))
+      }
     }
 
-    const fontFaces = extractFontFaceData(css, family)
     if (fontFaces.length === 0) {
       return null
     }
@@ -259,20 +303,20 @@ export default defineFontProvider('npm', (providerOptions: NpmProviderOptions, c
     return cleanFontFaces(fontFaces, formats)
   }
 
-  async function resolveFromCdn(pkgName: string, pkgVersion: string, cssFile: string, family: string, formats: ResolveFontOptions['formats']): Promise<FontFaceData[] | null> {
-    let css: string | null
-    try {
-      css = await fetchWithRetries(`${cdn}/${pkgName}@${pkgVersion}/${cssFile}`).then(res => res.text())
+  async function resolveFromCdn(pkgName: string, pkgVersion: string, cssFiles: string[], family: string, formats: ResolveFontOptions['formats']): Promise<FontFaceData[] | null> {
+    const stylesheets = await Promise.all(cssFiles.map(cssFile => fetchWithRetries(`${cdn}/${pkgName}@${pkgVersion}/${cssFile}`).then(res => res.text()).catch(() => null)))
+
+    const fontFaces: FontFaceData[] = []
+    for (const css of stylesheets) {
+      if (css) {
+        fontFaces.push(...extractFontFaceData(css, family))
+      }
     }
-    catch {
+
+    if (fontFaces.length === 0) {
       return null
     }
 
-    if (!css) {
-      return null
-    }
-
-    const fontFaces = extractFontFaceData(css, family)
     const baseUrl = `${cdn}/${pkgName}@${pkgVersion}/`
     resolveUrlsToAbsolute(fontFaces, baseUrl)
 
@@ -292,48 +336,48 @@ export default defineFontProvider('npm', (providerOptions: NpmProviderOptions, c
       const familyOptions = options.options || {} as NpmFamilyOptions
 
       let pkgName: string
-      let cssFile: string
-      let pkgVersion: string
+      let file: string | undefined
 
       if (familyOptions.package) {
         // Explicit package override
         pkgName = familyOptions.package
-        cssFile = familyOptions.file || 'index.css'
-        pkgVersion = familyOptions.version || 'latest'
+        file = familyOptions.file
       }
       else {
         // Check auto-detected fonts
         const fonts = await getDetectedFonts()
         const detected = fonts.get(family.toLowerCase())
-        if (detected) {
-          pkgName = detected.pkgName
-          cssFile = familyOptions.file || detected.file
-          pkgVersion = familyOptions.version || 'latest'
-        }
-        else {
-          // Guess package name using fontsource conventions
-          const guessed = guessPackageForFamily(family)
-          pkgName = guessed.pkgName
-          cssFile = familyOptions.file || guessed.file
-          pkgVersion = familyOptions.version || 'latest'
-        }
+        pkgName = detected?.pkgName ?? guessPackageForFamily(family)
+        file = familyOptions.file || detected?.file
       }
 
-      const key = `npm:${pkgName}/${cssFile}-${hash(options)}`
+      const pkgVersion = familyOptions.version || 'latest'
+      const cssFiles = file ? [file] : resolveCssFiles(pkgName, options)
+
+      const key = `npm:${pkgName}/${cssFiles.join(',')}-${hash(options)}`
 
       const fonts = await ctx.storage.getItem(key, async () => {
-        // Try local resolution first
-        const localResult = await resolveFromLocal(pkgName, cssFile, family, options.formats)
-        if (localResult) {
-          return localResult
+        const candidates = cssFiles.includes(DEFAULT_CSS_FILE) ? [cssFiles] : [cssFiles, [DEFAULT_CSS_FILE]]
+
+        for (const files of candidates) {
+          const localResult = await resolveFromLocal(pkgName, files, family, options.formats)
+          if (localResult) {
+            return localResult
+          }
         }
 
         if (!remote) {
           return null
         }
 
-        // Fall back to CDN
-        return await resolveFromCdn(pkgName, pkgVersion, cssFile, family, options.formats)
+        for (const files of candidates) {
+          const cdnResult = await resolveFromCdn(pkgName, pkgVersion, files, family, options.formats)
+          if (cdnResult) {
+            return cdnResult
+          }
+        }
+
+        return null
       })
 
       if (!fonts) {
