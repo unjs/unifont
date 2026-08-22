@@ -60,6 +60,22 @@ describe('proxy round trip', () => {
     expect(userAgents[format]).toBe(providerUserAgents[format])
   })
 
+  it('trims trailing slashes', () => {
+    expect(toProxyURL(`${API_BASE}///`, 'https://fonts.bunny.net/list'))
+      .toBe(`${API_BASE}/bunny/v1/list`)
+  })
+
+  it('does not backtrack over a long run of interior slashes', { timeout: 5000 }, () => {
+    const slashes = '/'.repeat(200_000)
+    expect(toProxyURL(`${API_BASE}${slashes}x`, 'https://fonts.bunny.net/list'))
+      .toBe(`${API_BASE}${slashes}x/bunny/v1/list`)
+  })
+
+  it('treats `$` sequences in apiBase literally', () => {
+    expect(toProxyURL('https://proxy.test/$&', 'https://fonts.bunny.net/list'))
+      .toBe('https://proxy.test/$&/bunny/v1/list')
+  })
+
   it('leaves URLs without a proxy route alone', () => {
     expect(toProxyURL(API_BASE, 'https://cdn.jsdelivr.net/npm/@fontsource/poppins@5/400.css')).toBeUndefined()
     expect(toProxyURL(API_BASE, 'https://fonts.gstatic.com/s/poppins/v24/font.woff2')).toBeUndefined()

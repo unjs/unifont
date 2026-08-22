@@ -20,11 +20,25 @@ const proxyRoutes: [pattern: RegExp, route: string][] = [
   [/^https:\/\/fonts\.googleapis\.com\/icon/, '/google/v1/icon'],
 ]
 
+/**
+ * Trims trailing slashes with a loop rather than `/\/+$/`, which backtracks quadratically over a
+ * long run of slashes.
+ * @see https://github.com/unjs/unifont/security/code-scanning/17
+ */
+function withoutTrailingSlashes(value: string): string {
+  let end = value.length
+  while (end > 0 && value[end - 1] === '/') {
+    end--
+  }
+  return value.slice(0, end)
+}
+
 /** Rewrites an upstream API URL to its proxy equivalent, or returns `undefined` if it has none. */
 export function toProxyURL(apiBase: string, url: string): string | undefined {
   for (const [pattern, route] of proxyRoutes) {
     if (pattern.test(url)) {
-      return url.replace(pattern, apiBase.replace(/\/+$/, '') + route)
+      // Only `route` is used as a replacement, so `$&` and friends in `apiBase` stay literal.
+      return withoutTrailingSlashes(apiBase) + url.replace(pattern, route)
     }
   }
 }
