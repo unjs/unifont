@@ -1,6 +1,10 @@
 import type { ProviderContext } from './types'
+import { hasWindow, provider } from 'std-env'
 import { fetchWithRetries } from './fetch'
 import { formatFromUserAgent } from './providers/google'
+
+/** The `unifont`-hosted proxy, used where the provider APIs cannot be reached directly. */
+const DEFAULT_API_BASE = 'https://proxy.unifont.dev'
 
 /**
  * Upstream API URL prefixes and the proxy route serving each, applied in order. A URL that matches
@@ -44,13 +48,31 @@ export function toProxyURL(apiBase: string, url: string): string | undefined {
 }
 
 /**
+ * Whether the current environment is subject to CORS, which every provider API except `npm`
+ * rejects. Covers browsers and WebContainers, whose Node process is served by the browser and so
+ * is bound by the same restrictions.
+ */
+function requiresProxy(): boolean {
+  return hasWindow || provider === 'stackblitz'
+}
+
+/** Resolves the configured `apiBase`, falling back to the hosted proxy where one is needed. */
+export function resolveAPIBase(apiBase: string | false | undefined): string | undefined {
+  if (apiBase === false) {
+    return undefined
+  }
+  return apiBase || (requiresProxy() ? DEFAULT_API_BASE : undefined)
+}
+
+/**
  * Wraps the provider fetcher so that requests to a known upstream API are sent to a `unifont`
  * proxy instead.
  *
  * A browser cannot set `user-agent`, which is how Google's endpoints pick a font format, so the
  * requested format moves into the query string for the proxy to apply on our behalf.
  */
-export function createAPIFetch(apiBase: string | undefined): ProviderContext['fetch'] {
+export function createAPIFetch(configuredAPIBase: string | false | undefined): ProviderContext['fetch'] {
+  const apiBase = resolveAPIBase(configuredAPIBase)
   if (!apiBase) {
     return fetchWithRetries
   }

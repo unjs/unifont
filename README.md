@@ -51,15 +51,21 @@ The following providers are built-in but you can build [custom providers](#build
 
 ### Using providers in the browser
 
-Apart from `npm`, no built-in provider's API can be called from a browser or a web container. Set `apiBase` to a deployment of the [proxy in this repository](./proxy) and requests to those APIs are routed through it:
+Apart from `npm`, no built-in provider's API can be called from a browser or a web container. In those environments `unifont` routes requests through `https://proxy.unifont.dev`, a deployment of the [proxy in this repository](./proxy), so no configuration is needed:
 
 ```js
 import { createUnifont, providers } from 'unifont'
 
-const unifont = await createUnifont([
-  providers.google(),
-  providers.bunny(),
-], { apiBase: 'https://proxy.unifont.dev' })
+// in a browser or a StackBlitz web container, this goes via the proxy
+const unifont = await createUnifont([providers.google()])
+```
+
+Detection covers browsers and StackBlitz web containers, whose Node process is served by the browser and so is bound by the same CORS rules. Everywhere else the provider APIs are requested directly. Point `apiBase` at your own deployment to override it, or pass `false` to always request the provider APIs directly:
+
+```js
+const unifont = await createUnifont([providers.google()], {
+  apiBase: 'https://fonts.example.com', // or `false` to never proxy
+})
 ```
 
 The proxy serves a fixed list of upstream endpoints, not arbitrary URLs. Only requests to those endpoints are rewritten; everything else, such as the npm CDNs or a [custom provider's](#building-your-own-provider) own API, is requested directly, as is everything when `apiBase` is unset.

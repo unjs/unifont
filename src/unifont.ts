@@ -12,12 +12,15 @@ export interface UnifontOptions {
    * (browsers, web containers) that cannot call the provider APIs directly. Providers whose APIs
    * are already reachable cross-origin, such as `npm`, are unaffected.
    *
-   * **Experimental.** `https://proxy.unifont.dev` is provided for reproductions and playgrounds
-   * only: it is best-effort, rate-limited at our discretion, and may change or disappear without
-   * notice. Deploy your own if you need one in production.
+   * Defaults to `https://proxy.unifont.dev` in a browser or a StackBlitz web container, where the
+   * provider APIs are unreachable anyway, and to no proxy elsewhere. Pass `false` to always
+   * request the provider APIs directly.
+   *
+   * **Experimental.** `https://proxy.unifont.dev` is best-effort, rate-limited at our discretion,
+   * and may change or disappear without notice. Deploy your own if you need one in production.
    * @example 'https://proxy.unifont.dev'
    */
-  apiBase?: string
+  apiBase?: string | false
 }
 
 type ExtractFamilyOptions<T extends Provider> = Exclude<
