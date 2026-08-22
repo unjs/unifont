@@ -41,7 +41,7 @@
     "@antfu/eslint-config": "9.3.0",
     "@types/css-tree": "3.2.0",
     "@types/node": "24.13.3",
-    "@vitest/coverage-v8": "4.1.10",
+    "@vitest/coverage-v8": "4.1.11",
     "bumpp": "12.2.1",
     "changelogithub": "15.0.4",
     "eslint": "10.9.0",
@@ -52,7 +52,7 @@
     "typescript": "6.0.3",
     "unstorage": "1.17.5",
     "vite": "8.2.1",
-    "vitest": "4.1.10"
+    "vitest": "4.1.11"
   },
   "simple-git-hooks": {
     "pre-commit": "npx lint-staged"
