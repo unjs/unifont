@@ -48,6 +48,24 @@ const { fonts, fallbacks } = await unifont.resolveFont('Poppins')
 
 The following providers are built-in but you can build [custom providers](#building-your-own-provider) too.
 
+### Using providers in the browser
+
+Apart from `npm`, no built-in provider's API can be called from a browser or a web container. Set `apiBase` to a deployment of the [proxy in this repository](./proxy) and requests to those APIs are routed through it:
+
+```js
+import { createUnifont, providers } from 'unifont'
+
+const unifont = await createUnifont([
+  providers.google(),
+  providers.bunny(),
+], { apiBase: 'https://proxy.unifont.dev' })
+```
+
+The proxy serves a fixed list of upstream endpoints, not arbitrary URLs. Only requests to those endpoints are rewritten; everything else, such as the npm CDNs or a [custom provider's](#building-your-own-provider) own API, is requested directly, as is everything when `apiBase` is unset.
+
+> [!WARNING]
+> `https://proxy.unifont.dev` is **experimental and not for production use**. It exists so that reproductions and playgrounds work in web containers such as StackBlitz. It is best-effort, may be rate-limited, and may change or disappear without notice. If you need a proxy in production, [deploy your own](./proxy) and point `apiBase` at it.
+
 ### Adobe
 
 A provider for [Adobe Fonts](https://fonts.adobe.com/).
@@ -729,7 +747,7 @@ export const myProvider = defineFontProvider('my-provider', async (options: MyPr
 })
 ```
 
-The context (`ctx`) gives access to the [`storage`](#storage), allowing you to cache results. We'll see how below.
+The context (`ctx`) gives access to the [`storage`](#storage), allowing you to cache results, and to `ctx.fetch`, which retries transient failures and honours [`apiBase`](#using-providers-in-the-browser). We'll see how below.
 
 ### Initialization
 
@@ -739,7 +757,7 @@ The callback runs when a `Unifont` instance is created. It is used for initializ
 import { defineFontProvider } from 'unifont'
 
 export const myProvider = defineFontProvider('my-provider', async (options, ctx) => {
-  const fonts: { name: string, cssUrl: string }[] = await ctx.storage.getItem('my-provider:meta.json', () => fetch('https://api.example.com/fonts.json').then(res => res.json()))
+  const fonts: { name: string, cssUrl: string }[] = await ctx.storage.getItem('my-provider:meta.json', () => ctx.fetch('https://api.example.com/fonts.json').then(res => res.json()))
 
   // ...
 })

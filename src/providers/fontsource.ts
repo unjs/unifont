@@ -1,7 +1,6 @@
 import type { FontFaceData, ResolveFontOptions } from '../types'
 
 import { hash } from 'ohash'
-import { fetchWithRetries } from '../fetch'
 import { cleanFontFaces, defineFontProvider, prepareWeights } from '../utils'
 
 const BASE_URL = 'https://api.fontsource.org/v1'
@@ -31,7 +30,7 @@ function getFallbacks(category: string): string[] | undefined {
 }
 
 export default defineFontProvider('fontsource', async (_options, ctx) => {
-  const fonts = await ctx.storage.getItem('fontsource:meta.json', () => fetchWithRetries(`${BASE_URL}/fonts`).then(res => res.json() as Promise<FontsourceFontMeta[]>))
+  const fonts = await ctx.storage.getItem('fontsource:meta.json', () => ctx.fetch(`${BASE_URL}/fonts`).then(res => res.json() as Promise<FontsourceFontMeta[]>))
   const familyMap = new Map<string, FontsourceFontMeta>()
 
   for (const meta of fonts) {
@@ -49,7 +48,7 @@ export default defineFontProvider('fontsource', async (_options, ctx) => {
     if (weights.length === 0 || styles.length === 0)
       return []
 
-    const fontDetail = await fetchWithRetries(`${BASE_URL}/fonts/${font.id}`).then(res => res.json() as Promise<FontsourceFontDetail>)
+    const fontDetail = await ctx.fetch(`${BASE_URL}/fonts/${font.id}`).then(res => res.json() as Promise<FontsourceFontDetail>)
     const fontFaceData: FontFaceData[] = []
 
     for (const subset of subsets) {
@@ -57,7 +56,7 @@ export default defineFontProvider('fontsource', async (_options, ctx) => {
         for (const { weight, variable } of weights) {
           if (variable) {
             try {
-              const variableAxes = await ctx.storage.getItem(`fontsource:${font.family}-axes.json`, () => fetchWithRetries(`${BASE_URL}/variable/${font.id}`).then(res => res.json() as Promise<FontsourceVariableFontDetail>))
+              const variableAxes = await ctx.storage.getItem(`fontsource:${font.family}-axes.json`, () => ctx.fetch(`${BASE_URL}/variable/${font.id}`).then(res => res.json() as Promise<FontsourceVariableFontDetail>))
               if (variableAxes && variableAxes.axes.wght) {
                 const axisSlug = pickFontsourceAxisSlug(Object.keys(variableAxes.axes))
                 fontFaceData.push({

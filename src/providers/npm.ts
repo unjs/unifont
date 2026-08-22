@@ -5,7 +5,6 @@ import { fileURLToPath, pathToFileURL } from 'node:url'
 import { hash } from 'ohash'
 
 import { extractFontFaceData } from '../css/parse'
-import { fetchWithRetries } from '../fetch'
 import { cleanFontFaces, defineFontProvider } from '../utils'
 
 export interface NpmProviderOptions {
@@ -463,7 +462,7 @@ export default defineFontProvider('npm', (providerOptions: NpmProviderOptions, c
   }
 
   async function resolveFromCdn(pkgName: string, pkgVersion: string, cssFiles: string[], family: string, formats: ResolveFontOptions['formats']): Promise<FontFaceData[] | null> {
-    const stylesheets = await Promise.all(cssFiles.map(cssFile => fetchWithRetries(`${cdn}/${pkgName}@${pkgVersion}/${cssFile}`).then(res => res.text()).catch(() => null)))
+    const stylesheets = await Promise.all(cssFiles.map(cssFile => ctx.fetch(`${cdn}/${pkgName}@${pkgVersion}/${cssFile}`).then(res => res.text()).catch(() => null)))
 
     const fontFaces: FontFaceData[] = []
     for (const css of stylesheets) {

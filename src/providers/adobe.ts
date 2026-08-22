@@ -1,16 +1,15 @@
-import type { ResolveFontOptions } from '../types'
+import type { ProviderContext, ResolveFontOptions } from '../types'
 
 import { hash } from 'ohash'
 import { extractFontFaceData } from '../css/parse'
-import { fetchWithRetries } from '../fetch'
 import { defineFontProvider, prepareWeights } from '../utils'
 
 export interface AdobeProviderOptions {
   id: string[] | string
 }
 
-async function getAdobeFontMeta(id: string): Promise<AdobeFontKit> {
-  const { kit } = await fetchWithRetries(`https://typekit.com/api/v1/json/kits/${id}/published`).then(res => res.json() as Promise<{ kit: AdobeFontKit }>)
+async function getAdobeFontMeta(ctx: ProviderContext, id: string): Promise<AdobeFontKit> {
+  const { kit } = await ctx.fetch(`https://typekit.com/api/v1/json/kits/${id}/published`).then(res => res.json() as Promise<{ kit: AdobeFontKit }>)
   return kit
 }
 
@@ -43,11 +42,11 @@ export default defineFontProvider('adobe', async (options: AdobeProviderOptions,
       let meta: AdobeFontKit
       const key = `adobe:meta-${id}.json`
       if (bypassCache) {
-        meta = await getAdobeFontMeta(id)
+        meta = await getAdobeFontMeta(ctx, id)
         await ctx.storage.setItem(key, meta)
       }
       else {
-        meta = await ctx.storage.getItem(key, () => getAdobeFontMeta(id))
+        meta = await ctx.storage.getItem(key, () => getAdobeFontMeta(ctx, id))
       }
 
       if (!meta) {
@@ -96,7 +95,7 @@ export default defineFontProvider('adobe', async (options: AdobeProviderOptions,
       if (styles.length === 0) {
         continue
       }
-      const css = await fetchWithRetries(`https://use.typekit.net/${kit.id}.css`).then(res => res.text())
+      const css = await ctx.fetch(`https://use.typekit.net/${kit.id}.css`).then(res => res.text())
 
       // TODO: Not sure whether this css_names array always has a single element. Still need to investigate.
       const cssName = font.css_names[0] ?? family.toLowerCase().split(' ').join('-')

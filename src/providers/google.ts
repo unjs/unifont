@@ -2,7 +2,6 @@ import type { FontFaceData, FontFormat, ResolveFontOptions } from '../types'
 
 import { hash } from 'ohash'
 import { extractFontFaceData } from '../css/parse'
-import { fetchWithRetries } from '../fetch'
 import { cleanFontFaces, defineFontProvider, prepareWeights, splitCssIntoSubsets } from '../utils'
 
 type VariableAxis = 'opsz' | 'slnt' | 'wdth' | (string & {})
@@ -47,6 +46,11 @@ export const userAgents: Partial<Record<FontFormat, string>> = {
   woff2: 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/121.0.0.0 Safari/537.36',
 }
 
+/** Recovers the format a request is asking Google for, for callers that cannot set `user-agent`. */
+export function formatFromUserAgent(userAgent: string | null): FontFormat | undefined {
+  return (Object.keys(userAgents) as FontFormat[]).find(format => userAgents[format] === userAgent)
+}
+
 // There are others like display and handwriting but these are not valid
 const VALID_FALLBACKS: Record<string, string> = {
   'Sans Serif': 'sans-serif',
@@ -62,7 +66,7 @@ function getFallbacks(category: string): string[] | undefined {
 }
 
 export default defineFontProvider('google', async (providerOptions: GoogleProviderOptions, ctx) => {
-  const { familyMetadataList: googleFonts } = await ctx.storage.getItem('google:meta.json', () => fetchWithRetries('https://fonts.google.com/metadata/fonts').then(res => res.json() as Promise<{ familyMetadataList: FontIndexMeta[] }>))
+  const { familyMetadataList: googleFonts } = await ctx.storage.getItem('google:meta.json', () => ctx.fetch('https://fonts.google.com/metadata/fonts').then(res => res.json() as Promise<{ familyMetadataList: FontIndexMeta[] }>))
 
   const styleMap = {
     italic: '1',
@@ -144,7 +148,7 @@ export default defineFontProvider('google', async (providerOptions: GoogleProvid
       if (glyphs) {
         url += `&text=${encodeURIComponent(glyphs)}`
       }
-      const rawCss = await fetchWithRetries(url, {
+      const rawCss = await ctx.fetch(url, {
         headers: {
           'user-agent': userAgent,
         },
