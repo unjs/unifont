@@ -6,28 +6,48 @@ on:
   pull_request:
     types: [closed]
     branches: [main]
+  # merged release PRs, publish reruns, and prereleases all arrive here
   workflow_dispatch:
+    inputs:
+      prerelease:
+        description: 'Cut a prerelease instead of a normal release, e.g. `beta`, `rc`, or `0`'
+        required: false
+        default: ''
 
 permissions: {}
 
 jobs:
+  # open or update a draft release PR from conventional commits
   pr:
-    if: github.event_name == 'push' && github.ref == format('refs/heads/{0}', github.event.repository.default_branch)
+    if: |
+      !github.event.repository.fork
+      && (
+        (
+          github.event_name == 'push'
+          && github.ref == format('refs/heads/{0}', github.event.repository.default_branch)
+        ) || (
+          github.event_name == 'workflow_dispatch'
+          && !startsWith(github.ref, 'refs/tags/')
+        )
+      )
     runs-on: ubuntu-latest
     permissions:
       contents: write
       pull-requests: write
     steps:
-      - uses: danielroe/uppt/pr@ac5677436f6aa3b06c98b811bd1e9ca0a768c90f # v0.6.3
+      - uses: danielroe/uppt/pr@a270063dd6a75376b151cdfb85c96266c62bd70e # v0.6.6
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
+          prerelease: ${{ inputs.prerelease }}
 
+  # release PR merged: tag it, cut a GitHub release, dispatch the publish run
   release:
     if: |
       github.event_name == 'pull_request'
       && github.event.pull_request.merged == true
       && startsWith(github.event.pull_request.head.ref, 'release/v')
       && github.event.pull_request.head.repo.full_name == github.repository
+      && !github.event.repository.fork
     runs-on: ubuntu-latest
     concurrency:
       group: release-${{ github.event.pull_request.number }}
@@ -36,10 +56,11 @@ jobs:
       contents: write
       actions: write
     steps:
-      - uses: danielroe/uppt/release@ac5677436f6aa3b06c98b811bd1e9ca0a768c90f # v0.6.3
+      - uses: danielroe/uppt/release@a270063dd6a75376b151cdfb85c96266c62bd70e # v0.6.6
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
 
+  # the chained dispatch lands here on the vX.Y.Z tag; build the tarball(s)
   pack:
     if: github.event_name == 'workflow_dispatch' && startsWith(github.ref, 'refs/tags/v')
     runs-on: ubuntu-latest
@@ -51,8 +72,9 @@ jobs:
       files: ${{ steps.pack.outputs.files }}
     steps:
       - id: pack
-        uses: danielroe/uppt/pack@ac5677436f6aa3b06c98b811bd1e9ca0a768c90f # v0.6.3
+        uses: danielroe/uppt/pack@a270063dd6a75376b151cdfb85c96266c62bd70e # v0.6.6
 
+  # stage the prebuilt tarball(s) to npm via OIDC
   publish:
     if: |
       github.event_name == 'workflow_dispatch'
@@ -67,6 +89,6 @@ jobs:
       id-token: write
     environment: npm
     steps:
-      - uses: danielroe/uppt/publish@ac5677436f6aa3b06c98b811bd1e9ca0a768c90f # v0.6.3
+      - uses: danielroe/uppt/publish@a270063dd6a75376b151cdfb85c96266c62bd70e # v0.6.6
         with:
           files: ${{ needs.pack.outputs.files }}
