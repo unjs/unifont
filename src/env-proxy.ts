@@ -13,6 +13,10 @@ import process from 'node:process'
 
 let installed = false
 
+function isDefaultAgent(dispatcher: unknown): boolean {
+  return (dispatcher as { constructor?: { name?: string } })?.constructor?.name === 'Agent'
+}
+
 export async function installProxyDispatcher(): Promise<void> {
   if (installed)
     return
@@ -24,9 +28,8 @@ export async function installProxyDispatcher(): Promise<void> {
   installed = true
 
   try {
-    const { Agent, EnvHttpProxyAgent, getGlobalDispatcher, setGlobalDispatcher } = await import('undici')
-    const current = getGlobalDispatcher()
-    if (current instanceof Agent && !(current instanceof EnvHttpProxyAgent)) {
+    const { EnvHttpProxyAgent, getGlobalDispatcher, setGlobalDispatcher } = await import('undici')
+    if (isDefaultAgent(getGlobalDispatcher())) {
       setGlobalDispatcher(new EnvHttpProxyAgent())
     }
   }
