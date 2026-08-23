@@ -42,11 +42,32 @@ export default defineFontProvider('fontshare', async (_options, ctx) => {
       axis = font.axes.find(e => e.property === 'wght')
     }
 
-    const weights = prepareWeights({
+    const staticWeights = font.styles.filter(s => !s.is_variable).map(s => String(s.weight.weight))
+    const axisRange = axis ? `${axis.range_left} ${axis.range_right}` : undefined
+
+    const weights = new Set<string>()
+    for (const { weight, variable } of prepareWeights({
       inputWeights: options.weights,
       hasVariableWeights: hasVariable && !!axis,
-      weights: font.styles.map(s => String(s.weight.weight)),
-    }).map(w => w.weight)
+      weights: staticWeights,
+    })) {
+      if (!variable) {
+        weights.add(weight)
+        continue
+      }
+      const [min, max] = weight.split(' ').map(Number) as [number, number]
+      // fontshare serves the variable file as-is, so it can only satisfy a range
+      // that covers the whole axis; narrower ranges resolve to static weights
+      if (axis && min <= axis.range_left && max >= axis.range_right) {
+        weights.add(axisRange!)
+        continue
+      }
+      for (const staticWeight of staticWeights) {
+        if (Number(staticWeight) >= min && Number(staticWeight) <= max) {
+          weights.add(staticWeight)
+        }
+      }
+    }
 
     for (const style of font.styles) {
       if (style.is_italic && !options.styles.includes('italic')) {
@@ -55,10 +76,10 @@ export default defineFontProvider('fontshare', async (_options, ctx) => {
       if (!style.is_italic && !options.styles.includes('normal')) {
         continue
       }
-      if (style.is_variable && axis && !weights.includes(`${axis.range_left} ${axis.range_right}`)) {
+      if (style.is_variable && (!axisRange || !weights.has(axisRange))) {
         continue
       }
-      if (!style.is_variable && !weights.includes(String(style.weight.weight))) {
+      if (!style.is_variable && !weights.has(String(style.weight.weight))) {
         continue
       }
       numbers.push(style.weight.number)
