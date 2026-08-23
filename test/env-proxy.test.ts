@@ -15,6 +15,24 @@ function dispatcherName(): string {
   return getGlobalDispatcher().constructor.name
 }
 
+function foreignDispatcher(name: string) {
+  const Cls = class {
+    dispatch() {
+      return true
+    }
+
+    close() {
+      return Promise.resolve()
+    }
+
+    destroy() {
+      return Promise.resolve()
+    }
+  }
+  Object.defineProperty(Cls, 'name', { value: name })
+  return new Cls()
+}
+
 describe('installProxyDispatcher', () => {
   const originalDispatcher = getGlobalDispatcher()
   const proxyEnvKeys = ['HTTPS_PROXY', 'HTTP_PROXY', 'https_proxy', 'http_proxy'] as const
@@ -73,6 +91,25 @@ describe('installProxyDispatcher', () => {
     await install()
     expect(getGlobalDispatcher()).toBe(custom)
     expect(dispatcherName()).toBe('ProxyAgent')
+  })
+
+  it('replaces a default agent installed by a different copy of undici', async () => {
+    process.env.HTTPS_PROXY = 'http://127.0.0.1:9999'
+    const foreign = foreignDispatcher('Agent')
+    setGlobalDispatcher(foreign as never)
+    const install = await freshInstall()
+    await install()
+    expect(getGlobalDispatcher()).not.toBe(foreign)
+    expect(dispatcherName()).toBe('EnvHttpProxyAgent')
+  })
+
+  it('does not trample a custom dispatcher from a different copy of undici', async () => {
+    process.env.HTTPS_PROXY = 'http://127.0.0.1:9999'
+    const foreign = foreignDispatcher('ProxyAgent')
+    setGlobalDispatcher(foreign as never)
+    const install = await freshInstall()
+    await install()
+    expect(getGlobalDispatcher()).toBe(foreign)
   })
 
   it('is idempotent across repeated calls', async () => {
