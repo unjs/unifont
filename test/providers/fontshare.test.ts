@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest'
+import { afterEach, describe, expect, it } from 'vitest'
 import { createUnifont, providers } from '../../src'
 import { mockFetchReturn, sanitizeFontSource } from '../utils'
 
@@ -173,6 +173,77 @@ describe('fontshare', () => {
       })
       expect(fonts.length).toBe(1)
       expect(fonts.flatMap(font => font.src.map(source => 'name' in source ? source.name : source.format))).toStrictEqual(['woff2', 'woff', 'truetype'])
+    })
+  })
+
+  describe('weight ranges', () => {
+    const staticStyles = [200, 300, 400, 500, 600, 700, 800].map(weight => ({
+      is_italic: false,
+      is_variable: false,
+      weight: { number: weight, weight },
+    }))
+
+    const meta = [{
+      slug: 'fixture',
+      name: 'Fixture',
+      category: 'Sans Serif',
+      axes: [{ name: 'wght', property: 'wght', range_default: 400, range_left: 200, range_right: 800 }],
+      styles: [...staticStyles, { is_italic: false, is_variable: true, weight: { number: 1, weight: 0 } }],
+    }]
+
+    let requestedNumbers: string[] = []
+    let restore: (() => void) | undefined
+
+    afterEach(() => {
+      restore?.()
+      restore = undefined
+      requestedNumbers = []
+    })
+
+    function mockApi() {
+      restore?.()
+      restore = mockFetchReturn(/api\.fontshare\.com/, (request) => {
+        const url = String(request)
+        if (url.includes('/fonts?')) {
+          return Promise.resolve({ ok: true, status: 200, json: () => Promise.resolve({ fonts: meta, has_more: false }) })
+        }
+        requestedNumbers = url.split('@')[1]!.split(',')
+        const css = requestedNumbers.map(number => `@font-face {
+          font-family: 'Fixture';
+          font-style: normal;
+          font-weight: ${number === '1' ? '200 800' : number};
+          src: url(https://cdn.fontshare.com/${number}.woff2) format('woff2');
+        }`).join('\n')
+        return Promise.resolve({ ok: true, status: 200, text: () => Promise.resolve(css) })
+      })
+    }
+
+    async function resolve(weights: string[]) {
+      mockApi()
+      const unifont = await createUnifont([providers.fontshare()])
+      const { fonts } = await unifont.resolveFont('Fixture', { weights, styles: ['normal'], subsets: ['latin'], formats: ['woff2'] })
+      return fonts
+    }
+
+    it('should resolve a range to the static weights it covers', async () => {
+      const fonts = await resolve(['400 700'])
+      expect(fonts.map(font => font.weight)).toStrictEqual([400, 500, 600, 700])
+    })
+
+    it('should resolve a range covering the axis to the variable font', async () => {
+      const fonts = await resolve(['100 900'])
+      expect(fonts.map(font => font.weight)).toStrictEqual([[200, 800]])
+      expect(requestedNumbers).toStrictEqual(['1'])
+    })
+
+    it('should resolve a range identically to the equivalent discrete weights', async () => {
+      const range = await resolve(['300 500'])
+      const discrete = await resolve(['300', '400', '500'])
+      expect(range).toStrictEqual(discrete)
+    })
+
+    it('should resolve nothing for a range outside the available weights', async () => {
+      expect(await resolve(['900 1000'])).toStrictEqual([])
     })
   })
 
