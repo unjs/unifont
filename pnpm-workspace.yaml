@@ -1,10 +1,19 @@
+minimumReleaseAgeExclude:
+  - '@nuxt/cli-nightly@4.0.0-20260824-125839-d3213ce'
+
 packages:
+  - docs
   - playground
   - proxy
 
 overrides:
+  '@nuxt/cli': 'npm:@nuxt/cli-nightly@4.0.0-20260824-125839-d3213ce'
+  ofetch: ^2.0.0-alpha.3
   unifont: 'link:.'
 
 allowBuilds:
+  '@parcel/watcher': false
   esbuild: false
+  sharp: true
   simple-git-hooks: true
+  unrs-resolver: false

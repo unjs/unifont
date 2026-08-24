@@ -7,6 +7,10 @@
 
 > Framework agnostic tools for accessing data from font CDNs and providers.
 
+[unifont.dev](https://unifont.dev) is the documentation site, a searchable catalogue of every family the
+providers will list, a per-family inspector (metadata, specimen, unicode coverage, ready-to-paste CSS), a
+provider comparison view, and a public HTTP API. It lives in [`docs/`](./docs) and runs on this package.
+
 ## Installation
 
 Using npm:
@@ -71,7 +75,9 @@ const unifont = await createUnifont([providers.google()], {
 The proxy serves a fixed list of upstream endpoints, not arbitrary URLs. Only requests to those endpoints are rewritten; everything else, such as the npm CDNs or a [custom provider's](#building-your-own-provider) own API, is requested directly, as is everything when `apiBase` is unset.
 
 > [!WARNING]
-> `https://proxy.unifont.dev` is **experimental and not for production use**. It exists so that reproductions and playgrounds work in web containers such as StackBlitz. It is best-effort, may be rate-limited, and may change or disappear without notice. If you need a proxy in production, [deploy your own](./proxy) and point `apiBase` at it.
+> `https://proxy.unifont.dev` is **experimental and not for production use**. It is a convenience, so that reproductions and playgrounds work in web containers such as StackBlitz without anyone deploying anything first. It is best-effort, may be rate-limited, and may change or disappear without notice.
+>
+> The proxy is built to be self-hosted: it is a small Nitro app in [this repository](./proxy) with no database, credentials or environment variables. Deploy that directory and point `apiBase` at it.
 
 ### Adobe
 
@@ -912,6 +918,19 @@ export const myProvider = defineFontProvider('my-provider', async (options, ctx)
   }
 })
 ```
+
+## Website
+
+The site in [`docs/`](./docs) is a Nuxt app. It needs `unifont` built first, because the workspace links the
+package from the repository root:
+
+```bash
+pnpm build
+pnpm docs
+```
+
+Content lives in [`docs/content`](./docs/content) as Markdown, served through
+[Comark Content](https://content.comark.dev). Everything else is generated from `unifont` at request time.
 
 ## 💻 Development
 

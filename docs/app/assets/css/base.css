@@ -1,0 +1,162 @@
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html {
+  overflow-x: clip;
+  -webkit-text-size-adjust: 100%;
+}
+
+body {
+  overflow-x: clip;
+  margin: 0;
+  background: var(--color-paper);
+  color: var(--color-ink);
+  font-family: var(--font-body);
+  font-size: var(--text-base);
+  font-weight: var(--weight-body);
+  line-height: 1.6;
+  font-variant-numeric: oldstyle-nums;
+  font-optical-sizing: auto;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  overscroll-behavior-y: none;
+}
+
+h1,
+h2,
+h3,
+h4 {
+  margin: 0;
+  font-family: var(--font-display);
+  font-style: normal;
+  font-weight: var(--weight-display);
+  line-height: 1.1;
+  letter-spacing: -0.02em;
+  text-wrap: balance;
+  overflow-wrap: anywhere;
+  min-width: 0;
+}
+
+p,
+ul,
+ol,
+dl,
+figure,
+pre {
+  margin: 0;
+}
+
+a {
+  color: inherit;
+  text-decoration-color: var(--color-rule-strong);
+  text-decoration-thickness: 1px;
+  text-underline-offset: 0.2em;
+  transition: text-decoration-color var(--dur-micro) var(--ease-out);
+}
+
+a:hover {
+  text-decoration-color: var(--color-ink);
+}
+
+/* For links with no permanent underline: the rule drawing in from the left is the hover signal. */
+.underline-reveal {
+  position: relative;
+  text-decoration: none;
+}
+
+.underline-reveal::after {
+  content: '';
+  position: absolute;
+  inset-inline: 0;
+  bottom: -0.1em;
+  height: 1px;
+  background: currentcolor;
+  transform: scaleX(0);
+  transform-origin: 0 50%;
+  transition: transform var(--dur-short) var(--ease-out);
+}
+
+.underline-reveal:hover::after,
+.underline-reveal:focus-visible::after {
+  transform: scaleX(1);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .underline-reveal::after {
+    transition-duration: 0s;
+  }
+}
+
+:focus-visible {
+  outline: var(--rule-heavy) solid var(--color-focus);
+  outline-offset: 2px;
+  border-radius: var(--radius-xs);
+}
+
+button,
+input,
+select,
+textarea {
+  font: inherit;
+  color: inherit;
+}
+
+code,
+kbd,
+samp,
+pre {
+  font-family: var(--font-mono);
+  font-size: 0.9em;
+  font-variant-numeric: tabular-nums;
+}
+
+/* Paths and identifiers offer no break opportunities, so at 320px they leave the viewport. */
+:not(pre) > code {
+  overflow-wrap: anywhere;
+}
+
+::selection {
+  background: var(--color-accent-quiet);
+  color: var(--color-ink-strong);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 150ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 150ms !important;
+  }
+}
+
+.skip {
+  position: absolute;
+  top: var(--space-xs);
+  left: var(--space-xs);
+  z-index: var(--z-toast);
+  padding: var(--space-xs) var(--space-sm);
+  background: var(--color-paper);
+  border: var(--rule-hair) solid var(--color-ink);
+  font-size: var(--text-sm);
+  text-decoration: none;
+  transform: translateY(-200%);
+}
+
+.skip:focus-visible {
+  transform: none;
+}
+
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}

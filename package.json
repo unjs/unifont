@@ -22,6 +22,8 @@
   "scripts": {
     "build": "tsdown",
     "dev": "vitest dev",
+    "docs": "pnpm --filter unifont-site dev",
+    "docs:build": "pnpm --filter unifont-site build",
     "lint": "eslint .",
     "prepare": "simple-git-hooks",
     "prepack": "pnpm build",

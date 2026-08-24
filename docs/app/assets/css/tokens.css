@@ -1,0 +1,124 @@
+:root {
+  /* Paper and ink: warm-tinted, never #fff / #000 */
+  --color-paper: oklch(98.4% 0.004 70);
+  --color-paper-2: oklch(96.5% 0.006 70);
+  --color-paper-3: oklch(94% 0.008 70);
+  --color-rule: oklch(88% 0.007 70);
+  --color-rule-strong: oklch(76% 0.008 70);
+  /* The lightest that still clears 4.5:1 on all three paper tints. */
+  --color-neutral: oklch(51% 0.008 70);
+  --color-muted: oklch(46% 0.009 65);
+  --color-ink: oklch(21% 0.012 60);
+  --color-ink-strong: oklch(14% 0.014 60);
+
+  /*
+   * A single accent, used only as a signal: focus rings and the on-state of something the reader
+   * chose. The site exists to display other people's typefaces, so colour anywhere else competes
+   * with the specimen. Code literals and the share card's rule are the two exceptions.
+   */
+  --color-accent: oklch(55% 0.19 40);
+  --color-accent-quiet: oklch(94% 0.03 45);
+  --color-focus: oklch(52% 0.2 40);
+
+  /* Status: paired with a glyph, never colour alone */
+  --color-positive: oklch(48% 0.11 150);
+  /* The warning line is set at `--text-xs`, so it needs the full 4.5:1. */
+  --color-warning: oklch(52% 0.13 75);
+  --color-negative: oklch(52% 0.17 25);
+
+  /* Type: display + body + one machine-text outlier (2+1) */
+  --font-display: 'Newsreader', ui-serif, Charter, Georgia, serif;
+  --font-body: 'Switzer', ui-sans-serif, system-ui, sans-serif;
+  --font-mono: 'JetBrains Mono', ui-monospace, monospace;
+
+  /* Major third from 16px, except `--text-xs`, held at the 12px floor for body text. */
+  --text-xs: 0.75rem;
+  --text-sm: 0.8125rem;
+  --text-base: 1rem;
+  --text-md: 1.25rem;
+  --text-lg: 1.5625rem;
+  --text-xl: 1.9531rem;
+  --text-2xl: 2.4414rem;
+  --text-3xl: 3.0518rem;
+  --text-4xl: 3.8147rem;
+  --text-display-s: clamp(2.25rem, 4vw + 0.5rem, 3.5rem);
+  --text-display: clamp(2.75rem, 5vw + 1rem, 5.25rem);
+
+  --weight-body: 350;
+  --weight-body-strong: 500;
+  --weight-display: 600;
+
+  /* 4pt spacing scale, named by role */
+  --space-3xs: 0.125rem;
+  --space-2xs: 0.25rem;
+  --space-xs: 0.5rem;
+  --space-sm: 0.75rem;
+  --space-md: 1rem;
+  --space-lg: 1.5rem;
+  --space-xl: 2.5rem;
+  --space-2xl: 4rem;
+  --space-3xl: 6rem;
+  --space-4xl: 9rem;
+
+  --rule-hair: 1px;
+  --rule-heavy: 2px;
+
+  --radius-none: 0;
+  --radius-xs: 2px;
+  --radius-sm: 4px;
+  --radius-pill: 999px;
+
+  --color-scrim: oklch(21% 0.012 60 / 0.28);
+
+  --shadow-whisper: 0 1px 2px oklch(21% 0.012 60 / 0.05);
+  --shadow-hairline: 0 0 0 1px oklch(30% 0.01 70 / 0.06);
+
+  --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-in: cubic-bezier(0.7, 0, 0.84, 0);
+  --ease-in-out: cubic-bezier(0.65, 0, 0.35, 1);
+
+  --dur-micro: 120ms;
+  --dur-short: 220ms;
+  --dur-long: 420ms;
+
+  --z-base: 1;
+  --z-raised: 10;
+  --z-dropdown: 100;
+  --z-sticky: 200;
+  --z-modal: 400;
+  --z-toast: 500;
+  --z-tooltip: 600;
+
+  --measure: 66ch;
+  --measure-tight: 48ch;
+  --page-max: 84rem;
+  --page-pad: clamp(1.25rem, 5vw, 4rem);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --color-paper: oklch(15% 0.008 70);
+    --color-paper-2: oklch(18.5% 0.009 70);
+    --color-paper-3: oklch(22% 0.01 70);
+    --color-rule: oklch(30% 0.009 70);
+    --color-rule-strong: oklch(42% 0.01 70);
+    /* Lifted to clear 4.5:1 against the raised code-block surface. */
+    --color-neutral: oklch(64% 0.009 70);
+    --color-muted: oklch(72% 0.008 70);
+    --color-ink: oklch(93% 0.006 75);
+    --color-ink-strong: oklch(97% 0.005 75);
+
+    --color-accent: oklch(70% 0.16 42);
+    --color-accent-quiet: oklch(28% 0.05 42);
+    --color-scrim: oklch(8% 0.01 70 / 0.5);
+    --color-focus: oklch(72% 0.17 42);
+
+    --color-positive: oklch(72% 0.1 150);
+    --color-warning: oklch(78% 0.11 80);
+    --color-negative: oklch(70% 0.15 28);
+
+    /* Light type on dark paper carries more optical weight */
+    --weight-body: 300;
+    --weight-body-strong: 450;
+  }
+}
