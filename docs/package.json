@@ -8,7 +8,7 @@
     "dev": "nuxt dev",
     "generate": "nuxt generate",
     "lint": "eslint .",
-    "postinstall": "nuxt prepare",
+    "postinstall": "pnpm --filter unifont build && nuxt prepare",
     "preview": "nuxt preview",
     "test:types": "vue-tsc -b --noEmit",
     "test": "vitest run",
