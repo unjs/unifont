@@ -1,0 +1,47 @@
+{
+  "name": "unifont-site",
+  "license": "MIT",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "nuxt build",
+    "dev": "nuxt dev",
+    "generate": "nuxt generate",
+    "lint": "eslint .",
+    "postinstall": "pnpm --filter unifont build && nuxt prepare",
+    "preview": "nuxt preview",
+    "test:types": "vue-tsc -b --noEmit",
+    "test": "vitest run",
+    "test:perf": "node test/perf/memory.mjs",
+    "test:watch": "vitest",
+    "test:a11y": "playwright test",
+    "test:a11y:advisory": "A11Y_ADVISORY=1 playwright test axe.spec.ts"
+  },
+  "dependencies": {
+    "@comark/vue": "^0.6.2",
+    "@nuxt/eslint": "^1.15.2",
+    "@nuxt/fonts": "^0.14.0",
+    "@takumi-rs/core": "^2.11.0",
+    "@takumi-rs/helpers": "^2.12.0",
+    "comark-content": "^0.3.0",
+    "fontaine": "0.8.0",
+    "fontless": "^0.2.1",
+    "microlighter": "^2.1.0",
+    "nuxt": "npm:nuxt-nightly@5x",
+    "unifont": "link:..",
+    "vue": "3.5.41"
+  },
+  "devDependencies": {
+    "@nuxt/test-utils": "^4.1.0",
+    "@playwright/test": "^1.62.1",
+    "@vitejs/devtools-kit": "^0.5.2",
+    "axe-core": "^4.13.0",
+    "eslint": "10.9.0",
+    "eslint-plugin-vuejs-accessibility": "^2.6.0",
+    "nitro": "3.0.260610-beta",
+    "playwright": "^1.62.1",
+    "typescript": "6.0.3",
+    "vitest": "4.1.11",
+    "vue-tsc": "3.3.11"
+  }
+}

@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32">
+  <title>unifont</title>
+  <!-- For dark browser chrome: paper glyph. Same mark as favicon-light.svg, inverted. -->
+  <g fill="#fcf9f7">
+    <rect x="7" y="8" width="4" height="12" rx="0.5" />
+    <rect x="7" y="17" width="14" height="4" rx="0.5" />
+    <rect x="17" y="8" width="4" height="16" rx="0.5" />
+  </g>
+  <rect x="7" y="26" width="18" height="2" fill="#e8590c" />
+</svg>

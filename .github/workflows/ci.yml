@@ -55,6 +55,34 @@ jobs:
         env:
           CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
 
+  a11y:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+      - run: corepack enable
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7
+        with:
+          node-version: lts/-1
+          cache: pnpm
+
+      - name: 📦 Install dependencies
+        run: pnpm install
+
+      - name: 🎭 Install Chromium
+        run: pnpm --filter docs exec playwright install --with-deps chromium
+
+      - name: ♿ Accessibility
+        run: pnpm --filter docs test:a11y
+
+      - name: 📄 Upload report
+        if: failure()
+        uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4 # v5
+        with:
+          name: playwright-report
+          path: docs/playwright-report
+          retention-days: 7
+
   proxy:
     runs-on: ubuntu-latest
 

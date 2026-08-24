@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32">
+  <title>unifont</title>
+  <!-- For light browser chrome: ink glyph. Colours are the ink and accent tokens as hex, since a
+       favicon cannot reach the stylesheet's custom properties. -->
+  <g fill="#1d1713">
+    <rect x="7" y="8" width="4" height="12" rx="0.5" />
+    <rect x="7" y="17" width="14" height="4" rx="0.5" />
+    <rect x="17" y="8" width="4" height="16" rx="0.5" />
+  </g>
+  <rect x="7" y="26" width="18" height="2" fill="#c73800" />
+</svg>

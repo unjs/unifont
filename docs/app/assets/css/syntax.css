@@ -1,0 +1,94 @@
+/* A near-monochrome MicroLighter theme built from the site palette. */
+
+[data-syntax-theme='unifont'] {
+  --syntax-comment: var(--color-neutral);
+  --syntax-keyword: var(--color-ink-strong);
+  --syntax-operator: var(--color-neutral);
+  /* Literals are what people scan a snippet for, so they get the accent. */
+  --syntax-string: var(--color-accent);
+  --syntax-constant: var(--color-accent);
+  --syntax-function: var(--color-ink);
+  --syntax-type: var(--color-muted);
+  --syntax-variable: var(--color-ink);
+  --syntax-property: var(--color-muted);
+  --syntax-tag: var(--color-ink-strong);
+  --syntax-selector: var(--color-ink);
+  /* Diff markers */
+  --syntax-inserted: var(--color-positive);
+  --syntax-deleted: var(--color-negative);
+}
+
+[data-syntax-theme='unifont'] ::highlight(comment),
+[data-syntax-theme='unifont'] ::highlight(quote) {
+  color: var(--syntax-comment);
+}
+
+[data-syntax-theme='unifont'] ::highlight(keyword),
+[data-syntax-theme='unifont'] ::highlight(storage),
+[data-syntax-theme='unifont'] ::highlight(at-rule),
+[data-syntax-theme='unifont'] ::highlight(doctype),
+[data-syntax-theme='unifont'] ::highlight(important),
+[data-syntax-theme='unifont'] ::highlight(section) {
+  color: var(--syntax-keyword);
+}
+
+[data-syntax-theme='unifont'] ::highlight(operator),
+[data-syntax-theme='unifont'] ::highlight(punctuation) {
+  color: var(--syntax-operator);
+}
+
+[data-syntax-theme='unifont'] ::highlight(string),
+[data-syntax-theme='unifont'] ::highlight(regexp),
+[data-syntax-theme='unifont'] ::highlight(attribute-value),
+[data-syntax-theme='unifont'] ::highlight(link),
+[data-syntax-theme='unifont'] ::highlight(raw) {
+  color: var(--syntax-string);
+}
+
+[data-syntax-theme='unifont'] ::highlight(numeric),
+[data-syntax-theme='unifont'] ::highlight(boolean),
+[data-syntax-theme='unifont'] ::highlight(constant),
+[data-syntax-theme='unifont'] ::highlight(symbol),
+[data-syntax-theme='unifont'] ::highlight(character-entity),
+[data-syntax-theme='unifont'] ::highlight(anchor),
+[data-syntax-theme='unifont'] ::highlight(entity) {
+  color: var(--syntax-constant);
+}
+
+[data-syntax-theme='unifont'] ::highlight(function),
+[data-syntax-theme='unifont'] ::highlight(decorator),
+[data-syntax-theme='unifont'] ::highlight(animation) {
+  color: var(--syntax-function);
+}
+
+[data-syntax-theme='unifont'] ::highlight(type),
+[data-syntax-theme='unifont'] ::highlight(support) {
+  color: var(--syntax-type);
+}
+
+[data-syntax-theme='unifont'] ::highlight(variable),
+[data-syntax-theme='unifont'] ::highlight(interpolation) {
+  color: var(--syntax-variable);
+}
+
+[data-syntax-theme='unifont'] ::highlight(property),
+[data-syntax-theme='unifont'] ::highlight(key),
+[data-syntax-theme='unifont'] ::highlight(attribute-name) {
+  color: var(--syntax-property);
+}
+
+[data-syntax-theme='unifont'] ::highlight(tag) {
+  color: var(--syntax-tag);
+}
+
+[data-syntax-theme='unifont'] ::highlight(selector) {
+  color: var(--syntax-selector);
+}
+
+[data-syntax-theme='unifont'] ::highlight(inserted) {
+  color: var(--syntax-inserted);
+}
+
+[data-syntax-theme='unifont'] ::highlight(deleted) {
+  color: var(--syntax-deleted);
+}
