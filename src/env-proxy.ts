@@ -9,7 +9,7 @@
 //   https://nodejs.org/api/cli.html#--use-env-proxy
 //   https://undici.nodejs.org/#/docs/api/EnvHttpProxyAgent
 
-import process from 'node:process'
+import { env } from 'node:process'
 
 let installed = false
 
@@ -21,7 +21,7 @@ export async function installProxyDispatcher(): Promise<void> {
   if (installed)
     return
 
-  const proxyUrl = process.env.HTTPS_PROXY || process.env.HTTP_PROXY || process.env.https_proxy || process.env.http_proxy
+  const proxyUrl = env.HTTPS_PROXY || env.HTTP_PROXY || env.https_proxy || env.http_proxy
   if (!proxyUrl)
     return
 
