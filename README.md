@@ -7,9 +7,11 @@
 
 > Framework agnostic tools for accessing data from font CDNs and providers.
 
-[unifont.dev](https://unifont.dev) is the documentation site, a searchable catalogue of every family the
-providers will list, a per-family inspector (metadata, specimen, unicode coverage, ready-to-paste CSS), a
-provider comparison view, and a public HTTP API. It lives in [`docs/`](./docs) and runs on this package.
+📖 [Documentation](https://unifont.dev/docs) · 🔍 [Catalogue](https://unifont.dev/fonts) · ⚖️ [Compare providers](https://unifont.dev/compare) · 🧩 [HTTP API](https://unifont.dev/api)
+
+[unifont.dev](https://unifont.dev) searches every family the providers will list, inspects any one of them
+(metadata, specimen, unicode coverage, CSS you can paste) and answers the same questions over HTTP. It
+lives in [`docs/`](./docs) and runs on this package.
 
 ## Installation
 
@@ -47,8 +49,6 @@ const properties = await unifont.getFontProperties('Poppins')
 const { fonts, fallbacks } = await unifont.resolveFont('Poppins')
 ```
 
-`unifont` honours the `HTTPS_PROXY` / `HTTP_PROXY` (and lower-case) environment variables for outbound font metadata and binary fetches at build time, so it works behind corporate proxies without extra configuration.
-
 ## Built-in providers
 
 The following providers are built-in but you can build [custom providers](#building-your-own-provider) too.
@@ -64,7 +64,7 @@ import { createUnifont, providers } from 'unifont'
 const unifont = await createUnifont([providers.google()])
 ```
 
-Detection covers browsers and StackBlitz web containers, whose Node process is served by the browser and so is bound by the same CORS rules. Everywhere else the provider APIs are requested directly. Point `apiBase` at your own deployment to override it, or pass `false` to always request the provider APIs directly:
+Point `apiBase` at your own deployment to override it, or pass `false` to always request the provider APIs directly:
 
 ```js
 const unifont = await createUnifont([providers.google()], {
@@ -72,12 +72,10 @@ const unifont = await createUnifont([providers.google()], {
 })
 ```
 
-The proxy serves a fixed list of upstream endpoints, not arbitrary URLs. Only requests to those endpoints are rewritten; everything else, such as the npm CDNs or a [custom provider's](#building-your-own-provider) own API, is requested directly, as is everything when `apiBase` is unset.
-
 > [!WARNING]
-> `https://proxy.unifont.dev` is **experimental and not for production use**. It is a convenience, so that reproductions and playgrounds work in web containers such as StackBlitz without anyone deploying anything first. It is best-effort, may be rate-limited, and may change or disappear without notice.
->
-> The proxy is built to be self-hosted: it is a small Nitro app in [this repository](./proxy) with no database, credentials or environment variables. Deploy that directory and point `apiBase` at it.
+> `https://proxy.unifont.dev` is **experimental and not for production use**. It is a convenience, so that reproductions and playgrounds work in web containers such as StackBlitz without anyone deploying anything first. It is best-effort, may be rate-limited, and may change or disappear without notice. The proxy is built to be self-hosted: deploy [`proxy/`](./proxy) and point `apiBase` at it.
+
+[Resolving in the browser](https://unifont.dev/docs/browser) covers which requests are proxied, which are not, and the `HTTPS_PROXY` / `HTTP_PROXY` handling that lets `unifont` work behind a corporate proxy.
 
 ### Adobe
 
@@ -170,7 +168,7 @@ providers.google({
 })
 ```
 
-Overriden by the `experimental.variableAxis` family option.
+Overridden by the `experimental.variableAxis` family option.
 
 ##### `experimental.glyphs`
 
@@ -190,7 +188,7 @@ providers.google({
 })
 ```
 
-Overriden by the `experimental.glyphs` family option.
+Overridden by the `experimental.glyphs` family option.
 
 #### Family options
 
@@ -277,7 +275,7 @@ providers.googleicons({
 })
 ```
 
-Only available when resolving the new `Material Symbols` icons. Overriden by the `experimental.glyphs` family option.
+Only available when resolving the new `Material Symbols` icons. Overridden by the `experimental.glyphs` family option.
 
 #### Family options
 
@@ -506,7 +504,7 @@ const unifont = await createUnifont([
 
 Allows caching the results of font APIs to avoid unnecessary hits to them. Uses a memory cache by default.
 
-This storage type is compatible with [`unstorage`](https://unstorage.unjs.io.):
+This storage type is compatible with [`unstorage`](https://unstorage.unjs.io):
 
 ```ts
 import { createUnifont, providers } from 'unifont'
@@ -578,7 +576,7 @@ It accepts options as the 2nd parameter. Each provider chooses to support them o
 - Type: `string[]`
 - Default: `['400']`
 
-Specifies what weights to retrieve. Variable weights must me in the format `<min> <max>`:
+Specifies what weights to retrieve. Variable weights must be in the format `<min> <max>`:
 
 ```js
 import { createUnifont, providers } from 'unifont'
@@ -671,7 +669,7 @@ const unifont = await createUnifont([
 ])
 
 const { fonts } = await unifont.resolveFont('Poppins', {
-  formats: ['woff2', 'woff2']
+  formats: ['woff2', 'woff']
 })
 ```
 
@@ -705,7 +703,7 @@ const unifont = await createUnifont([
   providers.google(),
 ])
 
-const availableFonts = await unifont.listFont()
+const availableFonts = await unifont.listFonts()
 ```
 
 It may return `undefined` if no provider is able to return names.
@@ -724,7 +722,7 @@ const unifont = await createUnifont([
   providers.fontsource(),
 ])
 
-const availableFonts = await unifont.listFont(['google'])
+const availableFonts = await unifont.listFonts(['google'])
 ```
 
 #### `getFontProperties()`
@@ -919,25 +917,16 @@ export const myProvider = defineFontProvider('my-provider', async (options, ctx)
 })
 ```
 
-## Website
-
-The site in [`docs/`](./docs) is a Nuxt app. It needs `unifont` built first, because the workspace links the
-package from the repository root:
-
-```bash
-pnpm build
-pnpm docs
-```
-
-Content lives in [`docs/content`](./docs/content) as Markdown, served through
-[Comark Content](https://content.comark.dev). Everything else is generated from `unifont` at request time.
-
 ## 💻 Development
 
 - Clone this repository
 - Enable [Corepack](https://github.com/nodejs/corepack) using `corepack enable`
 - Install dependencies using `pnpm install`
 - Run interactive tests using `pnpm dev`
+
+The site in [`docs/`](./docs) is a Nuxt app running on the built package, so `pnpm build` first, then
+`pnpm docs`. Its prose lives in [`docs/content`](./docs/content) and is served through
+[Comark Content](https://content.comark.dev); everything else is generated from `unifont` per request.
 
 ## License
 

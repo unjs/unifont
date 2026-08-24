@@ -24,16 +24,12 @@ const unifont = await createUnifont([
 
 ## When you need it
 
-No provider API except `npm` sends CORS headers, so a browser cannot call them. `unifont` detects
-that (a `window`, or a StackBlitz web container) and routes provider requests through
-`https://proxy.unifont.dev` unless you say otherwise. On a server, in a worker or in CI, nothing is
-proxied and this app is not involved at all.
+You need a deployment of your own if you resolve fonts in the browser or in a web container at
+runtime, and you need that to keep working. Resolution on a server, in a worker, in CI, or at build
+time (which is what `@nuxt/fonts` and `fontless` do) never touches this app.
 
-So you need a deployment of your own if you resolve fonts in the browser at runtime, or in a web
-container, and you need that to keep working. If your resolution happens at build time (which is
-what `@nuxt/fonts` and `fontless` do), you do not need a proxy.
-
-Pass `apiBase: false` to opt out entirely and always call the provider APIs directly.
+[Resolving in the browser](https://unifont.dev/docs/browser) covers how `unifont` decides, and how to
+point it elsewhere or turn it off.
 
 ## What it will and won't do
 
@@ -94,10 +90,4 @@ round-trip. The in-process cache is per-instance, so on a serverless host most o
 from the CDN in front, which the `cache-control` headers above are written for.
 
 Once it is up, `GET /` should return the endpoint list, and pointing `apiBase` at it is the only
-change your application needs:
-
-```ts
-const unifont = await createUnifont([providers.google()], {
-  apiBase: 'https://fonts.example.com',
-})
-```
+change your application needs.
