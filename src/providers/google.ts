@@ -75,7 +75,13 @@ export default defineFontProvider('google', async (providerOptions: GoogleProvid
   }
 
   async function getFontDetails(font: FontIndexMeta, options: ResolveFontOptions<GoogleFamilyOptions>) {
-    const styles = [...new Set(options.styles.map(i => styleMap[i]))].sort()
+    // A family that publishes no italic (or no upright) answers 400 for the axis value it
+    // does not have, so requested styles are narrowed to the ones the metadata lists.
+    const availableStyles = getAvailableStyles(font)
+    const styles = [...new Set(options.styles.filter(i => availableStyles.has(i)).map(i => styleMap[i]))].sort()
+    // Subsets are filtered out of the response anyway, so a request that asks only for subsets
+    // the family does not publish can be answered without a fetch.
+    const hasRequestedSubset = options.subsets.length === 0 || !font.subsets?.length || options.subsets.some(subset => font.subsets.includes(subset))
     const glyphs = (options.options?.experimental?.glyphs ?? providerOptions.experimental?.glyphs?.[font.family])?.join('')
     // The `css2` endpoint instances the font down to the axes named in the request:
     // any axis we omit is stripped from the delivered file, and any value outside a
@@ -98,7 +104,7 @@ export default defineFontProvider('google', async (providerOptions: GoogleProvid
       return { weight: clamped, variable: clamped.includes('..') }
     }), v => v.weight)
 
-    if (weights.length === 0 || styles.length === 0)
+    if (weights.length === 0 || styles.length === 0 || !hasRequestedSubset)
       return []
 
     const variableAxis = options.options?.experimental?.variableAxis ?? providerOptions.experimental?.variableAxis?.[font.family]
@@ -248,6 +254,24 @@ function clampAxisValue(value: string | [string, string], axis: FontAxis): strin
   const clampedMax = clamp(max, axis)
 
   return clampedMin === clampedMax ? String(clampedMin) : `${clampedMin}..${clampedMax}`
+}
+
+function getAvailableStyles(font: FontIndexMeta): Set<FontStyles> {
+  const styles = new Set<FontStyles>()
+  for (const weight of Object.keys(font.fonts)) {
+    if (weight.endsWith('i')) {
+      styles.add('italic')
+      styles.add('oblique')
+    }
+    else {
+      styles.add('normal')
+    }
+  }
+  if (font.axes.some(axis => axis.tag === 'ital' || axis.tag === 'slnt')) {
+    styles.add('italic')
+    styles.add('oblique')
+  }
+  return styles
 }
 
 function clamp(value: number, axis: FontAxis) {

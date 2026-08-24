@@ -288,6 +288,35 @@ describe('google', () => {
     expect(fonts.length).toEqual(2)
   })
 
+  it('resolves to no fonts when the family does not publish the requested style', async () => {
+    const { requests, restore } = mockCss2()
+    const unifont = await createUnifont([providers.google()])
+    const { fonts } = await unifont.resolveFont('Anton', {
+      formats: ['woff2'],
+      styles: ['italic'],
+      weights: ['400'],
+    })
+
+    expect(fonts).toStrictEqual([])
+    expect(requests).not.toHaveBeenCalled()
+    restore()
+  })
+
+  it('resolves to no fonts when the family does not publish the requested subsets', async () => {
+    const { requests, restore } = mockCss2()
+    const unifont = await createUnifont([providers.google()])
+    const { fonts } = await unifont.resolveFont('Anton', {
+      formats: ['woff2'],
+      styles: ['normal'],
+      weights: ['400'],
+      subsets: ['greek'],
+    })
+
+    expect(fonts).toStrictEqual([])
+    expect(requests).not.toHaveBeenCalled()
+    restore()
+  })
+
   it('falls back to the endpoints of the range for static families', async () => {
     const unifont = await createUnifont([providers.google()])
     const { fonts } = await unifont.resolveFont('Lato', {
