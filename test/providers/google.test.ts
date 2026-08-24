@@ -288,6 +288,51 @@ describe('google', () => {
     expect(fonts.length).toEqual(2)
   })
 
+  it('resolves the weights reported by getFontProperties', async () => {
+    const unifont = await createUnifont([providers.google()])
+    const properties = await unifont.getFontProperties('Newsreader')
+    const error = vi.spyOn(console, 'error').mockImplementation(() => {})
+
+    const { fonts } = await unifont.resolveFont('Newsreader', {
+      weights: properties!.weights,
+      styles: properties!.styles,
+      subsets: properties!.subsets,
+    })
+
+    expect(fonts.length).toBeGreaterThan(0)
+    expect(error).not.toHaveBeenCalled()
+    error.mockRestore()
+  })
+
+  it('prefers a variable range over the static weights it covers', async () => {
+    const { requests, restore } = mockCss2()
+    const unifont = await createUnifont([providers.google()])
+    await unifont.resolveFont('Newsreader', {
+      formats: ['woff2'],
+      styles: ['normal'],
+      weights: ['400', '600', '200 800'],
+    })
+
+    expect(requests).toHaveBeenCalledTimes(1)
+    expect(requests).toHaveBeenCalledWith('https://fonts.googleapis.com/css2?family=Newsreader:ital,wght@0,200..800')
+    restore()
+  })
+
+  it('requests static weights outside a variable range separately', async () => {
+    const { requests, restore } = mockCss2()
+    const unifont = await createUnifont([providers.google()])
+    await unifont.resolveFont('Newsreader', {
+      formats: ['woff2'],
+      styles: ['normal'],
+      weights: ['200 300', '800'],
+    })
+
+    expect(requests).toHaveBeenCalledTimes(2)
+    expect(requests).toHaveBeenCalledWith('https://fonts.googleapis.com/css2?family=Newsreader:ital,wght@0,200..300')
+    expect(requests).toHaveBeenCalledWith('https://fonts.googleapis.com/css2?family=Newsreader:ital,wght@0,800')
+    restore()
+  })
+
   it('resolves to no fonts when the family does not publish the requested style', async () => {
     const { requests, restore } = mockCss2()
     const unifont = await createUnifont([providers.google()])

@@ -90,7 +90,7 @@ export default defineFontProvider('google', async (providerOptions: GoogleProvid
     const fontAxes = new Map(font.axes.map(axis => [axis.tag, axis]))
     const weightAxis = fontAxes.get('wght')
 
-    const weights = dedupeBy(prepareWeights({
+    const allWeights = dedupeBy(prepareWeights({
       inputWeights: options.weights,
       hasVariableWeights: !!weightAxis,
       weights: Object.keys(font.fonts),
@@ -103,6 +103,11 @@ export default defineFontProvider('google', async (providerOptions: GoogleProvid
         return []
       return { weight: clamped, variable: clamped.includes('..') }
     }), v => v.weight)
+
+    // A variable range already delivers every weight it spans, so requesting those weights as
+    // separate static files as well would ship the same glyphs twice.
+    const ranges = allWeights.filter(v => v.variable).map(v => v.weight.split('..').map(Number) as [number, number])
+    const weights = allWeights.filter(v => v.variable || !ranges.some(([min, max]) => Number(v.weight) >= min && Number(v.weight) <= max))
 
     if (weights.length === 0 || styles.length === 0 || !hasRequestedSubset)
       return []
@@ -119,28 +124,38 @@ export default defineFontProvider('google', async (providerOptions: GoogleProvid
       }
     }
 
-    const resolvedAxes = []
-    let resolvedVariants: string[] = []
     const candidateAxes = [
       'wght',
       'ital',
       ...Object.keys(resolvedVariableAxes),
     ].sort(googleFlavoredSorting)
 
-    for (const axis of candidateAxes) {
-      const axisValue = ({
-        wght: weights.map(v => v.weight),
-        ital: styles,
-      })[axis] ?? resolvedVariableAxes[axis]!
+    function buildRequest(weightValues: string[]) {
+      const resolvedAxes: string[] = []
+      let resolvedVariants: string[] = []
+      for (const axis of candidateAxes) {
+        const axisValue = ({
+          wght: weightValues,
+          ital: styles,
+        })[axis] ?? resolvedVariableAxes[axis]!
 
-      if (resolvedVariants.length === 0) {
-        resolvedVariants = axisValue
+        if (resolvedVariants.length === 0) {
+          resolvedVariants = axisValue
+        }
+        else {
+          resolvedVariants = resolvedVariants.flatMap(v => Array.from(axisValue, o => [v, o].join(','))).sort()
+        }
+        resolvedAxes.push(axis)
       }
-      else {
-        resolvedVariants = resolvedVariants.flatMap(v => Array.from(axisValue, o => [v, o].join(','))).sort()
-      }
-      resolvedAxes.push(axis)
+      return `${font.family}:${resolvedAxes.join(',')}@${resolvedVariants.join(';')}`
     }
+
+    // `css2` rejects a request that mixes an axis range with discrete values on the same axis,
+    // so ranges and static weights are requested separately and merged.
+    const requests = [
+      weights.filter(v => v.variable),
+      weights.filter(v => !v.variable),
+    ].filter(group => group.length > 0).map(group => buildRequest(group.map(v => v.weight)))
 
     let priority = 0
     const resolvedFontFaceData: FontFaceData[] = []
@@ -150,31 +165,33 @@ export default defineFontProvider('google', async (providerOptions: GoogleProvid
       if (!userAgent)
         continue
 
-      let url = `https://fonts.googleapis.com/css2?family=${font.family}:${resolvedAxes.join(',')}@${resolvedVariants.join(';')}`
-      if (glyphs) {
-        url += `&text=${encodeURIComponent(glyphs)}`
-      }
-      const rawCss = await ctx.fetch(url, {
-        headers: {
-          'user-agent': userAgent,
-        },
-      }).then(res => res.text())
-      const groups = splitCssIntoSubsets(rawCss).filter(group => group.subset ? options.subsets.includes(group.subset) : true)
-      for (const group of groups) {
-        const data = extractFontFaceData(group.css)
-        data.map((f) => {
-          // avoid accidental pinning to a single width
-          if (!resolvedVariableAxes.wdth && f.stretch && !f.stretch.includes(' ')) {
-            delete f.stretch
-          }
-          f.meta ??= {}
-          f.meta.priority = priority
-          if (group.subset) {
-            f.meta.subset = group.subset
-          }
-          return f
-        })
-        resolvedFontFaceData.push(...data)
+      for (const request of requests) {
+        let url = `https://fonts.googleapis.com/css2?family=${request}`
+        if (glyphs) {
+          url += `&text=${encodeURIComponent(glyphs)}`
+        }
+        const rawCss = await ctx.fetch(url, {
+          headers: {
+            'user-agent': userAgent,
+          },
+        }).then(res => res.text())
+        const groups = splitCssIntoSubsets(rawCss).filter(group => group.subset ? options.subsets.includes(group.subset) : true)
+        for (const group of groups) {
+          const data = extractFontFaceData(group.css)
+          data.map((f) => {
+            // avoid accidental pinning to a single width
+            if (!resolvedVariableAxes.wdth && f.stretch && !f.stretch.includes(' ')) {
+              delete f.stretch
+            }
+            f.meta ??= {}
+            f.meta.priority = priority
+            if (group.subset) {
+              f.meta.subset = group.subset
+            }
+            return f
+          })
+          resolvedFontFaceData.push(...data)
+        }
       }
       priority++
     }
