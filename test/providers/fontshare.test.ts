@@ -19,7 +19,7 @@ describe('fontshare', () => {
           "src": [
             {
               "format": "woff2",
-              "url": "//cdn.fontshare.com/font",
+              "url": "https://cdn.fontshare.com/font",
             },
           ],
           "style": "normal",
@@ -41,7 +41,7 @@ describe('fontshare', () => {
           "src": [
             {
               "format": "woff2",
-              "url": "//cdn.fontshare.com/font",
+              "url": "https://cdn.fontshare.com/font",
             },
           ],
           "style": "italic",
@@ -49,6 +49,15 @@ describe('fontshare', () => {
         },
       ]
     `)
+  })
+
+  it('returns absolute font URLs', async () => {
+    const unifont = await createUnifont([providers.fontshare()])
+    const { fonts } = await unifont.resolveFont('Satoshi', { styles: ['normal'] })
+    const urls = fonts.flatMap(font => font.src.flatMap(source => 'url' in source ? source.url : []))
+
+    expect(urls.length).toBeGreaterThan(0)
+    expect(urls.every(url => url.startsWith('https://'))).toBe(true)
   })
 
   it('supports variable fonts', async () => {

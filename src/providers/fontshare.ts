@@ -90,7 +90,18 @@ export default defineFontProvider('fontshare', async (_options, ctx) => {
 
     const css = await ctx.fetch(`${BASE_URL}/css?f[]=${font.slug}@${numbers.join(',')}`).then(res => res.text())
 
-    return cleanFontFaces(extractFontFaceData(css), options.formats)
+    const fontFaces = extractFontFaceData(css)
+    for (const face of fontFaces) {
+      for (const source of face.src) {
+        // fontshare serves protocol-relative URLs, which are only resolvable from within a
+        // stylesheet loaded over http(s)
+        if ('url' in source && source.url.startsWith('//')) {
+          source.url = `https:${source.url}`
+        }
+      }
+    }
+
+    return cleanFontFaces(fontFaces, options.formats)
   }
 
   return {
