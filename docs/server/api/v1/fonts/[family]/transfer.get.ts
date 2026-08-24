@@ -1,4 +1,4 @@
-import { createError, getQuery, getRequestURL, getRouterParam } from 'nitro/h3'
+import { createError, getQuery, getRouterParam } from 'nitro/h3'
 import { defineCachedHandler } from 'nitro/cache'
 import { faceUrls } from '../../../../utils/css'
 import { useProviderScope } from '../../../../utils/unifont'
@@ -10,6 +10,27 @@ function list(value: unknown, fallback: string[]) {
     return fallback
   }
   return value.split(',').map(part => part.trim()).filter(Boolean)
+}
+
+/** A finely subset family can resolve to hundreds of files, so the probes go out in batches. */
+const BATCH = 12
+
+async function probeSizes(urls: string[]) {
+  const sizes: (number | undefined)[] = []
+  for (let index = 0; index < urls.length; index += BATCH) {
+    const batch = await Promise.all(urls.slice(index, index + BATCH).map(async (url) => {
+      try {
+        const response = await fetch(url, { method: 'HEAD' })
+        const length = Number(response.headers.get('content-length'))
+        return Number.isFinite(length) && length > 0 ? length : undefined
+      }
+      catch {
+        return undefined
+      }
+    }))
+    sizes.push(...batch)
+  }
+  return sizes
 }
 
 /**
@@ -34,16 +55,7 @@ export default defineCachedHandler(async (event): Promise<TransferResponse> => {
 
   const urls = faceUrls(resolved.fonts)
 
-  const sizes = await Promise.all(urls.map(async (url) => {
-    try {
-      const response = await fetch(url, { method: 'HEAD' })
-      const length = Number(response.headers.get('content-length'))
-      return Number.isFinite(length) && length > 0 ? length : undefined
-    }
-    catch {
-      return undefined
-    }
-  }))
+  const sizes = await probeSizes(urls)
 
   const known = sizes.filter((size): size is number => size !== undefined)
 
@@ -58,5 +70,12 @@ export default defineCachedHandler(async (event): Promise<TransferResponse> => {
 }, {
   maxAge: 60 * 60 * 24,
   name: 'transfer',
-  getKey: event => `${getRouterParam(event, 'family')}:${new URL(getRequestURL(event)).search}`,
+  // Only the parameters the handler reads, so an unrelated query string cannot multiply entries.
+  getKey: (event) => {
+    const query = getQuery(event)
+    const facets = ['provider', 'weights', 'styles', 'subsets']
+      .map(name => `${name}=${list(query[name], []).join('+')}`)
+      .join('&')
+    return `${getRouterParam(event, 'family')}:${facets}`
+  },
 })

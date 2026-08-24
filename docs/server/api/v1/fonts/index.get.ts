@@ -10,6 +10,14 @@ export default defineEventHandler(async (event) => {
     throw createError({ statusCode: 400, statusMessage: `Unknown provider \`${provider}\`.` })
   }
 
+  // npm is the whole registry and Adobe needs a project id, so neither has a library to filter.
+  if (provider === 'npm' || provider === 'adobe') {
+    throw createError({
+      statusCode: 400,
+      statusMessage: `\`${provider}\` cannot list its families, so the catalogue cannot be filtered by it. Resolve a family by name instead.`,
+    })
+  }
+
   const result = await searchCatalogue({
     query: typeof q === 'string' ? q : '',
     provider: provider as ProviderName | undefined,

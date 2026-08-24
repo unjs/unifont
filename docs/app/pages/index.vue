@@ -137,7 +137,8 @@ await unifont.getFontProperties('Switzer')
         <p class="prose__links">
           <NuxtLink to="/docs/providers">Providers</NuxtLink> ·
           <NuxtLink to="/docs/custom-providers">Write your own</NuxtLink> ·
-          <NuxtLink to="/docs/browser">Browser and web containers</NuxtLink>
+          <NuxtLink to="/docs/browser">Browser and web containers</NuxtLink> ·
+          <NuxtLink to="/docs/reference">API reference</NuxtLink>
         </p>
       </div>
       <figure class="prose__figure">

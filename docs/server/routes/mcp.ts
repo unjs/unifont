@@ -1,8 +1,11 @@
-import { defineEventHandler, readBody, setResponseHeader } from 'nitro/h3'
+import { defineEventHandler, readBody, setResponseHeader, setResponseStatus } from 'nitro/h3'
 import { MCP_TOOLS } from '../utils/mcp-tools'
 
 /** Advertised in `initialize`. */
 const SERVER_INFO = { name: 'unifont', version: '1' }
+
+/** Newest first: the spec wants an unsupported request answered with a version we do speak. */
+const PROTOCOL_VERSIONS = ['2025-06-18', '2025-03-26', '2024-11-05']
 
 interface JsonRpcRequest {
   jsonrpc?: string
@@ -13,9 +16,11 @@ interface JsonRpcRequest {
 
 const methods: Record<string, (params: Record<string, unknown>) => unknown | Promise<unknown>> = {
   initialize(params) {
+    const requested = params.protocolVersion
     return {
-      // Echoed rather than asserted, so this keeps working across spec revisions.
-      protocolVersion: (params.protocolVersion as string | undefined) ?? '2025-06-18',
+      protocolVersion: typeof requested === 'string' && PROTOCOL_VERSIONS.includes(requested)
+        ? requested
+        : PROTOCOL_VERSIONS[0],
       capabilities: { tools: { listChanged: false } },
       serverInfo: SERVER_INFO,
       instructions: 'Font metadata from every major CDN, through unifont. Use search_fonts to find a family, get_font to see what a provider publishes, and get_font_css when you need CSS to paste.',
@@ -104,8 +109,14 @@ export default defineEventHandler(async (event) => {
   // A batch of only notifications gets no response body at all.
   if (Array.isArray(body)) {
     const responses = (await Promise.all(body.map(dispatch))).filter(Boolean)
-    return responses.length ? responses : null
+    return responses.length ? responses : accepted(event)
   }
 
-  return (await dispatch(body ?? {})) ?? null
+  return (await dispatch(body ?? {})) ?? accepted(event)
 })
+
+/** Streamable HTTP wants `202 Accepted` with no body for notification-only posts. */
+function accepted(event: Parameters<typeof setResponseStatus>[0]) {
+  setResponseStatus(event, 202)
+  return ''
+}

@@ -31,6 +31,11 @@ describe('toFontFaceCss', () => {
     expect(toFontFaceCss('A', [{ ...remote, meta: undefined }])).not.toContain('/*')
   })
 
+  it('should escape a quote in a family name', () => {
+    const css = toFontFaceCss('Say "Hi"', [remote])
+    expect(css).toContain('font-family: "Say \\"Hi\\"";')
+  })
+
   it('should render local sources as local()', () => {
     const css = toFontFaceCss('A', [{ src: [{ name: 'Arial' }] }])
     expect(css).toContain('src: local("Arial");')

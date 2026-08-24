@@ -1,5 +1,6 @@
 import type { ProviderMeta, ProviderName } from '#shared/types'
 import { PROVIDER_NAMES } from '#shared/types'
+import { createError } from 'nitro/h3'
 import { useStorage } from 'nitro/storage'
 import { createUnifont, providers } from 'unifont'
 
@@ -65,16 +66,32 @@ type SharedProviderName = 'google' | 'bunny' | 'fontshare' | 'fontsource' | 'goo
 const SHARED_PROVIDERS: SharedProviderName[] = ['google', 'bunny', 'fontshare', 'fontsource', 'googleicons']
 
 /**
+ * Names this site can ask on a caller's behalf. Asking for anything else is refused rather than
+ * quietly widened, so an answer is never attributed to a provider the caller did not select.
+ */
+export function parseProviderSelection(value: unknown): Exclude<ProviderName, 'adobe'>[] {
+  const names = typeof value === 'string' ? value.split(',').map(part => part.trim()).filter(Boolean) : []
+  const unsupported = names.filter(name => !QUERYABLE_PROVIDERS.includes(name as ProviderName))
+
+  if (unsupported.length) {
+    throw createError({
+      statusCode: 400,
+      statusMessage: `This site cannot query \`${unsupported.join('`, `')}\`. Available: ${QUERYABLE_PROVIDERS.join(', ')}.`,
+    })
+  }
+
+  return names as Exclude<ProviderName, 'adobe'>[]
+}
+
+/**
  * Read the `provider` query parameter, a comma-separated list of the providers a request may
- * answer from. An absent or unrecognised value means every queryable provider.
+ * answer from. An absent value means every queryable provider.
  *
  * A single name gets its own instance, so `npm`, which the shared cascade does not register, can
  * still be asked directly. Several names narrow the cascade instead.
  */
 export async function useProviderScope(value: unknown) {
-  const requested = (typeof value === 'string' ? value.split(',').map(part => part.trim()) : [])
-    .filter((name): name is Exclude<ProviderName, 'adobe'> =>
-      name !== 'adobe' && QUERYABLE_PROVIDERS.includes(name as ProviderName))
+  const requested = parseProviderSelection(value)
 
   type Shared = Awaited<ReturnType<typeof useUnifont>>
 

@@ -12,6 +12,21 @@ export interface McpTool {
   run: (args: Record<string, unknown>) => Promise<string>
 }
 
+function queryable(provider: ProviderName | undefined): provider is Exclude<ProviderName, 'adobe'> {
+  return !!provider && QUERYABLE_PROVIDERS.includes(provider)
+}
+
+/**
+ * Adobe Fonts needs a per-user Typekit id, so a request naming it is refused rather than answered
+ * from another provider under Adobe's name.
+ */
+function unsupportedProvider(provider: ProviderName | undefined) {
+  if (!provider || queryable(provider)) {
+    return undefined
+  }
+  return `This server cannot query ${PROVIDER_META[provider].label}: ${PROVIDER_META[provider].note} Try one of: ${QUERYABLE_PROVIDERS.join(', ')}.`
+}
+
 function list(value: unknown, fallback: string[]) {
   if (typeof value === 'string' && value.trim()) {
     return value.split(',').map(part => part.trim()).filter(Boolean)
@@ -40,9 +55,14 @@ export const MCP_TOOLS: McpTool[] = [
       limit: integer('How many results, default 20, capped at 100.'),
     }),
     async run(args) {
+      const provider = args.provider as ProviderName | undefined
+      if (provider === 'npm' || provider === 'adobe') {
+        return `${PROVIDER_META[provider].label} cannot list its families, so it can't be searched. Use get_font with an exact family name instead.`
+      }
+
       const result = await searchCatalogue({
         query: typeof args.query === 'string' ? args.query : '',
-        provider: args.provider as ProviderName | undefined,
+        provider,
         limit: Math.min(Number(args.limit) || 20, 100),
       })
       if (!result.families.length) {
@@ -62,7 +82,11 @@ export const MCP_TOOLS: McpTool[] = [
     async run(args) {
       const family = String(args.family)
       const provider = args.provider as ProviderName | undefined
-      const unifont = provider && provider !== 'adobe' ? await useProvider(provider) : await useUnifont()
+      const unsupported = unsupportedProvider(provider)
+      if (unsupported) {
+        return unsupported
+      }
+      const unifont = queryable(provider) ? await useProvider(provider) : await useUnifont()
 
       const properties = await unifont.getFontProperties(family)
       if (!properties) {
@@ -100,7 +124,11 @@ export const MCP_TOOLS: McpTool[] = [
     async run(args) {
       const family = String(args.family)
       const provider = args.provider as ProviderName | undefined
-      const unifont = provider && provider !== 'adobe' ? await useProvider(provider) : await useUnifont()
+      const unsupported = unsupportedProvider(provider)
+      if (unsupported) {
+        return unsupported
+      }
+      const unifont = queryable(provider) ? await useProvider(provider) : await useUnifont()
 
       const properties = await unifont.getFontProperties(family)
       if (!properties) {

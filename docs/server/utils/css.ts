@@ -17,11 +17,24 @@ export function absoluteUrl(url: string) {
   return url.startsWith('//') ? `https:${url}` : url
 }
 
+/**
+ * Escape a value for use inside a double-quoted CSS string. Family names reach here straight from
+ * a query parameter, so a bare quote or newline would otherwise end the declaration.
+ */
+export function cssString(value: string) {
+  return `"${value.replaceAll('\\', '\\\\').replaceAll('"', '\\"').replace(/[\n\r\f]/g, ' ')}"`
+}
+
+/** Neutralise anything that could close a CSS comment early, for values echoed back in one. */
+export function cssComment(value: string) {
+  return value.replaceAll('*/', '*\u200B/').replace(/[\n\r\f]/g, ' ')
+}
+
 function serialiseSource(source: LocalFontSource | RemoteFontSource) {
   if (isLocal(source)) {
-    return `local("${source.name}")`
+    return `local(${cssString(source.name)})`
   }
-  const parts = [`url("${absoluteUrl(source.url)}")`]
+  const parts = [`url(${cssString(absoluteUrl(source.url))})`]
   if (source.format) {
     parts.push(`format("${source.format}")`)
   }
@@ -42,7 +55,7 @@ export function toFontFaceCss(
   options: { fallbacks?: string[], withMetricFallback?: boolean } = {},
 ) {
   const blocks = faces.map((face) => {
-    const lines = [`  font-family: "${family}";`]
+    const lines = [`  font-family: ${cssString(family)};`]
     if (face.src.length) {
       lines.push(`  src: ${face.src.map(serialiseSource).join(',\n       ')};`)
     }
@@ -66,7 +79,7 @@ export function toFontFaceCss(
       lines.push(`  unicode-range: ${face.unicodeRange.join(', ')};`)
     }
     const subset = face.meta?.subset
-    const header = subset ? `/* ${subset} */\n@font-face {` : '@font-face {'
+    const header = subset ? `/* ${cssComment(subset)} */\n@font-face {` : '@font-face {'
     return `${header}\n${lines.join('\n')}\n}`
   })
 
@@ -75,7 +88,7 @@ export function toFontFaceCss(
     const names = options.withMetricFallback
       ? [family, fallbackFamily(family), ...options.fallbacks]
       : [family, ...options.fallbacks]
-    const stack = names.map(name => (/\s/.test(name) ? `"${name}"` : name)).join(', ')
+    const stack = names.map(name => (/^[\w-]+$/.test(name) ? name : cssString(name))).join(', ')
     blocks.push(`:root {\n  --font-${family.toLowerCase().replace(/\W+/g, '-')}: ${stack};\n}`)
   }
 

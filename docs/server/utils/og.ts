@@ -25,6 +25,9 @@ const SITE_FACES = [
   { family: 'JetBrains Mono', weight: '400', label: 'og-mono' },
 ] as const
 
+/** A stalled CDN must not hold an OG request open indefinitely. */
+const FETCH_TIMEOUT = 10_000
+
 async function fetchFace(family: string, weight: string) {
   const unifont = await useUnifont()
   const resolved = await unifont.resolveFont(family, {
@@ -37,7 +40,7 @@ async function fetchFace(family: string, weight: string) {
     for (const source of face.src) {
       if ('url' in source) {
         const url = source.url.startsWith('//') ? `https:${source.url}` : source.url
-        const response = await fetch(url)
+        const response = await fetch(url, { signal: AbortSignal.timeout(FETCH_TIMEOUT) })
         if (response.ok) {
           return new Uint8Array(await response.arrayBuffer())
         }
@@ -64,7 +67,16 @@ function createBaseRenderer() {
 }
 
 export function useOgRenderer() {
-  base ??= createBaseRenderer()
+  if (!base) {
+    const attempt = createBaseRenderer()
+    // A rejected promise must not be cached, or one failed download breaks every later card.
+    attempt.catch(() => {
+      if (base === attempt) {
+        base = undefined
+      }
+    })
+    base = attempt
+  }
   return base
 }
 

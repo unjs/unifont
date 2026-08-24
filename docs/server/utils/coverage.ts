@@ -56,7 +56,10 @@ export function coverageForText(faces: FontFaceData[], text: string): CoverageRe
   const ranges = rangesForFaces(faces)
   const characters = [...new Set([...text])].filter(character => !/\s/.test(character))
 
-  if (!ranges.length) {
+  // One face without a `unicode-range` applies to every code point, whatever the others declare.
+  const anyUnrestricted = faces.some(face => !face.unicodeRange?.length)
+
+  if (anyUnrestricted || !ranges.length) {
     return { unrestricted: true, covered: characters, missing: [], subsets: [] }
   }
 

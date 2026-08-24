@@ -4,8 +4,6 @@ import type { TransferResponse } from '#shared/types'
 const route = useRoute()
 const router = useRouter()
 
-const family = computed(() => decodeURIComponent(String(route.params.family ?? '')))
-
 const weights = computed(() => String(route.query.weights ?? ''))
 const subsets = computed(() => String(route.query.subsets ?? ''))
 const styles = computed(() => String(route.query.styles ?? ''))
@@ -29,6 +27,9 @@ const { data, status, error, refresh } = await useFetch(() => `/api/v1/fonts/${e
   // detail is already in the CSS shown below.
   transform: ({ fonts, ...rest }) => ({ ...rest, faces: fonts.length }),
 })
+
+/** A 404 means no provider has the family; anything else means the site failed to ask. */
+const unknownFamily = computed(() => error.value?.statusCode === 404)
 
 const { drop } = useFontWarmup()
 
@@ -398,9 +399,18 @@ export default defineNuxtConfig({
       <h1 class="state__title">
         {{ family }}
       </h1>
-      <p class="state__body">
+      <p
+        v-if="unknownFamily"
+        class="state__body"
+      >
         None of the providers this site can ask know this family. Check the spelling, or
         <NuxtLink to="/fonts">browse the catalogue</NuxtLink>. Adobe Fonts needs a Typekit id, so families that only exist there never show up here.
+      </p>
+      <p
+        v-else
+        class="state__body"
+      >
+        We couldn't reach the providers to answer for this family. That's this site, not your spelling, so a retry may well work.
       </p>
       <button
         class="state__retry"

@@ -44,6 +44,8 @@ async function search(term: string) {
   const ticket = ++sequence
 
   if (!trimmed) {
+    clearTimeout(pendingTimer)
+    showPending.value = false
     families.value = []
     status.value = 'idle'
     return

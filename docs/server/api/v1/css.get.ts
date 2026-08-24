@@ -1,6 +1,6 @@
 import { createError, getQuery, getRequestURL, setResponseHeader } from 'nitro/h3'
 import { defineCachedHandler } from 'nitro/cache'
-import { metricFallbackCss, toFontFaceCss } from '../../utils/css'
+import { cssComment, metricFallbackCss, toFontFaceCss } from '../../utils/css'
 import { useUnifont } from '../../utils/unifont'
 
 /**
@@ -33,17 +33,17 @@ export default defineCachedHandler(async (event) => {
         formats: ['woff2'],
       })
       if (!resolved.fonts.length) {
-        return `/* ${family}: no provider could resolve this family */`
+        return `/* ${cssComment(family)}: no provider could resolve this family */`
       }
       const fallbackCss = await metricFallbackCss(family, resolved.fonts, resolved.fallbacks ?? [])
       return [
-        `/* ${family}: ${resolved.provider} */`,
+        `/* ${cssComment(family)}: ${resolved.provider} */`,
         toFontFaceCss(family, resolved.fonts),
         fallbackCss,
       ].filter(Boolean).join('\n')
     }
     catch {
-      return `/* ${family}: provider request failed */`
+      return `/* ${cssComment(family)}: provider request failed */`
     }
   }))
 

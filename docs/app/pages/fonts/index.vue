@@ -8,10 +8,14 @@ const PAGE = 36
 
 const q = computed(() => String(route.query.q ?? ''))
 const provider = computed(() => String(route.query.provider ?? ''))
-const offset = computed(() => Math.max(Number(route.query.offset ?? 0) || 0, 0))
+const offset = computed(() => {
+  const value = Number(route.query.offset ?? 0)
+  return Number.isFinite(value) ? Math.max(Math.trunc(value), 0) : 0
+})
 
 const term = ref(q.value)
 let debounce: ReturnType<typeof setTimeout> | undefined
+onBeforeUnmount(() => clearTimeout(debounce))
 watch(term, (value) => {
   clearTimeout(debounce)
   debounce = setTimeout(() => {

@@ -36,6 +36,12 @@ describe('coverageForText', () => {
     expect(result.missing).toEqual([])
   })
 
+  it('should treat one range-less face as covering everything the others miss', () => {
+    const result = coverageForText([face(['U+0041']), face(undefined)], 'AB')
+    expect(result.unrestricted).toBe(true)
+    expect(result.missing).toEqual([])
+  })
+
   it('should report characters outside every range as missing', () => {
     const result = coverageForText([face(['U+0000-00FF'])], 'Zażółć')
     expect(result.unrestricted).toBe(false)

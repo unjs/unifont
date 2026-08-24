@@ -18,7 +18,7 @@ function submit() {
   router.replace({ query: { ...route.query, family: term.value.trim() || undefined } })
 }
 
-const { data } = await useAsyncData<CompareResponse | null>(
+const { data, error, refresh } = await useAsyncData<CompareResponse | null>(
   () => `compare-${family.value}`,
   () => (family.value
     ? $fetch(`/api/v1/fonts/${encodeURIComponent(family.value)}/compare`)
@@ -172,6 +172,20 @@ const divergence = computed(() => {
     >
       Type a family above to see how each provider answers.
     </p>
+
+    <div
+      v-else-if="error"
+      class="empty"
+    >
+      <p>We couldn't reach the providers to compare <strong>{{ family }}</strong>.</p>
+      <button
+        class="retry"
+        type="button"
+        @click="refresh()"
+      >
+        Try again
+      </button>
+    </div>
 
     <p
       v-else-if="!answered"
@@ -446,6 +460,16 @@ const divergence = computed(() => {
   max-width: var(--measure);
   padding-block: var(--space-2xl) var(--space-3xl);
   color: var(--color-muted);
+}
+
+.retry {
+  margin-top: var(--space-lg);
+  min-height: 2.75rem;
+  padding: var(--space-xs) var(--space-md);
+  color: var(--color-ink);
+  background: none;
+  border: var(--rule-hair) solid var(--color-ink);
+  cursor: pointer;
 }
 
 .specimens {

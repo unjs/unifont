@@ -15,6 +15,11 @@ interface Catalogue {
 }
 
 let building: Promise<Catalogue> | undefined
+let expiresAt = 0
+let refreshing = false
+
+/** How long a build answers for, so a provider that failed once is retried without a restart. */
+const TTL = 60 * 60 * 1000
 
 async function build(): Promise<Catalogue> {
   const byFamily = new Map<string, CatalogueEntry>()
@@ -60,7 +65,29 @@ async function build(): Promise<Catalogue> {
 }
 
 export function useCatalogue() {
-  building ??= build()
+  if (!building) {
+    expiresAt = Date.now() + TTL
+    building = build()
+    return building
+  }
+
+  if (Date.now() > expiresAt && !refreshing) {
+    refreshing = true
+    // Rebuilt in the background, so the stale catalogue keeps answering meanwhile and a failed
+    // rebuild changes nothing.
+    build()
+      .then((next) => {
+        building = Promise.resolve(next)
+        expiresAt = Date.now() + TTL
+      })
+      .catch(() => {
+        expiresAt = Date.now() + TTL
+      })
+      .finally(() => {
+        refreshing = false
+      })
+  }
+
   return building
 }
 
