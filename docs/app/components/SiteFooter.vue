@@ -1,17 +1,15 @@
 <script setup lang="ts">
 import type { ContributorsResponse } from '#shared/types'
 
-// Server-rendered: a client-only avatar row lands after hydration and pushes the colophon down.
-const { data: credits } = await useFetch<ContributorsResponse>('/api/v1/contributors', {
+// Server-rendered: a client-only credit line lands after hydration and pushes the colophon down.
+// Only the count survives into the payload; the avatars and profiles are not drawn here.
+const { data: credits } = await useFetch('/api/v1/contributors', {
   key: 'footer-contributors',
-  // The colophon never hydrates, so the avatar list need not go into the payload.
-  serialize: false,
+  /** Named in the template: danielroe, qwerzl, florian-lefebvre. Zero when GitHub is rate-limited. */
+  transform: (response: ContributorsResponse) => ({ others: Math.max(0, (response.contributors?.length ?? 0) - 3) }),
 })
 
-const contributors = computed(() => credits.value?.contributors ?? [])
-
-/** Named above: danielroe, qwerzl, florian-lefebvre. Zero when GitHub is rate-limited. */
-const others = computed(() => Math.max(0, contributors.value.length - 3))
+const others = computed(() => credits.value?.others ?? 0)
 </script>
 
 <template>

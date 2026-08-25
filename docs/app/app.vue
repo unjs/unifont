@@ -86,7 +86,7 @@ if (import.meta.client) {
     >
       <NuxtPage />
     </main>
-    <LazySiteFooter hydrate-never />
+    <LazySiteFooter hydrate-on-visible />
   </div>
 </template>
 

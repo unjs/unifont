@@ -211,9 +211,14 @@ export default defineNuxtConfig({
     'prerender:routes': async ({ routes }) => {
       const { content } = await import('./server/utils/content.ts')
       const pages = new Set(proseRoutes)
-      for (const { path } of await content.list()) {
+      const paths = (await content.list()).map((file: { path: string }) => file.path)
+      for (const path of paths) {
         routes.add(path)
-        routes.add(`/api/content/get/${path.replace(/^\//, '')}`)
+        // Each endpoint is prerendered to a file, so `/docs`, which is also the parent of every
+        // chapter, would have to be a file and a directory at once. It is left to the server.
+        if (!paths.some((other: string) => other.startsWith(`${path}/`))) {
+          routes.add(`/api/content/get/${path.replace(/^\//, '')}`)
+        }
         pages.add(path)
       }
       for (const page of pages) {

@@ -54,7 +54,7 @@ usePageSeo({
         >Back to the start</NuxtLink>
       </div>
     </main>
-    <LazySiteFooter hydrate-never />
+    <LazySiteFooter hydrate-on-visible />
   </div>
 </template>
 
