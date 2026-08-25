@@ -34,13 +34,13 @@
   },
   "devDependencies": {
     "@nuxt/test-utils": "^4.1.0",
-    "@playwright/test": "^1.62.1",
+    "@playwright/test": "1.62.1",
     "@vitejs/devtools-kit": "^0.5.2",
-    "axe-core": "^4.13.0",
+    "axe-core": "4.13.0",
     "eslint": "10.9.0",
     "eslint-plugin-vuejs-accessibility": "^2.6.0",
     "nitro": "3.0.260610-beta",
-    "playwright": "^1.62.1",
+    "playwright": "1.62.1",
     "typescript": "6.0.3",
     "vitest": "4.1.11",
     "vue-tsc": "3.3.11"
