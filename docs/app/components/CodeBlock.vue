@@ -11,6 +11,11 @@ const props = defineProps<{
 
 const { $highlightCode } = useNuxtApp()
 
+// MicroLighter matches its grammar synchronously, and the cost is not linear in the length of the
+// block: 60 kB of resolved CSS locks the main thread for minutes. Past this it renders plain.
+const HIGHLIGHT_LIMIT = 16_000
+const highlighted = computed(() => props.language && props.code.length <= HIGHLIGHT_LIMIT ? props.language : undefined)
+
 // The highlighter walks the DOM once per navigation, so a block whose contents change in place
 // has to ask for another pass.
 watch(() => [props.code, props.language], () => {
@@ -111,7 +116,7 @@ onBeforeUnmount(() => clearTimeout(timer))
       ref="pre"
       class="block__pre"
       :tabindex="overflowing ? 0 : undefined"
-    ><code :class="language ? `language-${language}` : undefined">{{ code }}</code></pre>
+    ><code :class="highlighted ? `language-${highlighted}` : undefined">{{ code }}</code></pre>
   </div>
 </template>
 

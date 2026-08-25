@@ -14,6 +14,13 @@ export const SAMPLES: Record<string, string> = {
   'maths': '≈ ≠ ≤ ≥ ± × ÷ ∑ √ ∞',
 }
 
+function list(value: unknown) {
+  if (typeof value !== 'string' || !value.trim()) {
+    return undefined
+  }
+  return value.split(',').map(part => part.trim()).filter(Boolean)
+}
+
 export default defineEventHandler(async (event) => {
   const family = decodeURIComponent(getRouterParam(event, 'family') || '')
   if (!family) {
@@ -32,7 +39,9 @@ export default defineEventHandler(async (event) => {
     // `unicode-range` does not vary by weight within a family.
     weights: ['400'],
     styles: ['normal'],
-    subsets: properties.subsets?.length ? properties.subsets : ['latin'],
+    // Absent, everything the provider publishes: the answer then describes the family, not a
+    // selection.
+    subsets: list(query.subsets) ?? (properties.subsets?.length ? properties.subsets : ['latin']),
     formats: ['woff2'],
   }, allowed)
 

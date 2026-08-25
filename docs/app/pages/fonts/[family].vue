@@ -30,21 +30,35 @@ const { drop } = useFontWarmup()
 const requested = computed(() => data.value?.requested)
 const properties = computed(() => data.value?.properties)
 
-// The `preview` preset rather than the current selection, so the URL is stable for a family: it
-// can be warmed on hover, and narrowing a facet does not drop and re-add every `@font-face`.
-const stylesheet = computed(() => {
-  const scoped = provider.value ? `&provider=${encodeURIComponent(provider.value)}` : ''
-  return `/api/v1/fonts/${encodeURIComponent(family.value)}/css?preset=preview${scoped}`
-})
+const scopedProvider = computed(() => (provider.value ? `&provider=${encodeURIComponent(provider.value)}` : ''))
+
+// One weight, subset to the specimen's own glyphs, and the URL the grid warms on hover.
+const warmStylesheet = computed(() =>
+  `/api/v1/fonts/${encodeURIComponent(family.value)}/css?preset=warm${scopedProvider.value}`,
+)
+
+/*
+ * The `preview` preset rather than the current selection, so the URL is stable for a family and
+ * narrowing a facet does not drop and re-add every `@font-face`. Aliased: declaring it under the
+ * family name would restyle the specimen to a different file the moment it lands.
+ */
+const previewFamily = computed(() => `${family.value} preview`)
+const stylesheet = computed(() =>
+  `/api/v1/fonts/${encodeURIComponent(family.value)}/css?preset=preview&as=${encodeURIComponent(previewFamily.value)}${scopedProvider.value}`,
+)
 
 useHead(() => ({
-  link: [{ rel: 'stylesheet', href: stylesheet.value }],
+  link: [
+    { rel: 'stylesheet', href: warmStylesheet.value },
+    { rel: 'stylesheet', href: stylesheet.value },
+  ],
 }))
 
-// The warm stylesheet paints the specimen until the preview sheet is both parsed and loaded.
-// `document.fonts.ready` alone resolves immediately when no request is yet in flight.
+// A hover-warmed sheet declares the same faces, so it is released only once this page's own copy
+// is parsed and loaded. `document.fonts.ready` alone resolves immediately when no request is yet
+// in flight.
 if (import.meta.client) {
-  watch(stylesheet, async (href) => {
+  watch(warmStylesheet, async (href) => {
     await nextTick()
     const link = document.head.querySelector<HTMLLinkElement>(`link[rel="stylesheet"][href="${href}"]`)
     if (link && !link.sheet) {
@@ -108,8 +122,17 @@ watch([loadedRange, staticWeights], () => {
   }
 }, { immediate: true })
 
+// The warm face holds one weight and only the glyphs of the untouched specimen, so an edit moves
+// to the preview alias. On events, not on the values, which normalise on load for a family
+// without a 400.
+const usingPreview = ref(false)
+function needsPreviewFace() {
+  usingPreview.value = true
+}
+const specimenFamily = computed(() => (usingPreview.value ? previewFamily.value : family.value))
+
 const previewStyle = computed(() => ({
-  fontFamily: `'${family.value}', '${family.value} fallback', var(--font-display)`,
+  fontFamily: `'${specimenFamily.value}', '${specimenFamily.value} fallback', var(--font-display)`,
   fontSize: `${size.value}px`,
   fontWeight: String(weight.value),
   fontStyle: italic.value ? 'italic' : 'normal',
@@ -156,6 +179,7 @@ function setProvider(name: string) {
   if (name === selectedProvider.value) {
     return
   }
+  needsPreviewFace()
   router.replace({
     query: {
       ...route.query,
@@ -168,6 +192,7 @@ function setProvider(name: string) {
 }
 
 function apply(key: 'weights' | 'subsets' | 'styles', values: string[]) {
+  needsPreviewFace()
   router.replace({
     query: { ...route.query, [key]: values.length ? values.join(',') : undefined },
   })
@@ -251,12 +276,35 @@ const kb = (bytes: number) => `${(bytes / 1024).toFixed(1)} kB`
 /* ── Coverage ───────────────────────────────────────────── */
 interface CoverageCheck { text: string, unrestricted: boolean, covered: string[], missing: string[], subsets: string[] }
 type CoverageRow = Pick<CoverageCheck, 'text' | 'unrestricted' | 'missing'>
+const coverageSubsets = computed(() => requested.value?.subsets.join(',') ?? '')
+
+// Aliased away from the specimen family, so a subset the selection dropped cannot paint the row.
+const coverageFamily = computed(() => `${family.value} coverage`)
+const coverageStylesheet = computed(() => {
+  if (!coverageSubsets.value) {
+    return undefined
+  }
+  const params = new URLSearchParams({
+    weights: String(sampleWeight.value),
+    styles: 'normal',
+    subsets: coverageSubsets.value,
+    as: coverageFamily.value,
+  })
+  if (provider.value) {
+    params.set('provider', provider.value)
+  }
+  return `/api/v1/fonts/${encodeURIComponent(family.value)}/css?${params}`
+})
+
+useHead(() => ({
+  link: coverageStylesheet.value ? [{ rel: 'stylesheet', href: coverageStylesheet.value }] : [],
+}))
 const { data: coverage } = await useFetch(
   () => `/api/v1/fonts/${encodeURIComponent(family.value)}/coverage`,
   // Server-rendered: on the client the coverage rows land after hydration and shift the page.
   {
     key: () => `coverage-${family.value}`,
-    query: { provider },
+    query: { provider, subsets: coverageSubsets },
     // Only the gaps are rendered.
     transform: ({ checks }: { checks: Record<string, CoverageCheck> }): { checks: Record<string, CoverageRow> } => ({
       checks: Object.fromEntries(
@@ -464,6 +512,7 @@ export default defineNuxtConfig({
             rows="2"
             spellcheck="false"
             :style="previewStyle"
+            @input="needsPreviewFace()"
           />
         </div>
 
@@ -519,6 +568,7 @@ export default defineNuxtConfig({
               :min="loadedRange.min"
               :max="loadedRange.max"
               step="1"
+              @input="needsPreviewFace()"
             >
           </p>
           <p
@@ -529,6 +579,7 @@ export default defineNuxtConfig({
             <select
               id="weight"
               v-model.number="weight"
+              @change="needsPreviewFace()"
             >
               <option
                 v-for="value in staticWeights"
@@ -546,6 +597,7 @@ export default defineNuxtConfig({
               v-model="italic"
               type="checkbox"
               :disabled="!italicLoaded"
+              @change="needsPreviewFace()"
             >
             <span
               v-if="!providerHasItalic"
@@ -713,7 +765,7 @@ export default defineNuxtConfig({
             Coverage
           </h3>
           <p class="meta__lede">
-            Checked against the <code>unicode-range</code> of every face the provider returned.
+            Checked against the <code>unicode-range</code> of every face this selection resolved.
           </p>
           <ul
             v-if="coverage"
@@ -728,7 +780,7 @@ export default defineNuxtConfig({
               <span
                 class="coverage__sample"
                 :style="{
-                  fontFamily: `'${family}', '${family} fallback', var(--font-display)`,
+                  fontFamily: `'${coverageFamily}', '${coverageFamily} fallback', var(--font-display)`,
                   fontWeight: String(sampleWeight),
                 }"
               >{{ check.text }}</span>
