@@ -9,8 +9,9 @@ const { data: credits } = await useFetch<ContributorsResponse>('/api/v1/contribu
 })
 
 const contributors = computed(() => credits.value?.contributors ?? [])
-// The API sorts by commit count, so the first entry leads.
-const top = computed(() => contributors.value[0]!)
+
+/** Named above: danielroe, qwerzl, florian-lefebvre. Zero when GitHub is rate-limited. */
+const others = computed(() => Math.max(0, contributors.value.length - 3))
 </script>
 
 <template>
@@ -24,39 +25,14 @@ const top = computed(() => contributors.value[0]!)
         <NuxtLink to="/compare">compare</NuxtLink> ·
         <NuxtLink to="/docs">docs</NuxtLink> ·
         <NuxtLink to="/api">api</NuxtLink> ·
+        <NuxtLink to="/about">about</NuxtLink> ·
+        <NuxtLink to="/contact">contact</NuxtLink> ·
+        <NuxtLink to="/privacy">privacy</NuxtLink> ·
         <a href="https://github.com/unjs/unifont">source</a> ·
-        <a href="https://npmjs.com/package/unifont">npm</a>
+        <a href="https://npmjs.com/package/unifont">npm</a> ·
+        <a href="/llms.txt">llms.txt</a> ·
+        <a href="/openapi.json">openapi.json</a>
       </p>
-      <div
-        v-if="contributors.length"
-        class="credits"
-      >
-        <!-- A link per avatar is a link and a list item per person once the styles are gone, so the
-             row is decorative and the sentence below carries the same information as text. -->
-        <div
-          class="credits__row"
-          aria-hidden="true"
-        >
-          <img
-            v-for="person in contributors"
-            :key="person.login"
-            class="credits__avatar"
-            :src="person.avatar"
-            alt=""
-            width="28"
-            height="28"
-            loading="lazy"
-            decoding="async"
-          >
-        </div>
-        <p class="credits__summary">
-          {{ contributors.length }}
-          {{ contributors.length === 1 ? 'person has' : 'people have' }}
-          landed a commit, {{ top.login }} the most with {{ top.contributions }}
-          {{ top.contributions === 1 ? 'commit' : 'commits' }}.
-          <a href="https://github.com/unjs/unifont/graphs/contributors">all contributors</a>
-        </p>
-      </div>
 
       <p class="colophon__line colophon__line--fine">
         made with <span
@@ -64,7 +40,9 @@ const top = computed(() => contributors.value[0]!)
           role="img"
           aria-label="love"
         >&hearts;</span> by
-        <a href="https://roe.dev">Daniel Roe</a> and contributors ·
+        <a href="https://roe.dev">danielroe</a>, <a href="https://github.com/qwerzl">qwerzl</a><template v-if="others">, </template><template v-else> and </template><a href="https://florian-lefebvre.dev/">florian-lefebvre</a><template v-if="others">
+          and <a href="https://github.com/unjs/unifont/graphs/contributors">{{ others }} other contributor{{ others === 1 ? '' : 's' }}</a>
+        </template> ·
         MIT · font data belongs to its foundries and is licensed by them, not by us
       </p>
     </div>

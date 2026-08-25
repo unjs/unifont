@@ -37,6 +37,23 @@ if (import.meta.server) {
   })
 }
 
+/** Prose routes with a markdown twin. */
+const PROSE = /^\/(?:$|fonts$|compare$|api$|about$|contact$|privacy$|docs)/
+
+const canonical = computed(() => new URL(route.path, origin).href)
+
+if (import.meta.server) {
+  useHead({
+    link: [{ rel: 'canonical', href: () => canonical.value }],
+  })
+
+  // <https://acceptmarkdown.com>: the same document, negotiable through `Accept` or the suffix.
+  if (PROSE.test(route.path)) {
+    const markdown = route.path === '/' ? '/index.md' : `${route.path.replace(/\/$/, '')}.md`
+    useHead({ link: [{ rel: 'alternate', type: 'text/markdown', href: new URL(markdown, origin).href }] })
+  }
+}
+
 const main = useTemplateRef<HTMLElement>('main')
 
 // Reset focus to the main landmark after a client-side navigation, which otherwise leaves the

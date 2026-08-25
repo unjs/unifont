@@ -19,6 +19,64 @@ const surfaces = [
   { to: '/api', label: 'API', note: 'Every page here is an HTTP endpoint you can call yourself.' },
 ] as const
 
+const siteUrl = useRuntimeConfig().public.siteUrl
+
+/** Identity for anything resolving the entity behind this domain. */
+const structuredData = {
+  '@context': 'https://schema.org',
+  '@graph': [
+    {
+      '@type': 'SoftwareApplication',
+      '@id': `${siteUrl}/#unifont`,
+      'name': 'unifont',
+      'alternateName': 'unifont.dev',
+      'url': siteUrl,
+      'description': 'unifont reads font metadata from every major font CDN through one interface: Google Fonts, Bunny Fonts, Fontshare, Fontsource, Google Icons, npm and Adobe Fonts. It returns weights, styles, subsets, unicode ranges and @font-face data in the same shape for every provider.',
+      'applicationCategory': 'DeveloperApplication',
+      'operatingSystem': 'Node.js, Bun, Deno, browsers, edge runtimes',
+      'programmingLanguage': 'TypeScript',
+      'license': 'https://opensource.org/licenses/MIT',
+      'isAccessibleForFree': true,
+      'offers': { '@type': 'Offer', 'price': '0', 'priceCurrency': 'USD' },
+      'installUrl': 'https://www.npmjs.com/package/unifont',
+      'downloadUrl': 'https://www.npmjs.com/package/unifont',
+      'codeRepository': 'https://github.com/unjs/unifont',
+      'author': { '@id': `${siteUrl}/#maintainer` },
+      'maintainer': { '@id': `${siteUrl}/#maintainer` },
+      'sameAs': [
+        'https://github.com/unjs/unifont',
+        'https://www.npmjs.com/package/unifont',
+      ],
+    },
+    {
+      '@type': 'WebSite',
+      '@id': `${siteUrl}/#website`,
+      'name': 'unifont',
+      'url': siteUrl,
+      'inLanguage': 'en',
+      'description': 'Look up a typeface across every font CDN in one place: metadata, specimens, unicode coverage, and the CSS to ship it.',
+      'about': { '@id': `${siteUrl}/#unifont` },
+      'author': { '@id': `${siteUrl}/#maintainer` },
+      'potentialAction': {
+        '@type': 'SearchAction',
+        'target': { '@type': 'EntryPoint', 'urlTemplate': `${siteUrl}/fonts?q={search_term_string}` },
+        'query-input': 'required name=search_term_string',
+      },
+    },
+    {
+      '@type': 'Person',
+      '@id': `${siteUrl}/#maintainer`,
+      'name': 'Daniel Roe',
+      'url': 'https://roe.dev',
+      'sameAs': ['https://github.com/danielroe', 'https://roe.dev'],
+    },
+  ],
+}
+
+useHead({
+  script: [{ type: 'application/ld+json', innerHTML: JSON.stringify(structuredData) }],
+})
+
 const install = `import { createUnifont, providers } from 'unifont'
 
 const unifont = await createUnifont([
@@ -112,23 +170,19 @@ await unifont.getFontProperties('Switzer')
         <h2 id="use-heading">
           Consistent font metadata
         </h2>
+        <h3>One shape for every provider</h3>
         <p>
-          Every font CDN has its own API, its own idea of what a weight is, and its own way of spelling <em>italic</em>. unifont provides consistent metadata and <code>@font-face</code> data you can hand straight to the browser.
+          Every font CDN has its own API. unifont provides <NuxtLink to="/docs/reference">consistent metadata</NuxtLink> and <code>@font-face</code> data you can hand straight to the browser.
         </p>
+        <h3>Runs wherever your code does</h3>
         <p>
-          It runs anywhere: Node, Bun, Deno, workers, and the browser, via a self-hostable proxy. This site is (of course!) powered by unifont.
+          It runs anywhere: Node, Bun, Deno, workers, and <NuxtLink to="/docs/browser">the browser, via a self-hostable proxy</NuxtLink>. This site is (of course!) powered by unifont.
         </p>
+        <h3>&hellip; or let a bundler do it</h3>
         <p>
-          Just want fonts to work on your site? Use
+          Use
           <a href="https://github.com/unjs/fontaine/tree/main/packages/fontless">fontless</a> in any Vite app, or
-          <a href="https://fonts.nuxt.com">@nuxt/fonts</a> in Nuxt. Both wrap unifont, download and host the
-          files for you, and build metric-matched fallbacks so the page doesn't jump.
-        </p>
-        <p class="prose__links">
-          <NuxtLink to="/docs/providers">Providers</NuxtLink> ·
-          <NuxtLink to="/docs/custom-providers">Write your own</NuxtLink> ·
-          <NuxtLink to="/docs/browser">Browser and web containers</NuxtLink> ·
-          <NuxtLink to="/docs/reference">API reference</NuxtLink>
+          <a href="https://fonts.nuxt.com">@nuxt/fonts</a> in Nuxt. They wrap unifont, download and host your fonts, and inject metric fallbacks to reduce layout shift.
         </p>
       </div>
       <figure class="prose__figure">
@@ -189,6 +243,10 @@ await unifont.getFontProperties('Switzer')
           </tbody>
         </table>
       </TableScroller>
+      <p class="index__more">
+        <NuxtLink to="/docs/providers">Provider documentation</NuxtLink> ·
+        <NuxtLink to="/docs/custom-providers">Create your own provider</NuxtLink>
+      </p>
     </section>
 
     <section
@@ -402,6 +460,20 @@ await unifont.getFontProperties('Switzer')
 
 .prose__text h2 {
   font-size: var(--text-xl);
+}
+
+/* Subheads within the run of prose, so the section can be skimmed. */
+.prose__text h3 {
+  margin-top: var(--space-xs);
+  font-family: var(--font-body);
+  font-size: var(--text-base);
+  font-weight: var(--weight-body-strong);
+  letter-spacing: 0;
+}
+
+/* The heading above supplies the gap. */
+.prose__text h2 + h3 {
+  margin-top: 0;
 }
 
 .prose__text p {

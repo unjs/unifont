@@ -14,10 +14,40 @@ const staticRoutes = [
   '/fonts',
   '/compare',
   '/api',
+  '/about',
+  '/contact',
+  '/privacy',
   '/api/v1/catalogue.css',
   '/api/v1/specimens.css',
   '/api/content/navigation',
+  // Machine-readable descriptions of the site: their answers depend on the content, not the request.
+  '/openapi.json',
+  '/api/openapi.json',
+  '/sitemap.xml',
+  '/robots.txt',
+  '/llms.txt',
+  '/llms-full.txt',
 ]
+
+/** Pages with a markdown twin, served at `<path>.md`. `/docs` also has one chapter beneath it. */
+const proseRoutes = ['/', '/fonts', '/compare', '/api', '/about', '/contact', '/privacy', '/docs']
+
+const negotiatedRoutes = [...proseRoutes, '/docs/**']
+
+const markdownTwin = (route: string) => (route === '/' ? '/index.md' : `${route}.md`)
+
+/**
+ * Markdown negotiation for the prerendered pages, whose static files Vercel's CDN serves before
+ * any function of ours runs, so the rewrite has to happen in the routing layer.
+ */
+const vercelMarkdownRoutes = [
+  ...proseRoutes.map(route => ({ src: route, dest: markdownTwin(route) })),
+  { src: '/docs/([^/]+)', dest: '/docs/$1.md' },
+].map(route => ({
+  ...route,
+  has: [{ type: 'header', key: 'accept', value: '.*text/markdown.*' }],
+  headers: { vary: 'Accept, Accept-Encoding' },
+}))
 
 /**
  * Where the font caches live. `node_modules` is convenient in development but read-only on most
@@ -48,6 +78,8 @@ export default defineNuxtConfig({
   },
   css: ['~/assets/css/tokens.css', '~/assets/css/base.css', '~/assets/css/syntax.css'],
   runtimeConfig: {
+    // `lastmod` in `sitemap.xml`: the prose ships with the build.
+    buildTime: new Date().toISOString(),
     public: {
       siteUrl: 'https://unifont.dev',
     },
@@ -75,9 +107,15 @@ export default defineNuxtConfig({
     alias: {
       undici: fileURLToPath(new URL('stubs/undici.ts', import.meta.url)),
     },
-    // Provider family indexes, fetched by `scripts/prime-font-cache.mjs` before the build and read
-    // back through the `unifont` storage.
-    serverAssets: [{ baseName: 'font-cache', dir: './.font-cache' }],
+    /*
+     * Provider family indexes, fetched by `scripts/prime-font-cache.mjs` before the build and read
+     * back through the `unifont` storage, and the markdown behind every prose page, since a
+     * deployment has no `content/` directory.
+     */
+    serverAssets: [
+      { baseName: 'font-cache', dir: './.font-cache' },
+      { baseName: 'content', dir: './content' },
+    ],
     // Provider metadata is immutable enough to cache hard, and a warm cache is worth ~2s on a
     // family page.
     storage: {
@@ -88,11 +126,18 @@ export default defineNuxtConfig({
       // stringifies bodies.
       og: { driver: 'fs', base: join(cacheBase, 'unifont-og') },
     },
+    vercel: {
+      config: { version: 3, routes: vercelMarkdownRoutes },
+    },
     routeRules: {
       // Prerendered so the deployed site never spends one of its 60 unauthenticated GitHub
       // requests per hour on drawing a colophon.
       '/api/v1/contributors': { prerender: true },
       '/api/v1/specimens.css': { headers: { 'cache-control': 'public, max-age=3600, stale-while-revalidate=86400' } },
+      // The HTML variant is negotiable against `text/markdown`, so a cache has to key on `Accept`.
+      ...Object.fromEntries(negotiatedRoutes.map(route => [route, { headers: { vary: 'Accept, Accept-Encoding' } }])),
+      // Every API response points at the document that describes it.
+      '/api/v1/**': { headers: { link: '</openapi.json>; rel="service-desc"; type="application/json"' } },
       '/api/v1/catalogue.css': { headers: { 'cache-control': 'public, max-age=3600, stale-while-revalidate=86400' } },
     },
     prerender: {
@@ -151,14 +196,28 @@ export default defineNuxtConfig({
     hoist: ['nitro/h3', 'h3'],
   },
   hooks: {
-    // The documentation pages and the endpoints behind them, so no request has to read markdown
-    // from a filesystem a serverless deployment does not have.
+    /*
+     * Markdown errors for clients that did not ask for HTML. Prepended: `errorHandler` is also
+     * where Nuxt puts the `error.vue` renderer, which it registers only if the option is free.
+     */
+    'nitro:config': (nitro) => {
+      const agentErrors = fileURLToPath(new URL('server/error.ts', import.meta.url))
+      const existing = nitro.errorHandler ? [nitro.errorHandler].flat() : []
+      nitro.errorHandler = [agentErrors, ...existing]
+    },
+
+    // The content pages and the endpoints behind them, so no request has to read markdown from a
+    // filesystem a serverless deployment does not have.
     'prerender:routes': async ({ routes }) => {
       const { content } = await import('./server/utils/content.ts')
+      const pages = new Set(proseRoutes)
       for (const { path } of await content.list()) {
-        const slug = path === '/' ? '' : path.replace(/^\//, '')
-        routes.add(`/docs${slug ? `/${slug}` : ''}`)
-        routes.add(`/api/content/get/${slug}`)
+        routes.add(path)
+        routes.add(`/api/content/get/${path.replace(/^\//, '')}`)
+        pages.add(path)
+      }
+      for (const page of pages) {
+        routes.add(markdownTwin(page))
       }
     },
   },

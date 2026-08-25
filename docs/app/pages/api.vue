@@ -135,6 +135,11 @@ const anchor = (path: string) => path.replace(/[^a-z0-9]+/gi, '-').replace(/^-|-
         plugins or CI checks, anywhere you want font metadata without shipping a resolver. There's an
         <a href="https://modelcontextprotocol.io">MCP</a> server too, if the thing asking is a model.
       </p>
+      <p class="head__machine">
+        Machine-readable: <a href="/openapi.json">openapi.json</a> describes every endpoint below,
+        <a href="/llms.txt">llms.txt</a> indexes the site for agents, and every prose page here answers in
+        markdown if you ask for <code>text/markdown</code> or append <code>.md</code> to its path.
+      </p>
       <p class="head__warn">
         Not for production use. This API is best-effort, we'll rate-limit it if we have to, and it can
         change or go away, the same as <code>proxy.unifont.dev</code>. Build it into a script, an editor
@@ -281,6 +286,13 @@ const anchor = (path: string) => path.replace(/[^a-z0-9]+/gi, '-').replace(/^-|-
   max-width: var(--measure);
   margin-top: var(--space-sm);
   color: var(--color-muted);
+}
+
+.head__machine {
+  max-width: var(--measure);
+  margin-top: var(--space-sm);
+  color: var(--color-muted);
+  font-size: var(--text-sm);
 }
 
 .head__warn {

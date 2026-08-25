@@ -8,7 +8,7 @@ const route = useRoute()
 const path = computed(() => {
   const slug = route.params.slug
   const parts = Array.isArray(slug) ? slug : slug ? [slug] : []
-  return parts.length ? `/${parts.join('/')}` : '/'
+  return parts.length ? `/docs/${parts.join('/')}` : '/docs'
 })
 
 const { data: page } = await useAsyncData(() => `doc:${path.value}`, () => clientContent.get(path.value), {
@@ -23,13 +23,17 @@ const { data: nav } = await useAsyncData('doc-nav', () => clientContent.navigati
 
 interface NavItem { title?: string, path: string, children?: NavItem[] }
 
+/**
+ * The `/docs` subtree of the navigation, flattened into reading order. A directory and its own
+ * index are separate nodes with the same path, so the first of each wins.
+ */
 const chapters = computed<NavItem[]>(() => {
   const items = (nav.value ?? []) as NavItem[]
-  const flat: NavItem[] = []
+  const flat = new Map<string, NavItem>()
   const walk = (list: NavItem[]) => {
     for (const item of list) {
-      if (item.path) {
-        flat.push(item)
+      if ((item.path === '/docs' || item.path?.startsWith('/docs/')) && !flat.has(item.path)) {
+        flat.set(item.path, item)
       }
       if (item.children?.length) {
         walk(item.children)
@@ -37,7 +41,7 @@ const chapters = computed<NavItem[]>(() => {
     }
   }
   walk(items)
-  return flat
+  return [...flat.values()]
 })
 
 const position = computed(() => chapters.value.findIndex(item => item.path === path.value))
@@ -64,8 +68,6 @@ usePageSeo({
   title: () => title.value,
   description: () => (page.value?.data.description as string | undefined) ?? undefined,
 })
-
-const href = (docPath: string) => (docPath === '/' ? '/docs' : `/docs${docPath}`)
 </script>
 
 <template>
@@ -86,7 +88,7 @@ const href = (docPath: string) => (docPath === '/' ? '/docs' : `/docs${docPath}`
             class="rail__link"
             :class="{ 'rail__link--current': item.path === path }"
             :aria-current="item.path === path ? 'page' : undefined"
-            :to="href(item.path)"
+            :to="item.path"
           >{{ item.title }}</NuxtLink>
         </li>
       </ol>
@@ -119,7 +121,7 @@ const href = (docPath: string) => (docPath === '/' ? '/docs' : `/docs${docPath}`
         <NuxtLink
           v-if="previous"
           class="pager__link"
-          :to="href(previous.path)"
+          :to="previous.path"
         >
           <span class="pager__dir">previous</span>
           <span class="pager__name">{{ previous.title }}</span>
@@ -127,7 +129,7 @@ const href = (docPath: string) => (docPath === '/' ? '/docs' : `/docs${docPath}`
         <NuxtLink
           v-if="next"
           class="pager__link pager__link--next"
-          :to="href(next.path)"
+          :to="next.path"
         >
           <span class="pager__dir">next</span>
           <span class="pager__name">{{ next.title }}</span>

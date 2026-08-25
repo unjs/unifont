@@ -24,6 +24,7 @@ export const ROUTES = [
   '/docs',
   '/docs/providers',
   '/api',
+  '/about',
   '/not-a-page',
 ] as const
 
