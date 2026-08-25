@@ -85,7 +85,7 @@ usePageSeo({
 }
 
 .fail__title {
-  max-width: 18ch;
+  max-width: calc(18 * var(--char));
   margin-top: var(--space-sm);
   font-size: var(--text-display-s);
   letter-spacing: -0.03em;

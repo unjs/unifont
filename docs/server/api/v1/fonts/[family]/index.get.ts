@@ -42,6 +42,9 @@ export default defineEventHandler(async (event) => {
   const fallbackCss = await metricFallbackCss(family, resolved.fonts, resolved.fallbacks ?? [])
   const entry = await lookupFamily(family)
 
+  // Long enough that a hover prefetch and the navigation behind it are one request.
+  event.res.headers.set('cache-control', 'public, max-age=300, stale-while-revalidate=3600')
+
   return {
     family,
     provider: resolved.provider ?? properties.provider,

@@ -94,8 +94,8 @@ const endpoints: Endpoint[] = [
     summary: 'One stylesheet for lots of families, so a grid of specimens costs one request.',
     params: [
       { name: 'families', type: 'string', note: 'Comma-separated, up to 40. Required.' },
-      { name: 'weights', type: 'string', note: 'Comma-separated. Default 400.' },
-      { name: 'subsets', type: 'string', note: 'Comma-separated. Default latin.' },
+      { name: 'weights', type: 'string', note: 'Comma-separated. Defaults to the variable range, or the weight nearest 400.' },
+      { name: 'subsets', type: 'string', note: 'Comma-separated. Defaults to latin where the family publishes it.' },
     ],
     example: 'curl "https://unifont.dev/api/v1/css?families=Anton,Erode,Spectral"',
     returns: 'text/css. A family that can\'t be resolved becomes a comment, rather than breaking the sheet',
@@ -272,7 +272,7 @@ const anchor = (path: string) => path.replace(/[^a-z0-9]+/gi, '-').replace(/^-|-
 }
 
 .head__title {
-  max-width: 20ch;
+  max-width: calc(20 * var(--char));
   font-size: var(--text-display-s);
   letter-spacing: -0.03em;
 }

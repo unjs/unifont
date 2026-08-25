@@ -4,8 +4,6 @@
  * full preview stylesheet and calls `drop`.
  */
 export function useFontWarmup() {
-  const claimed = useState<string[]>('font-claimed', () => [])
-
   // Warmed sheets stay in the document, and every live `@font-face` rule is work the browser
   // redoes when the font set changes. One weight and one subset each keeps the limit this high.
   const LIMIT = 24
@@ -17,21 +15,13 @@ export function useFontWarmup() {
     return match ? decodeURIComponent(match[1]!) : undefined
   }
 
-  /**
-   * Declares families a page loads itself, typically through the batch stylesheet behind a
-   * specimen grid. Warming those again would declare a second set of `@font-face` rules and
-   * visibly re-resolve the face under the cursor.
+  /*
+   * A grid declares the same faces itself, but its sheet goes with the page: only the warmed link
+   * survives the navigation to paint the specimen while the family page's own is in flight. Both
+   * resolve the same file, so the second declaration costs nothing to fetch.
    */
-  function claim(families: readonly string[]) {
-    for (const family of families) {
-      if (!claimed.value.includes(family)) {
-        claimed.value.push(family)
-      }
-    }
-  }
-
   function warm(family: string) {
-    if (import.meta.server || claimed.value.includes(family)) {
+    if (import.meta.server) {
       return
     }
     const existing = links()
@@ -65,5 +55,5 @@ export function useFontWarmup() {
     }
   }
 
-  return { warm, claim, drop }
+  return { warm, drop }
 }

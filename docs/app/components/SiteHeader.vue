@@ -21,7 +21,10 @@ function isCurrent(to: string) {
       <NuxtLink
         class="wordmark"
         to="/"
-      >unifont</NuxtLink>
+      >unifont<span
+        class="wordmark__dot"
+        aria-hidden="true"
+      >.</span></NuxtLink>
 
       <button
         class="pill"
@@ -81,6 +84,11 @@ function isCurrent(to: string) {
   letter-spacing: -0.03em;
   text-decoration: none;
   color: var(--color-ink-strong);
+}
+
+/* The mark the favicon draws, and not part of the name, so it is not read out. */
+.wordmark__dot {
+  color: var(--color-accent);
 }
 
 .pill {

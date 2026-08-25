@@ -20,5 +20,14 @@ export const FEATURED_FAMILIES = [
   'Space Mono',
 ] as const
 
+export const CATALOGUE_PAGE = 36
+
 /** One shared line for the comparison view, so no provider is flattered by its own sample. */
 export const SPECIMEN_LINE = 'Handgloves & 0123'
+
+export const SPECIMEN_TEXT = 'Typography is what language looks like.'
+
+/** The characters a specimen sets, for providers that can subset to a glyph list. */
+export function specimenGlyphs(family: string) {
+  return [...new Set(`${family}${SPECIMEN_TEXT}${SPECIMEN_LINE}`)].sort()
+}

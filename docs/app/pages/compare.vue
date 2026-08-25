@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import type { CompareResponse, CompareRow } from '#shared/types'
-import { SPECIMEN_LINE } from '~/utils/featured'
+import { SPECIMEN_LINE } from '#shared/featured'
 
 const route = useRoute()
 const router = useRouter()
@@ -378,7 +378,7 @@ const divergence = computed(() => {
 }
 
 .head__title {
-  max-width: 22ch;
+  max-width: calc(22 * var(--char));
   font-size: var(--text-display-s);
   letter-spacing: -0.03em;
 }
@@ -520,7 +520,7 @@ const divergence = computed(() => {
 
 .divergence__text {
   display: block;
-  max-width: 78ch;
+  max-width: calc(78 * var(--char));
 }
 
 .divergence strong {

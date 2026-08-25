@@ -23,6 +23,9 @@ const docRoutes = [
   ...docSlugs.filter(Boolean).map(slug => `/docs/${slug}`),
   '/api/content/navigation',
   ...docSlugs.map(slug => `/api/content/get/${slug}`),
+  // Inlined into the page that shows them, so they are on the critical path.
+  '/api/v1/specimens.css',
+  '/api/v1/catalogue.css',
 ]
 
 /**
@@ -49,6 +52,11 @@ export default defineNuxtConfig({
          */
         { rel: 'icon', href: '/favicon-dark.svg', type: 'image/svg+xml', media: '(prefers-color-scheme: dark)' },
         { rel: 'icon', href: '/favicon-light.svg', type: 'image/svg+xml' },
+        // Specimen faces come straight from the provider that resolved them, and their URLs are
+        // only known once a stylesheet has parsed.
+        { rel: 'preconnect', href: 'https://fonts.gstatic.com', crossorigin: 'anonymous' },
+        { rel: 'preconnect', href: 'https://cdn.fontshare.com', crossorigin: 'anonymous' },
+        { rel: 'preconnect', href: 'https://fonts.bunny.net', crossorigin: 'anonymous' },
       ],
     },
   },
@@ -82,6 +90,8 @@ export default defineNuxtConfig({
     // Provider metadata is immutable enough to cache hard, and a warm cache is worth ~2s on a
     // family page.
     storage: {
+      // `defineCachedFunction` writes here, and the default base is not writable on a deployment.
+      cache: { driver: 'fs', base: join(cacheBase, 'unifont-cache') },
       unifont: { driver: 'fs', base: join(cacheBase, 'unifont-site') },
       // Share cards are binary, so they are cached with the raw storage API: `defineCachedHandler`
       // stringifies bodies.
@@ -91,6 +101,8 @@ export default defineNuxtConfig({
       // Prerendered so the deployed site never spends one of its 60 unauthenticated GitHub
       // requests per hour on drawing a colophon.
       '/api/v1/contributors': { prerender: true },
+      '/api/v1/specimens.css': { headers: { 'cache-control': 'public, max-age=3600, stale-while-revalidate=86400' } },
+      '/api/v1/catalogue.css': { headers: { 'cache-control': 'public, max-age=3600, stale-while-revalidate=86400' } },
     },
     prerender: {
       routes: docRoutes,
@@ -104,11 +116,19 @@ export default defineNuxtConfig({
   vite: {
     plugins: [
       fontless({
+        /*
+         * One file per family and style, and preloaded: every page sets its first paragraph in
+         * these. `fontaine`'s metric fallback cannot cover a swap here, because `local("serif")`
+         * matches no installed family and the face never loads.
+         *
+         * The interface is in English, so `latin` is the whole of it.
+         */
         families: [
           // The variable cut carries Newsreader's optical-size axis.
-          { name: 'Newsreader', provider: 'google', weights: ['200 800'] },
-          { name: 'Switzer', provider: 'fontshare', weights: ['300', '400', '500'] },
-          { name: 'JetBrains Mono', provider: 'google', weights: ['400'] },
+          { name: 'Newsreader', provider: 'google', weights: ['200 800'], styles: ['normal'], subsets: ['latin'], preload: true },
+          // The variable cut, so the 350 and 450 body weights are real rather than rounded.
+          { name: 'Switzer', provider: 'fontshare', weights: ['100 900'], styles: ['normal', 'italic'], subsets: ['latin'], preload: true },
+          { name: 'JetBrains Mono', provider: 'google', weights: ['400'], styles: ['normal'], subsets: ['latin'], preload: true },
         ],
       }),
     ],

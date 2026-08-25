@@ -274,7 +274,7 @@ onMounted(() => {
           <template v-if="row.kind === 'family'">
             <span
               class="row__specimen"
-              :style="{ fontFamily: `'${row.item.family}', '${row.item.family} fallback', var(--font-display)` }"
+              :style="{ fontFamily: `'${row.item.family}', var(--font-display)` }"
             >{{ row.item.family }}</span>
             <span class="row__meta">{{ row.item.providers.join(' · ') }}</span>
           </template>

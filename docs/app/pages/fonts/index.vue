@@ -1,10 +1,15 @@
 <script setup lang="ts">
-const { warm, claim } = useFontWarmup()
+import { CATALOGUE_PAGE } from '#shared/featured'
+
+const { warm } = useFontWarmup()
+
+function prefetch(family: string) {
+  warm(family)
+  prefetchFamilyData(family)
+}
 
 const route = useRoute()
 const router = useRouter()
-
-const PAGE = 36
 
 const q = computed(() => String(route.query.q ?? ''))
 const provider = computed(() => String(route.query.provider ?? ''))
@@ -29,7 +34,7 @@ watch(q, (value) => {
 })
 
 const { data, status } = await useFetch('/api/v1/fonts', {
-  query: { q, provider, limit: PAGE, offset },
+  query: { q, provider, limit: CATALOGUE_PAGE, offset },
   key: () => `catalogue-${q.value}-${provider.value}-${offset.value}`,
 })
 
@@ -37,10 +42,16 @@ const { data: catalogue } = await useProviders()
 
 const enumerable = computed(() => catalogue.value?.providers.filter(item => item.families) ?? [])
 
-/** One stylesheet for the families on screen, so a page of specimens is one request. */
+/**
+ * One stylesheet for the families on screen, so a page of specimens is one request. The first
+ * page as served is inlined into the head instead; searching or paging past it moves to a link.
+ */
+const { covered, release } = useInlinedSpecimens('/api/v1/catalogue.css')
+watch([q, provider, offset], () => release())
+
 const stylesheet = computed(() => {
   const families = data.value?.families.map(item => item.family) ?? []
-  if (!families.length) {
+  if (!families.length || covered.value) {
     return undefined
   }
   return `/api/v1/css?families=${families.map(encodeURIComponent).join(',')}`
@@ -49,13 +60,6 @@ const stylesheet = computed(() => {
 useHead(() => ({
   link: stylesheet.value ? [{ rel: 'stylesheet', href: stylesheet.value }] : [],
 }))
-
-// Every family on the page is already declared by the batch stylesheet above.
-watch(() => data.value?.families, (families) => {
-  if (families?.length) {
-    claim(families.map(entry => entry.family))
-  }
-}, { immediate: true })
 
 usePageSeo({
   title: 'Catalogue',
@@ -69,7 +73,7 @@ function setProvider(name: string) {
 }
 
 function page(delta: number) {
-  router.replace({ query: { ...route.query, offset: Math.max(offset.value + delta * PAGE, 0) || undefined } })
+  router.replace({ query: { ...route.query, offset: Math.max(offset.value + delta * CATALOGUE_PAGE, 0) || undefined } })
 }
 
 const showing = computed(() => {
@@ -77,7 +81,7 @@ const showing = computed(() => {
   if (!total) {
     return null
   }
-  return { from: offset.value + 1, to: Math.min(offset.value + PAGE, total), total }
+  return { from: offset.value + 1, to: Math.min(offset.value + CATALOGUE_PAGE, total), total }
 })
 
 // Rendered unconditionally: a live region inserted alongside its first message is not reliably
@@ -181,14 +185,14 @@ function turn(delta: number) {
         <NuxtLink
           class="cell__link"
           :to="{ path: `/fonts/${encodeURIComponent(entry.family)}`, query: provider ? { provider } : undefined }"
-          @mouseenter="warm(entry.family)"
-          @focus="warm(entry.family)"
+          @mouseenter="prefetch(entry.family)"
+          @focus="prefetch(entry.family)"
         >
           <!-- Set twice, in its own face and in mono; only one of them is read out. -->
           <span
             class="cell__specimen"
             aria-hidden="true"
-            :style="{ fontFamily: `'${entry.family}', '${entry.family} fallback', var(--font-display)` }"
+            :style="{ fontFamily: `'${entry.family}', var(--font-display)` }"
           >{{ entry.family }}</span>
           <span class="cell__name">{{ entry.family }}</span>
           <span class="cell__providers">{{ entry.providers.join(' · ') }}</span>
@@ -204,7 +208,7 @@ function turn(delta: number) {
     </p>
 
     <nav
-      v-if="showing && showing.total > PAGE"
+      v-if="showing && showing.total > CATALOGUE_PAGE"
       class="pager"
       aria-label="Catalogue pages"
     >
@@ -361,6 +365,8 @@ function turn(delta: number) {
 /* Specimens size to their own cell rather than to a breakpoint. */
 .cell__specimen {
   container-type: inline-size;
+  /* Two lines, always, so a name that wraps differently in the fallback cannot resize its row. */
+  min-height: 2lh;
   font-size: clamp(1.1rem, 11cqi, 1.75rem);
   line-height: 1.15;
   overflow-wrap: anywhere;

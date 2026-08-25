@@ -1,14 +1,20 @@
 <script setup lang="ts">
 const DESCRIPTION = 'Look up a typeface across every font CDN in one place: metadata, specimens, coverage, and the CSS to ship it.'
 
+// The template has to survive into the client, where a navigation sets a title through it.
 useSeoMeta({
   titleTemplate: title => withSiteName(title ?? undefined),
-  description: DESCRIPTION,
-  ogType: 'website',
-  ogSiteName: 'unifont',
-  ogTitle: 'unifont',
-  ogDescription: DESCRIPTION,
 })
+
+if (import.meta.server) {
+  useSeoMeta({
+    description: DESCRIPTION,
+    ogType: 'website',
+    ogSiteName: 'unifont',
+    ogTitle: 'unifont',
+    ogDescription: DESCRIPTION,
+  })
+}
 
 /*
  * Share cards mirror the route: `/fonts/Fraunces` is drawn by `/og/fonts/Fraunces.png`, which
@@ -23,11 +29,13 @@ const ogImage = computed(() => {
   return new URL(`/og/${path || 'index'}.png`, origin).href
 })
 
-useSeoMeta({
-  ogImage: () => ogImage.value,
-  ogImageWidth: 1200,
-  ogImageHeight: 630,
-})
+if (import.meta.server) {
+  useSeoMeta({
+    ogImage: () => ogImage.value,
+    ogImageWidth: 1200,
+    ogImageHeight: 630,
+  })
+}
 
 const main = useTemplateRef<HTMLElement>('main')
 
@@ -39,7 +47,8 @@ if (import.meta.client) {
       return
     }
     await nextTick()
-    main.value?.focus()
+    // Focusing scrolls into view, and `<main>` starts below the sticky header.
+    main.value?.focus({ preventScroll: true })
   })
 }
 </script>

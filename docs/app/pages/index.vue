@@ -1,21 +1,25 @@
 <script setup lang="ts">
-import { FEATURED_FAMILIES } from '~/utils/featured'
+import { FEATURED_FAMILIES } from '#shared/featured'
 
-const { warm, claim } = useFontWarmup()
+const { warm } = useFontWarmup()
 
-// The batch stylesheet below already declares every family in the grid.
-claim(FEATURED_FAMILIES)
+function prefetch(family: string) {
+  warm(family)
+  prefetchFamilyData(family)
+}
 
 const palette = useCommandPalette()
 const shortcut = useCommandShortcut()
 
 const { data: catalogue } = await useProviders()
 
-const specimenCss = computed(() => `/api/v1/css?families=${FEATURED_FAMILIES.map(encodeURIComponent).join(',')}`)
+// Inlined into the server-rendered head; a navigation that arrives client-side links it instead.
+const SPECIMEN_SHEET = '/api/v1/specimens.css'
+const { covered } = useInlinedSpecimens(SPECIMEN_SHEET)
 
-useHead({
-  link: [{ rel: 'stylesheet', href: specimenCss.value }],
-})
+useHead(() => ({
+  link: covered.value ? [] : [{ rel: 'stylesheet', href: SPECIMEN_SHEET }],
+}))
 
 usePageSeo({
   title: 'Every font CDN, one lookup',
@@ -83,8 +87,8 @@ await unifont.getFontProperties('Switzer')
           Some fonts you might like &hellip;
         </h2>
         <p class="index__note">
-          {{ FEATURED_FAMILIES.length }} families, resolved through <code>google</code> and <code>fontshare</code>, in one
-          request to this site's own <NuxtLink to="/api">CSS endpoint</NuxtLink>.
+          {{ FEATURED_FAMILIES.length }} families, resolved through <code>google</code> and <code>fontshare</code> by this
+          site's own <NuxtLink to="/api">CSS endpoint</NuxtLink>, and inlined above.
         </p>
       </div>
       <ul class="grid">
@@ -96,14 +100,14 @@ await unifont.getFontProperties('Switzer')
           <NuxtLink
             class="cell__link"
             :to="`/fonts/${encodeURIComponent(family)}`"
-            @mouseenter="warm(family)"
-            @focus="warm(family)"
+            @mouseenter="prefetch(family)"
+            @focus="prefetch(family)"
           >
             <!-- Set twice, in its own face and in mono; only one of them is read out. -->
             <span
               class="cell__specimen"
               aria-hidden="true"
-              :style="{ fontFamily: `'${family}', '${family} fallback', var(--font-display)` }"
+              :style="{ fontFamily: `'${family}', var(--font-display)` }"
             >{{ family }}</span>
             <span class="cell__name">{{ family }}</span>
           </NuxtLink>
@@ -246,7 +250,7 @@ await unifont.getFontProperties('Switzer')
 
 .masthead__title {
   grid-column: 1;
-  max-width: 20ch;
+  max-width: calc(20 * var(--char));
   font-size: var(--text-display);
   letter-spacing: -0.035em;
   /* Newsreader's opsz axis tops out at 72, which is the display drawing rather than a scaled-up
@@ -340,7 +344,7 @@ await unifont.getFontProperties('Switzer')
 }
 
 .index__note {
-  max-width: 44ch;
+  max-width: calc(44 * var(--char));
   color: var(--color-muted);
   font-size: var(--text-sm);
 }
@@ -377,6 +381,8 @@ await unifont.getFontProperties('Switzer')
 /* Specimens size to their own cell, so a narrow column shows smaller type, not a wrapped word. */
 .cell__specimen {
   container-type: inline-size;
+  /* Two lines, always, so a name that wraps differently in the fallback cannot resize its row. */
+  min-height: 2lh;
   font-size: clamp(1.1rem, 11cqi, 1.75rem);
   line-height: 1.15;
   overflow-wrap: anywhere;

@@ -18,10 +18,15 @@ export function usePageSeo(meta: PageSeo) {
   const title = () => toValue(meta.title)
   const description = () => toValue(meta.description)
 
-  useSeoMeta({
-    title,
-    description,
-    ogTitle: () => withSiteName(title()),
-    ogDescription: description,
-  })
+  // Only `<title>` has to keep up with a client-side navigation; a share card reads the rest
+  // from the server-rendered document alone.
+  useSeoMeta({ title })
+
+  if (import.meta.server) {
+    useSeoMeta({
+      description,
+      ogTitle: () => withSiteName(title()),
+      ogDescription: description,
+    })
+  }
 }

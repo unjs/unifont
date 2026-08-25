@@ -1,8 +1,6 @@
 <script setup lang="ts">
 import type { ContributorsResponse } from '#shared/types'
 
-const { data } = await useProviders()
-
 // Server-rendered: a client-only avatar row lands after hydration and pushes the colophon down.
 const { data: credits } = await useFetch<ContributorsResponse>('/api/v1/contributors', {
   key: 'footer-contributors',
@@ -11,16 +9,6 @@ const { data: credits } = await useFetch<ContributorsResponse>('/api/v1/contribu
 })
 
 const contributors = computed(() => credits.value?.contributors ?? [])
-
-const providerLine = computed(() => {
-  const providers = data.value?.providers ?? []
-  if (!providers.length) {
-    return null
-  }
-  return providers
-    .map(provider => `${provider.name}${provider.families ? `(${provider.families.toLocaleString('en')})` : ''}`)
-    .join(' · ')
-})
 </script>
 
 <template>
@@ -36,12 +24,6 @@ const providerLine = computed(() => {
         <NuxtLink to="/api">api</NuxtLink> ·
         <a href="https://github.com/unjs/unifont">source</a> ·
         <a href="https://npmjs.com/package/unifont">npm</a>
-      </p>
-      <p
-        v-if="providerLine"
-        class="colophon__line colophon__line--data"
-      >
-        providers indexed: {{ providerLine }}
       </p>
       <div
         v-if="contributors.length"
@@ -75,7 +57,7 @@ const providerLine = computed(() => {
         </ul>
       </div>
 
-      <p class="colophon__line colophon__line--data">
+      <p class="colophon__line colophon__line--fine">
         made with <span
           class="heart"
           role="img"
@@ -105,25 +87,25 @@ const providerLine = computed(() => {
 }
 
 .colophon__line {
-  max-width: 78ch;
+  max-width: var(--measure);
   color: var(--color-muted);
-  font-family: var(--font-mono);
-  font-size: var(--text-xs);
-  line-height: 1.75;
+  font-size: var(--text-sm);
+  line-height: 1.65;
   text-wrap: pretty;
 }
 
 .colophon__line strong {
   color: var(--color-ink);
-  font-weight: 500;
+  font-weight: var(--weight-body-strong);
 }
 
 .colophon__line--index {
   color: var(--color-ink);
 }
 
-.colophon__line--data {
-  overflow-wrap: anywhere;
+.colophon__line--fine {
+  color: var(--color-neutral);
+  font-size: var(--text-xs);
 }
 
 .colophon a {

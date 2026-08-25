@@ -1,7 +1,8 @@
 import { HTTPError, defineEventHandler, getQuery, getRouterParam } from 'nitro/h3'
 import { metricFallbackCss, toFontFaceCss } from '#server/utils/css'
 import { useProviderScope } from '#server/utils/unifont'
-import { normaliseWeights } from '#server/utils/weights'
+import { specimenOptions } from '#server/utils/specimens'
+import { normaliseWeights, specimenSubsets, specimenWeights } from '#server/utils/weights'
 
 function list(value: unknown, fallback: string[]) {
   if (typeof value !== 'string' || !value.trim()) {
@@ -26,14 +27,6 @@ function representativeWeights(published: string[]) {
   return [...new Set([numeric[0]!, nearest(400), nearest(700), numeric.at(-1)!])].map(String)
 }
 
-function nearestWeight(published: string[], target: number) {
-  const numeric = published.map(Number).filter(Number.isFinite)
-  if (!numeric.length) {
-    return published[0] ?? '400'
-  }
-  return String(numeric.reduce((best, weight) => (Math.abs(weight - target) < Math.abs(best - target) ? weight : best), numeric[0]!))
-}
-
 /** Servable `@font-face` CSS for a family, meant to be read and copied as much as linked. */
 export default defineEventHandler(async (event) => {
   const family = decodeURIComponent(getRouterParam(event, 'family') || '')
@@ -52,6 +45,7 @@ export default defineEventHandler(async (event) => {
   let weights: string[]
   let styles: ('normal' | 'italic' | 'oblique')[]
   let subsets: string[]
+  let options: ReturnType<typeof specimenOptions> | undefined
 
   if (query.preset === 'preview' || query.preset === 'warm') {
     const properties = await unifont.getFontProperties(family, allowed)
@@ -63,9 +57,11 @@ export default defineEventHandler(async (event) => {
      * Noto Sans, which is enough to make the whole document slow to restyle.
      */
     if (query.preset === 'warm') {
-      weights = range ? [range] : [nearestWeight(published, 400)]
+      weights = specimenWeights(published)
       styles = ['normal']
-      subsets = properties?.subsets?.includes('latin') ? ['latin'] : [properties?.subsets?.[0] ?? 'latin']
+      subsets = specimenSubsets(properties?.subsets)
+      // The grids' own glyph list, so a warmed face is the file the browser already holds.
+      options = specimenOptions(family)
     }
     else {
       weights = range ? [range] : representativeWeights(published)
@@ -79,7 +75,7 @@ export default defineEventHandler(async (event) => {
     subsets = list(query.subsets, ['latin'])
   }
 
-  const resolved = await unifont.resolveFont(family, { weights, styles, subsets, formats: ['woff2'] }, allowed)
+  const resolved = await unifont.resolveFont(family, { weights, styles, subsets, formats: ['woff2'], options }, allowed)
 
   // `as` renames the declared family, so several providers can serve it at once without their
   // declarations colliding.

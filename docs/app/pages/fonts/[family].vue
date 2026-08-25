@@ -20,14 +20,13 @@ const allowedProviders = computed(() => {
   return allowed.length ? allowed : all
 })
 
-// Keyed on the family alone, so a chip toggle refetches against the same cache entry and keeps
-// the previous answer on screen instead of blanking the page.
+// A chip toggle refetches against the same entry, keeping the previous answer on screen rather
+// than blanking the page.
 const { data, status, error, refresh } = await useFetch(() => `/api/v1/fonts/${encodeURIComponent(family.value)}`, {
   query: { weights, subsets, styles, provider },
-  key: () => `font-${family.value}`,
-  // The face list is the largest thing this endpoint returns and the page only counts it; the
-  // detail is already in the CSS shown below.
-  transform: ({ fonts, ...rest }) => ({ ...rest, faces: fonts.length }),
+  key: () => familyDataKey(family.value),
+  transform: toFamilySummary,
+  getCachedData: (key, nuxtApp, ctx) => cachedFamilyData(key, nuxtApp, ctx.cause),
 })
 
 /** A 404 means no provider has the family; anything else means the site failed to ask. */

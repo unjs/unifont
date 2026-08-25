@@ -1,28 +1,6 @@
 <script setup lang="ts">
 // Server-rendered: fetched on the client this lands after hydration and shifts the masthead.
 const { data } = await useFetch('/api/v1/status', { key: 'status-strip' })
-
-// Read once. On an interval this would be auto-updating content, which owes the reader a way to
-// stop it (SC 2.2.2); the line dates the index against the reader's clock rather than being one.
-const clock = ref('')
-onMounted(() => {
-  clock.value = new Date().toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' })
-})
-
-const age = computed(() => {
-  const ms = data.value?.indexAge
-  if (ms === undefined) {
-    return null
-  }
-  const minutes = Math.floor(ms / 60_000)
-  if (minutes < 1) {
-    return 'just now'
-  }
-  if (minutes < 60) {
-    return `${minutes}m ago`
-  }
-  return `${Math.floor(minutes / 60)}h ago`
-})
 </script>
 
 <template>
@@ -41,14 +19,6 @@ const age = computed(() => {
     <div class="strip__cell">
       <dt class="strip__key">answering</dt>
       <dd class="strip__value">{{ data.providers }} providers</dd>
-    </div>
-    <div class="strip__cell">
-      <dt class="strip__key">built</dt>
-      <dd class="strip__value">{{ age }}</dd>
-    </div>
-    <div class="strip__cell">
-      <dt class="strip__key">your clock</dt>
-      <dd class="strip__value strip__value--clock">{{ clock }}</dd>
     </div>
     <div
       v-if="data.unavailable.length"
@@ -90,12 +60,6 @@ const age = computed(() => {
 
 .strip__key::after {
   content: ':';
-}
-
-/* The clock only exists after mount, so its width is held open for it. */
-.strip__value--clock {
-  display: inline-block;
-  min-width: 5ch;
 }
 
 .strip__cell--warn {

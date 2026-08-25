@@ -18,10 +18,12 @@ export function useOverflow(target: Readonly<ShallowRef<HTMLElement | null>>) {
   }
 
   onMounted(() => {
-    measure()
     if (typeof ResizeObserver === 'undefined') {
+      measure()
       return
     }
+    // No eager measurement: reading `scrollWidth` here forces a layout mid-hydration, and
+    // observing an element reports its current size on the next frame anyway.
     const observer = new ResizeObserver(measure)
     let child: Element | null = null
 

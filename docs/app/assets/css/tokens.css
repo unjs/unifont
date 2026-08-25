@@ -89,8 +89,11 @@
   --z-toast: 500;
   --z-tooltip: 600;
 
-  --measure: 66ch;
-  --measure-tight: 48ch;
+  /* One character of measure. Not `ch`, which is the resolved font's zero advance and so changes
+     width as a webfont lands; both faces here set zero at 0.5625em. */
+  --char: 0.5625em;
+  --measure: calc(66 * var(--char));
+  --measure-tight: calc(48 * var(--char));
   --page-max: 84rem;
   --page-pad: clamp(1.25rem, 5vw, 4rem);
 }
