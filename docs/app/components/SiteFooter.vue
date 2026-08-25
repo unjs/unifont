@@ -37,16 +37,16 @@ const contributors = computed(() => credits.value?.contributors ?? [])
             v-for="person in contributors"
             :key="person.login"
           >
-            <!-- The avatar is the link, so its `alt` names the destination rather than the
-                 picture, and carries the commit count. -->
+            <!-- The avatar carries no text of its own, so the link is labelled instead. -->
             <a
               class="credits__person"
               :href="person.url"
+              :aria-label="`${person.login}, ${person.contributions} ${person.contributions === 1 ? 'commit' : 'commits'}`"
             >
               <img
                 class="credits__avatar"
                 :src="person.avatar"
-                :alt="`${person.login} on GitHub, ${person.contributions} commits`"
+                alt=""
                 width="28"
                 height="28"
                 loading="lazy"
@@ -55,6 +55,10 @@ const contributors = computed(() => credits.value?.contributors ?? [])
             </a>
           </li>
         </ul>
+        <a
+          class="credits__all"
+          href="https://github.com/unjs/unifont/graphs/contributors"
+        >all contributors</a>
       </div>
 
       <p class="colophon__line colophon__line--fine">
@@ -72,7 +76,7 @@ const contributors = computed(() => credits.value?.contributors ?? [])
 
 <style scoped>
 .colophon {
-  margin-top: var(--space-4xl);
+  margin-top: var(--space-2xl);
   border-top: var(--rule-heavy) solid var(--color-ink);
   background: var(--color-paper-2);
 }
@@ -129,6 +133,12 @@ const contributors = computed(() => credits.value?.contributors ?? [])
   margin: 0;
   padding: 0;
   list-style: none;
+}
+
+.credits__all {
+  color: var(--color-neutral);
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
 }
 
 .credits__person {

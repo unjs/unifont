@@ -190,13 +190,11 @@ function turn(delta: number) {
           @mouseenter="prefetch(entry.family)"
           @focus="prefetch(entry.family)"
         >
-          <!-- Set twice, in its own face and in mono; only one of them is read out. -->
+          <!-- The name is set once, in its own face, and is the link's accessible name. -->
           <span
             class="cell__specimen"
-            aria-hidden="true"
             :style="{ fontFamily: `'${entry.family}', var(--font-display)` }"
           >{{ entry.family }}</span>
-          <span class="cell__name">{{ entry.family }}</span>
           <span class="cell__providers">{{ entry.providers.join(' · ') }}</span>
         </NuxtLink>
       </li>
@@ -378,16 +376,8 @@ function turn(delta: number) {
   overflow-wrap: anywhere;
 }
 
-.cell__name {
-  margin-top: auto;
-  font-size: var(--text-sm);
-}
-
-.cell__link:hover .cell__name {
-  color: var(--color-ink-strong);
-}
-
 .cell__providers {
+  margin-top: auto;
   color: var(--color-neutral);
   font-family: var(--font-mono);
   font-size: var(--text-xs);

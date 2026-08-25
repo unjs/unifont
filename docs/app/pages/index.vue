@@ -88,13 +88,11 @@ await unifont.getFontProperties('Switzer')
             @mouseenter="prefetchFamilyData(family)"
             @focus="prefetchFamilyData(family)"
           >
-            <!-- Set twice, in its own face and in mono; only one of them is read out. -->
+            <!-- The name is set once, in its own face, and is the link's accessible name. -->
             <span
               class="cell__specimen"
-              aria-hidden="true"
               :data-specimen="family"
             >{{ family }}</span>
-            <span class="cell__name">{{ family }}</span>
           </NuxtLink>
         </li>
       </ul>
@@ -377,18 +375,6 @@ await unifont.getFontProperties('Switzer')
   overflow-wrap: anywhere;
 }
 
-.cell__link:hover .cell__name {
-  color: var(--color-ink-strong);
-}
-
-.cell__name {
-  margin-top: auto;
-  color: var(--color-neutral);
-  font-family: var(--font-mono);
-  font-size: var(--text-xs);
-  transition: color var(--dur-micro) var(--ease-out);
-}
-
 .index__more {
   margin-top: var(--space-lg);
   font-size: var(--text-sm);
@@ -504,7 +490,7 @@ await unifont.getFontProperties('Switzer')
 
 /* ── Surfaces ─────────────────────────────────────────────── */
 .surfaces {
-  padding-block: var(--space-2xl) var(--space-xl);
+  padding-block: var(--space-xl) var(--space-lg);
 }
 
 .surfaces h2 {
@@ -519,8 +505,8 @@ await unifont.getFontProperties('Switzer')
 
 .surfaces__row {
   display: grid;
-  grid-template-columns: minmax(0, 3fr) minmax(0, 9fr);
-  gap: var(--space-md) var(--space-xl);
+  grid-template-columns: minmax(0, 2fr) minmax(0, 10fr);
+  gap: var(--space-sm) var(--space-xl);
   padding-block: var(--space-md);
   border-top: var(--rule-hair) solid var(--color-rule);
 }
