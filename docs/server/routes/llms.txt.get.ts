@@ -7,7 +7,7 @@ import { listDocs, listPages } from '../utils/markdown'
  * blockquote summary, prose, then H2 sections of annotated links.
  */
 export default defineEventHandler(async (event) => {
-  const origin = (useRuntimeConfig(event).public.siteUrl || getRequestURL(event).origin).replace(/\/+$/, '')
+  const origin = (useRuntimeConfig().public.siteUrl || getRequestURL(event).origin).replace(/\/+$/, '')
   const url = (path: string) => `${origin}${path}`
 
   const docs = await listDocs()

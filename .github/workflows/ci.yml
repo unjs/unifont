@@ -55,6 +55,12 @@ jobs:
         env:
           CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
 
+      - name: 🧪 Test site
+        run: pnpm --filter unifont-site test
+
+      - name: 🔍 Typecheck site
+        run: pnpm --filter unifont-site test:types
+
   a11y:
     runs-on: ubuntu-latest
 
@@ -70,10 +76,10 @@ jobs:
         run: pnpm install
 
       - name: 🎭 Install Chromium
-        run: pnpm --filter docs exec playwright install --with-deps chromium
+        run: pnpm --filter unifont-site exec playwright install --with-deps chromium
 
       - name: ♿ Accessibility
-        run: pnpm --filter docs test:a11y
+        run: pnpm --filter unifont-site test:a11y
 
       - name: 📄 Upload report
         if: failure()

@@ -1,3 +1,4 @@
+import type { H3Event } from 'nitro/h3'
 import { definePlugin } from 'nitro'
 import { markdownPath, prefersMarkdown } from '#server/utils/negotiation'
 
@@ -12,16 +13,20 @@ export default definePlugin((nitro) => {
       return
     }
 
-    const twin = markdownPath(event.url.pathname)
+    // Nitro types the hook with the minimal `HTTPEvent`, the request and nothing else. What it
+    // dispatches is an `H3Event`, whose `url` is the one routing and the static handler read.
+    const { url, res } = event as H3Event
+
+    const twin = markdownPath(url.pathname)
     if (!twin) {
       return
     }
 
     // On the HTML variant too: a shared cache must not serve it to a client asking for markdown.
-    event.res.headers.set('vary', 'Accept, Accept-Encoding')
+    res.headers.set('vary', 'Accept, Accept-Encoding')
 
     if (prefersMarkdown(event.req.headers.get('accept'))) {
-      event.url.pathname = twin
+      url.pathname = twin
     }
   })
 })

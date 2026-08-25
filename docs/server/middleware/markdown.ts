@@ -19,7 +19,7 @@ export default defineEventHandler(async (event) => {
     return
   }
 
-  const origin = useRuntimeConfig(event).public.siteUrl || url.origin
+  const origin = useRuntimeConfig().public.siteUrl || url.origin
   const source = await markdownForPath(path, origin)
   if (!source) {
     return

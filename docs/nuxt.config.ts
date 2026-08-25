@@ -229,9 +229,9 @@ export default defineNuxtConfig({
     // The content pages and the endpoints behind them, so no request has to read markdown from a
     // filesystem a serverless deployment does not have.
     'prerender:routes': async ({ routes }) => {
-      const { content } = await import('./server/utils/content.ts')
+      const { fsContent } = await import('./server/utils/content-fs.ts')
       const pages = new Set(proseRoutes)
-      const paths = (await content.list()).map((file: { path: string }) => file.path)
+      const paths = (await fsContent().list()).map((file: { path: string }) => file.path)
       for (const path of paths) {
         routes.add(path)
         // Each endpoint is prerendered to a file, so `/docs`, which is also the parent of every

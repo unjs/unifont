@@ -14,7 +14,7 @@ const escape = (value: string) =>
 
 /** Every indexable URL. A family page costs a provider lookup, so only the featured ones are listed. */
 export default defineEventHandler(async (event) => {
-  const config = useRuntimeConfig(event)
+  const config = useRuntimeConfig()
   const origin = (config.public.siteUrl || getRequestURL(event).origin).replace(/\/+$/, '')
   const lastmod = config.buildTime || new Date().toISOString()
 

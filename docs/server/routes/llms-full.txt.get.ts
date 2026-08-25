@@ -4,7 +4,7 @@ import { listMarkdownSources, renderMarkdown } from '../utils/markdown'
 
 /** Every prose page on the site, concatenated into one request. */
 export default defineEventHandler(async (event) => {
-  const origin = (useRuntimeConfig(event).public.siteUrl || getRequestURL(event).origin).replace(/\/+$/, '')
+  const origin = (useRuntimeConfig().public.siteUrl || getRequestURL(event).origin).replace(/\/+$/, '')
   const sources = await listMarkdownSources(origin)
 
   const body = sources
