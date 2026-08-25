@@ -55,8 +55,6 @@ const familyFacets = ['weights', 'subsets', 'styles', 'provider']
 /** A day: a family's faces change when a provider republishes it, and a deployment resets this. */
 const DAY = 60 * 60 * 24
 
-const familyPage = { expiration: DAY, allowQuery: familyFacets }
-
 // The endpoint answers in a format as well, which the page does not ask about.
 const familyEntry = { expiration: DAY, allowQuery: [...familyFacets, 'formats'] }
 
@@ -150,8 +148,7 @@ export default defineNuxtConfig({
       // Every API response points at the document that describes it.
       '/api/v1/**': { headers: { link: '</openapi.json>; rel="service-desc"; type="application/json"' } },
       '/api/v1/catalogue.css': { headers: { 'cache-control': 'public, max-age=3600, stale-while-revalidate=86400' } },
-      '/fonts/**': { isr: familyPage },
-      '/fonts/*/_payload.json': { isr: familyPage },
+      '/fonts/**': { headers: { 'cache-control': `public, s-maxage=${DAY}, stale-while-revalidate=${DAY}` } },
       '/api/v1/fonts/*': { isr: familyEntry },
     },
     prerender: {
