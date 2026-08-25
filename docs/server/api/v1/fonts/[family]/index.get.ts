@@ -42,8 +42,13 @@ export default defineEventHandler(async (event) => {
   const fallbackCss = await metricFallbackCss(family, resolved.fonts, resolved.fallbacks ?? [])
   const entry = await lookupFamily(family)
 
-  // Long enough that a hover prefetch and the navigation behind it are one request.
-  event.res.headers.set('cache-control', 'public, max-age=300, stale-while-revalidate=3600')
+  /*
+   * Long enough that a hover prefetch and the navigation behind it are one request, and long
+   * enough at the edge to answer for a family no provider has republished. A header rather than an
+   * `isr` route rule: that rewrites the request to a URL carrying no query string, so every
+   * narrowed facet is answered with the defaults.
+   */
+  event.res.headers.set('cache-control', 'public, max-age=300, s-maxage=86400, stale-while-revalidate=86400')
 
   return {
     family,

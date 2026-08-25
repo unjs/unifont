@@ -49,14 +49,8 @@ const vercelMarkdownRoutes = [
   headers: { vary: 'Accept, Accept-Encoding' },
 }))
 
-/** The facets a family can be narrowed by, which a cache of one has to key on. */
-const familyFacets = ['weights', 'subsets', 'styles', 'provider']
-
 /** A day: a family's faces change when a provider republishes it, and a deployment resets this. */
 const DAY = 60 * 60 * 24
-
-// The endpoint answers in a format as well, which the page does not ask about.
-const familyEntry = { expiration: DAY, allowQuery: [...familyFacets, 'formats'] }
 
 /**
  * Where the font caches live. `node_modules` is convenient in development but read-only on most
@@ -149,7 +143,6 @@ export default defineNuxtConfig({
       '/api/v1/**': { headers: { link: '</openapi.json>; rel="service-desc"; type="application/json"' } },
       '/api/v1/catalogue.css': { headers: { 'cache-control': 'public, max-age=3600, stale-while-revalidate=86400' } },
       '/fonts/**': { headers: { 'cache-control': `public, s-maxage=${DAY}, stale-while-revalidate=${DAY}` } },
-      '/api/v1/fonts/*': { isr: familyEntry },
     },
     prerender: {
       routes: staticRoutes,
