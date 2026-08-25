@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import type { TransferResponse } from '#shared/types'
+import { specimenAlias } from '#shared/featured'
 
 const route = useRoute()
 const router = useRouter()
@@ -33,9 +34,8 @@ const properties = computed(() => data.value?.properties)
 const scopedProvider = computed(() => (provider.value ? `&provider=${encodeURIComponent(provider.value)}` : ''))
 
 // One weight, subset to the specimen's own glyphs, and the URL the grid warms on hover.
-const warmStylesheet = computed(() =>
-  `/api/v1/fonts/${encodeURIComponent(family.value)}/css?preset=warm${scopedProvider.value}`,
-)
+const warmFamily = computed(() => specimenAlias(family.value))
+const warmStylesheet = computed(() => warmStylesheetUrl(family.value, provider.value || undefined))
 
 /*
  * The `preview` preset rather than the current selection, so the URL is stable for a family and
@@ -129,10 +129,24 @@ const usingPreview = ref(false)
 function needsPreviewFace() {
   usingPreview.value = true
 }
-const specimenFamily = computed(() => (usingPreview.value ? previewFamily.value : family.value))
+const specimenFamily = computed(() => (usingPreview.value ? previewFamily.value : warmFamily.value))
+
+/*
+ * The family's own name sits between the specimen face and the metric fallback: a page reached
+ * from a grid already has a face declared under it and loaded, so it paints while the specimen
+ * face is in flight instead of the fallback.
+ */
+const specimenStack = computed(() =>
+  `'${specimenFamily.value}', '${family.value}', '${specimenFamily.value} fallback', var(--font-display)`,
+)
+
+// The name is set in the specimen face whatever the tester is doing to the sample below it.
+const headingStack = computed(() =>
+  `'${warmFamily.value}', '${family.value}', '${warmFamily.value} fallback', var(--font-display)`,
+)
 
 const previewStyle = computed(() => ({
-  fontFamily: `'${specimenFamily.value}', '${specimenFamily.value} fallback', var(--font-display)`,
+  fontFamily: specimenStack.value,
   fontSize: `${size.value}px`,
   fontWeight: String(weight.value),
   fontStyle: italic.value ? 'italic' : 'normal',
@@ -474,7 +488,7 @@ export default defineNuxtConfig({
         </p>
         <h1
           class="head__name"
-          :style="{ fontFamily: `'${family}', '${family} fallback', var(--font-display)` }"
+          :style="{ fontFamily: headingStack }"
         >
           {{ family }}
         </h1>

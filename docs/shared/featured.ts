@@ -25,6 +25,17 @@ export const FEATURED_FAMILIES = [
   'Space Mono',
 ] as const
 
+/**
+ * The name a specimen face is declared under. Firefox treats any new `@font-face` for a family as
+ * a reason to re-resolve every element set in it, and repaints them in the fallback until the new
+ * file lands: with a metric-matched fallback that is a flicker with no reflow to explain it. So a
+ * specimen face never reuses the family's own name, which a grid or the interface may already have
+ * declared and loaded.
+ */
+export function specimenAlias(family: string) {
+  return `${family} specimen`
+}
+
 export const CATALOGUE_PAGE = 36
 
 /** One shared line for the comparison view, so no provider is flattered by its own sample. */

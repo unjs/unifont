@@ -1,3 +1,11 @@
+import { specimenAlias } from '#shared/featured'
+
+/** The warmed sheet's URL, so the family page can link and await the very tag warming used. */
+export function warmStylesheetUrl(family: string, provider?: string) {
+  const scope = provider ? `&provider=${encodeURIComponent(provider)}` : ''
+  return `/api/v1/fonts/${encodeURIComponent(family)}/css?preset=warm&as=${encodeURIComponent(specimenAlias(family))}${scope}`
+}
+
 /**
  * Loads a family's specimen face ahead of navigation, on hover or keyboard focus: Nuxt prefetches
  * the route's payload, and this does the same for the typeface. The family page then loads the
@@ -18,7 +26,8 @@ export function useFontWarmup() {
   /*
    * A grid declares the same faces itself, but its sheet goes with the page: only the warmed link
    * survives the navigation to paint the specimen while the family page's own is in flight. Both
-   * resolve the same file, so the second declaration costs nothing to fetch.
+   * resolve the same file, so the second declaration costs nothing to fetch, and it is declared
+   * under the specimen alias so that adding it does not restyle a grid card set in the family.
    */
   function warm(family: string) {
     if (import.meta.server) {
@@ -39,7 +48,7 @@ export function useFontWarmup() {
     const link = document.createElement('link')
     link.rel = 'stylesheet'
     link.dataset.warmFamily = family
-    link.href = `/api/v1/fonts/${encodeURIComponent(family)}/css?preset=warm`
+    link.href = warmStylesheetUrl(family)
     document.head.append(link)
   }
 
