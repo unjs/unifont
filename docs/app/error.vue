@@ -5,7 +5,7 @@ const props = defineProps<{ error: NuxtError }>()
 
 const palette = useCommandPalette()
 
-const isMissing = computed(() => props.error.statusCode === 404)
+const isMissing = computed(() => props.error.status === 404)
 
 usePageSeo({
   title: () => (isMissing.value ? 'Not found' : 'Something broke'),
@@ -25,7 +25,7 @@ usePageSeo({
       tabindex="-1"
     >
       <p class="fail__code">
-        {{ error.statusCode }}
+        {{ error.status }}
       </p>
       <h1 class="fail__title">
         {{ isMissing ? 'No such page.' : 'That did not work.' }}

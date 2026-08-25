@@ -1,7 +1,36 @@
+import { readdirSync } from 'node:fs'
 import { createRequire } from 'node:module'
+import { tmpdir } from 'node:os'
 import { dirname, join } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { fontless } from 'fontless'
+
+/**
+ * Documentation slugs, read from the content directory at build time. `1.index.md` is the root of
+ * the section; every other file keeps its name without the ordering prefix.
+ */
+const docSlugs = readdirSync(fileURLToPath(new URL('content', import.meta.url)))
+  .filter(name => name.endsWith('.md'))
+  .map(name => name.replace(/^\d+\./, '').replace(/\.md$/, ''))
+  .map(slug => (slug === 'index' ? '' : slug))
+
+/**
+ * The pages and the content endpoints behind them, prerendered so no request has to read markdown
+ * from a filesystem that a serverless deployment does not have.
+ */
+const docRoutes = [
+  '/docs',
+  ...docSlugs.filter(Boolean).map(slug => `/docs/${slug}`),
+  '/api/content/navigation',
+  ...docSlugs.map(slug => `/api/content/get/${slug}`),
+]
+
+/**
+ * Where the font caches live. `node_modules` is convenient in development but read-only on most
+ * deployment platforms, where the temporary directory is the one writable path.
+ */
+const cacheBase = process.env.UNIFONT_SITE_CACHE_DIR
+  ?? (process.env.NODE_ENV === 'production' ? tmpdir() : 'node_modules/.cache')
 
 export default defineNuxtConfig({
   modules: [
@@ -26,8 +55,7 @@ export default defineNuxtConfig({
   css: ['~/assets/css/tokens.css', '~/assets/css/base.css', '~/assets/css/syntax.css'],
   runtimeConfig: {
     public: {
-      // Absolute origin for share-card URLs. Empty means "use the request origin".
-      siteUrl: '',
+      siteUrl: 'https://unifont.dev',
     },
   },
   experimental: {
@@ -48,18 +76,26 @@ export default defineNuxtConfig({
     alias: {
       undici: fileURLToPath(new URL('stubs/undici.ts', import.meta.url)),
     },
+    // Provider family indexes, fetched by `scripts/prime-font-cache.mjs` before the build and read
+    // back through the `unifont` storage.
+    serverAssets: [{ baseName: 'font-cache', dir: './.font-cache' }],
     // Provider metadata is immutable enough to cache hard, and a warm cache is worth ~2s on a
     // family page.
     storage: {
-      unifont: { driver: 'fs', base: 'node_modules/.cache/unifont-site' },
+      unifont: { driver: 'fs', base: join(cacheBase, 'unifont-site') },
       // Share cards are binary, so they are cached with the raw storage API: `defineCachedHandler`
       // stringifies bodies.
-      og: { driver: 'fs', base: 'node_modules/.cache/unifont-og' },
+      og: { driver: 'fs', base: join(cacheBase, 'unifont-og') },
     },
     routeRules: {
       // Prerendered so the deployed site never spends one of its 60 unauthenticated GitHub
       // requests per hour on drawing a colophon.
       '/api/v1/contributors': { prerender: true },
+    },
+    prerender: {
+      routes: docRoutes,
+      // The docs pages are listed explicitly, and crawling them would pull in every family page.
+      crawlLinks: false,
     },
     // `unifont` is linked from the repository root, so nitro inlines it and `css-tree` with it.
     // css-tree lazily requires `../data/patch.json`, which a bundle does not emit.
@@ -84,10 +120,6 @@ export default defineNuxtConfig({
     },
   },
   typescript: {
-    /*
-     * `nitro/h3` re-exports h3, whose v2 exports map has no `types` condition, so which entry
-     * surface TypeScript resolves varies between runs. Hoisting pins one copy for the project.
-     */
     hoist: ['nitro/h3', 'h3'],
   },
 

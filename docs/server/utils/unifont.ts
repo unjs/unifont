@@ -1,6 +1,6 @@
 import type { ProviderMeta, ProviderName } from '#shared/types'
 import { PROVIDER_NAMES } from '#shared/types'
-import { createError } from 'nitro/h3'
+import { HTTPError } from 'nitro/h3'
 import { useStorage } from 'nitro/storage'
 import { createUnifont, providers } from 'unifont'
 
@@ -20,11 +20,23 @@ export const PROVIDER_META: Record<ProviderName, ProviderMeta> = {
 /** Providers this site can query without per-user credentials. */
 export const QUERYABLE_PROVIDERS = PROVIDER_NAMES.filter(name => !PROVIDER_META[name].requiresOptions)
 
+/**
+ * Storage that degrades instead of failing. A deployment with a read-only filesystem must serve
+ * fonts uncached rather than report every provider as unavailable.
+ *
+ * Reads fall back to the family indexes baked into the bundle at build time, so a cold instance
+ * answers from its own assets before it considers calling a provider.
+ */
 function nitroStorage(bucket = 'unifont') {
   const cache = useStorage(bucket)
+  const baked = useStorage('assets:font-cache')
   return {
-    getItem: (key: string) => cache.getItem(key),
-    setItem: (key: string, value: Parameters<typeof cache.setItem>[1]) => cache.setItem(key, value),
+    async getItem(key: string) {
+      const cached = await Promise.resolve(cache.getItem(key)).catch(() => null)
+      return cached ?? await Promise.resolve(baked.getItem(key)).catch(() => null)
+    },
+    setItem: (key: string, value: Parameters<typeof cache.setItem>[1]) =>
+      Promise.resolve(cache.setItem(key, value)).catch(() => {}),
   }
 }
 
@@ -74,7 +86,7 @@ export function parseProviderSelection(value: unknown): Exclude<ProviderName, 'a
   const unsupported = names.filter(name => !QUERYABLE_PROVIDERS.includes(name as ProviderName))
 
   if (unsupported.length) {
-    throw createError({
+    throw new HTTPError({
       statusCode: 400,
       statusMessage: `This site cannot query \`${unsupported.join('`, `')}\`. Available: ${QUERYABLE_PROVIDERS.join(', ')}.`,
     })

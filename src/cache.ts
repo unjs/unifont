@@ -45,6 +45,15 @@ export function createAsyncStorage(storage: Storage, options: CachedStorageOptio
   const prefix = options?.cachedBy?.length ? `${createCacheKey(...options.cachedBy)}:` : ''
   const resolveKey = (key: string) => `${prefix}${key}`
 
+  async function write(key: string, value: StorageValue) {
+    try {
+      await storage.setItem(key, value)
+    }
+    catch (error) {
+      console.warn(`Could not cache \`${key}\`. Continuing without caching it.`, error)
+    }
+  }
+
   return {
     async getItem<T = unknown>(key: string, init?: () => T | Promise<T>) {
       const resolvedKey = resolveKey(key)
@@ -57,11 +66,13 @@ export function createAsyncStorage(storage: Storage, options: CachedStorageOptio
         return null
       }
       const data = await init()
-      await storage.setItem(resolvedKey, { expires: now + ONE_WEEK, version, data })
+      // A cache that cannot be written to is still a working cache miss, so a read-only or full
+      // storage must not discard data that has already been fetched.
+      await write(resolvedKey, { expires: now + ONE_WEEK, version, data })
       return data
     },
     async setItem(key: string, data: unknown) {
-      await storage.setItem(resolveKey(key), { expires: Date.now() + ONE_WEEK, version, data })
+      await write(resolveKey(key), { expires: Date.now() + ONE_WEEK, version, data })
     },
   }
 }

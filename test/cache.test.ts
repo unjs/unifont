@@ -29,6 +29,23 @@ describe('cache storage', () => {
     expect(await asyncStorage.getItem('unset')).toBe(null)
   })
 
+  it('should return fetched data when the cache cannot be written to', async () => {
+    const storage = {
+      getItem: () => null,
+      setItem: () => {
+        throw new Error('EROFS: read-only file system')
+      },
+    }
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {})
+    const asyncStorage = createAsyncStorage(storage)
+
+    expect(await asyncStorage.getItem('key', () => 'value')).toBe('value')
+    await expect(asyncStorage.setItem('key', 'value')).resolves.toBeUndefined()
+    expect(warn).toHaveBeenCalled()
+
+    warn.mockRestore()
+  })
+
   it('unifont works with custom storage', async () => {
     const customStorage = {
       getItem: vi.fn(() => 'value'),

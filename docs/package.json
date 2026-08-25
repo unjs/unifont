@@ -4,7 +4,7 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "build": "nuxt build",
+    "build": "node scripts/prime-font-cache.mjs && nuxt build",
     "dev": "nuxt dev",
     "generate": "nuxt generate",
     "lint": "eslint .",
@@ -15,7 +15,8 @@
     "test:perf": "node test/perf/memory.mjs",
     "test:watch": "vitest",
     "test:a11y": "playwright test",
-    "test:a11y:advisory": "A11Y_ADVISORY=1 playwright test axe.spec.ts"
+    "test:a11y:advisory": "A11Y_ADVISORY=1 playwright test axe.spec.ts",
+    "prime": "node scripts/prime-font-cache.mjs"
   },
   "dependencies": {
     "@comark/vue": "^0.6.2",

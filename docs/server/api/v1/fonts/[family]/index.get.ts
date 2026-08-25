@@ -1,9 +1,9 @@
-import type { ProviderName } from '../../../../utils/unifont'
-import { createError, defineEventHandler, getQuery, getRouterParam } from 'nitro/h3'
-import { lookupFamily } from '../../../../utils/catalogue'
-import { metricFallbackCss, toFontFaceCss } from '../../../../utils/css'
-import { PROVIDER_META, useProviderScope } from '../../../../utils/unifont'
-import { normaliseWeights } from '../../../../utils/weights'
+import type { ProviderName } from '#server/utils/unifont'
+import { HTTPError, defineEventHandler, getQuery, getRouterParam } from 'nitro/h3'
+import { lookupFamily } from '#server/utils/catalogue'
+import { metricFallbackCss, toFontFaceCss } from '#server/utils/css'
+import { PROVIDER_META, useProviderScope } from '#server/utils/unifont'
+import { normaliseWeights } from '#server/utils/weights'
 
 function list(value: unknown, fallback: string[]) {
   if (typeof value !== 'string' || !value.trim()) {
@@ -15,7 +15,7 @@ function list(value: unknown, fallback: string[]) {
 export default defineEventHandler(async (event) => {
   const family = decodeURIComponent(getRouterParam(event, 'family') || '')
   if (!family) {
-    throw createError({ statusCode: 400, statusMessage: 'A font family is required.' })
+    throw new HTTPError({ statusCode: 400, statusMessage: 'A font family is required.' })
   }
 
   const query = getQuery(event)
@@ -23,7 +23,7 @@ export default defineEventHandler(async (event) => {
 
   const properties = await unifont.getFontProperties(family, allowed)
   if (!properties) {
-    throw createError({ statusCode: 404, statusMessage: `No provider knows \`${family}\`.` })
+    throw new HTTPError({ statusCode: 404, statusMessage: `No provider knows \`${family}\`.` })
   }
 
   const askedForWeights = typeof query.weights === 'string' && !!query.weights.trim()

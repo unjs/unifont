@@ -1,4 +1,4 @@
-import { createError, getQuery, getRequestURL, setResponseHeader } from 'nitro/h3'
+import { getQuery, getRequestURL, HTTPError } from 'nitro/h3'
 import { defineCachedHandler } from 'nitro/cache'
 import { cssComment, metricFallbackCss, toFontFaceCss } from '../../utils/css'
 import { useUnifont } from '../../utils/unifont'
@@ -16,7 +16,7 @@ export default defineCachedHandler(async (event) => {
     .slice(0, 40)
 
   if (!families.length) {
-    throw createError({ statusCode: 400, statusMessage: 'Pass `?families=Newsreader,Switzer`.' })
+    throw new HTTPError({ statusCode: 400, statusMessage: 'Pass `?families=Newsreader,Switzer`.' })
   }
 
   const weights = String(query.weights ?? '400').split(',').map(part => part.trim()).filter(Boolean)
@@ -47,7 +47,7 @@ export default defineCachedHandler(async (event) => {
     }
   }))
 
-  setResponseHeader(event, 'content-type', 'text/css; charset=utf-8')
+  event.res.headers.set('content-type', 'text/css; charset=utf-8')
   return `${blocks.join('\n\n')}\n`
 }, {
   maxAge: 60 * 60 * 24,

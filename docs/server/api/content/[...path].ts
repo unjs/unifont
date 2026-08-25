@@ -7,8 +7,8 @@ import { content } from '../../utils/content'
  */
 export default defineEventHandler((event) => {
   const request = new Request(getRequestURL(event), {
-    method: event.method,
-    headers: event.headers,
+    method: event.req.method,
+    headers: event.req.headers,
   })
   return content.handler(request)
 })

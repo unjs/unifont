@@ -4,6 +4,8 @@ import type { TransferResponse } from '#shared/types'
 const route = useRoute()
 const router = useRouter()
 
+const family = computed(() => String(route.params.family ?? ''))
+
 const weights = computed(() => String(route.query.weights ?? ''))
 const subsets = computed(() => String(route.query.subsets ?? ''))
 const styles = computed(() => String(route.query.styles ?? ''))
@@ -29,7 +31,7 @@ const { data, status, error, refresh } = await useFetch(() => `/api/v1/fonts/${e
 })
 
 /** A 404 means no provider has the family; anything else means the site failed to ask. */
-const unknownFamily = computed(() => error.value?.statusCode === 404)
+const unknownFamily = computed(() => error.value?.status === 404)
 
 const { drop } = useFontWarmup()
 

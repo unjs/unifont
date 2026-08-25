@@ -1,4 +1,4 @@
-import { defineEventHandler, setResponseHeader } from 'nitro/h3'
+import { defineEventHandler } from 'nitro/h3'
 import { useCatalogue } from '../../utils/catalogue'
 import { PROVIDER_META, QUERYABLE_PROVIDERS } from '../../utils/unifont'
 
@@ -10,7 +10,7 @@ export default defineEventHandler(async (event) => {
     .filter(name => !PROVIDER_META[name].requiresOptions && name !== 'npm')
     .filter(name => !catalogue.unavailable.includes(name))
 
-  setResponseHeader(event, 'cache-control', 'public, max-age=30')
+  event.res.headers.set('cache-control', 'public, max-age=30')
 
   return {
     families: catalogue.entries.length,

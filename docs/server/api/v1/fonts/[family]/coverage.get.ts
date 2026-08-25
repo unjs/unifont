@@ -1,6 +1,6 @@
-import { createError, defineEventHandler, getQuery, getRouterParam, setResponseHeader } from 'nitro/h3'
-import { coverageForText } from '../../../../utils/coverage'
-import { useProviderScope } from '../../../../utils/unifont'
+import { HTTPError, defineEventHandler, getQuery, getRouterParam } from 'nitro/h3'
+import { coverageForText } from '#server/utils/coverage'
+import { useProviderScope } from '#server/utils/unifont'
 
 /** Sample strings covering the gaps people actually hit. */
 export const SAMPLES: Record<string, string> = {
@@ -17,7 +17,7 @@ export const SAMPLES: Record<string, string> = {
 export default defineEventHandler(async (event) => {
   const family = decodeURIComponent(getRouterParam(event, 'family') || '')
   if (!family) {
-    throw createError({ statusCode: 400, statusMessage: 'A font family is required.' })
+    throw new HTTPError({ statusCode: 400, statusMessage: 'A font family is required.' })
   }
 
   const query = getQuery(event)
@@ -25,7 +25,7 @@ export default defineEventHandler(async (event) => {
 
   const properties = await unifont.getFontProperties(family, allowed)
   if (!properties) {
-    throw createError({ statusCode: 404, statusMessage: `No provider knows \`${family}\`.` })
+    throw new HTTPError({ statusCode: 404, statusMessage: `No provider knows \`${family}\`.` })
   }
 
   const resolved = await unifont.resolveFont(family, {
@@ -39,7 +39,7 @@ export default defineEventHandler(async (event) => {
   const text = typeof query.text === 'string' && query.text ? query.text : undefined
 
   if (text) {
-    setResponseHeader(event, 'cache-control', 'public, max-age=600')
+    event.res.headers.set('cache-control', 'public, max-age=600')
     return { family, provider: resolved.provider, checks: { custom: { text, ...coverageForText(resolved.fonts, text) } } }
   }
 
@@ -48,6 +48,6 @@ export default defineEventHandler(async (event) => {
     checks[name] = { text: sample, ...coverageForText(resolved.fonts, sample) }
   }
 
-  setResponseHeader(event, 'cache-control', 'public, max-age=600, stale-while-revalidate=3600')
+  event.res.headers.set('cache-control', 'public, max-age=600, stale-while-revalidate=3600')
   return { family, provider: resolved.provider, checks }
 })

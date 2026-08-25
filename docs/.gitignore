@@ -4,3 +4,4 @@
 dist
 node_modules
 comark-content.d.ts
+.font-cache

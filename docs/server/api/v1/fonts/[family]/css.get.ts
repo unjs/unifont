@@ -1,7 +1,7 @@
-import { createError, defineEventHandler, getQuery, getRouterParam, setResponseHeader } from 'nitro/h3'
-import { metricFallbackCss, toFontFaceCss } from '../../../../utils/css'
-import { useProviderScope } from '../../../../utils/unifont'
-import { normaliseWeights } from '../../../../utils/weights'
+import { HTTPError, defineEventHandler, getQuery, getRouterParam } from 'nitro/h3'
+import { metricFallbackCss, toFontFaceCss } from '#server/utils/css'
+import { useProviderScope } from '#server/utils/unifont'
+import { normaliseWeights } from '#server/utils/weights'
 
 function list(value: unknown, fallback: string[]) {
   if (typeof value !== 'string' || !value.trim()) {
@@ -38,7 +38,7 @@ function nearestWeight(published: string[], target: number) {
 export default defineEventHandler(async (event) => {
   const family = decodeURIComponent(getRouterParam(event, 'family') || '')
   if (!family) {
-    throw createError({ statusCode: 400, statusMessage: 'A font family is required.' })
+    throw new HTTPError({ statusCode: 400, statusMessage: 'A font family is required.' })
   }
 
   const query = getQuery(event)
@@ -85,8 +85,8 @@ export default defineEventHandler(async (event) => {
   // declarations colliding.
   const alias = typeof query.as === 'string' && query.as.trim() ? query.as.trim() : family
 
-  setResponseHeader(event, 'content-type', 'text/css; charset=utf-8')
-  setResponseHeader(event, 'cache-control', 'public, max-age=3600, stale-while-revalidate=86400')
+  event.res.headers.set('content-type', 'text/css; charset=utf-8')
+  event.res.headers.set('cache-control', 'public, max-age=3600, stale-while-revalidate=86400')
 
   // An empty result is an answer, not a failure: a 404 would break the page that linked the
   // stylesheet, so say so in a comment and stay a valid CSS document.

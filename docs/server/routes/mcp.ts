@@ -1,4 +1,5 @@
-import { defineEventHandler, readBody, setResponseHeader, setResponseStatus } from 'nitro/h3'
+import type { H3Event } from 'nitro/h3'
+import { defineEventHandler, readBody } from 'nitro/h3'
 import { MCP_TOOLS } from '../utils/mcp-tools'
 
 /** Advertised in `initialize`. */
@@ -102,7 +103,7 @@ async function dispatch(request: JsonRpcRequest) {
  * but has no usable type declaration as of h3 2.0.1-rc.22.
  */
 export default defineEventHandler(async (event) => {
-  setResponseHeader(event, 'content-type', 'application/json')
+  event.res.headers.set('content-type', 'application/json')
 
   const body = await readBody<JsonRpcRequest | JsonRpcRequest[]>(event)
 
@@ -116,7 +117,7 @@ export default defineEventHandler(async (event) => {
 })
 
 /** Streamable HTTP wants `202 Accepted` with no body for notification-only posts. */
-function accepted(event: Parameters<typeof setResponseStatus>[0]) {
-  setResponseStatus(event, 202)
+function accepted(event: H3Event) {
+  event.res.status = 202
   return ''
 }

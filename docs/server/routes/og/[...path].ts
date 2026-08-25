@@ -1,5 +1,5 @@
 import { createHash } from 'node:crypto'
-import { defineEventHandler, getQuery, getRouterParam, setResponseHeader } from 'nitro/h3'
+import { defineEventHandler, getQuery, getRouterParam } from 'nitro/h3'
 import { useStorage } from 'nitro/storage'
 import { renderOgCard } from '../../utils/og'
 
@@ -22,8 +22,8 @@ export default defineEventHandler(async (event) => {
   const query = getQuery(event)
   const title = typeof query.title === 'string' ? query.title.trim().slice(0, TITLE_LIMIT) : undefined
 
-  setResponseHeader(event, 'content-type', 'image/png')
-  setResponseHeader(event, 'cache-control', 'public, max-age=86400, stale-while-revalidate=604800')
+  event.res.headers.set('content-type', 'image/png')
+  event.res.headers.set('cache-control', 'public, max-age=86400, stale-while-revalidate=604800')
 
   // Cached by hand: `defineCachedHandler` round-trips the body through storage as a string, which
   // corrupts the PNG.

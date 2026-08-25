@@ -1,8 +1,8 @@
-import { createError, getRouterParam } from 'nitro/h3'
 import { defineCachedHandler } from 'nitro/cache'
-import { faceUrls } from '../../../../utils/css'
-import { PROVIDER_META, QUERYABLE_PROVIDERS, useProvider } from '../../../../utils/unifont'
-import { normaliseWeights } from '../../../../utils/weights'
+import { HTTPError, getRouterParam } from 'nitro/h3'
+import { faceUrls } from '#server/utils/css'
+import { PROVIDER_META, QUERYABLE_PROVIDERS, useProvider } from '#server/utils/unifont'
+import { normaliseWeights } from '#server/utils/weights'
 
 /** Total transferred bytes for a set of files, via HEAD so nothing is downloaded. */
 async function measure(urls: string[]) {
@@ -33,7 +33,7 @@ async function measure(urls: string[]) {
 export default defineCachedHandler(async (event) => {
   const family = decodeURIComponent(getRouterParam(event, 'family') || '')
   if (!family) {
-    throw createError({ statusCode: 400, statusMessage: 'A font family is required.' })
+    throw new HTTPError({ statusCode: 400, statusMessage: 'A font family is required.' })
   }
 
   const candidates = QUERYABLE_PROVIDERS.filter(name => name !== 'adobe' && name !== 'npm')
