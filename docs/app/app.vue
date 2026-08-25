@@ -1,5 +1,22 @@
 <script setup lang="ts">
+import { globalFontFaces, preloads } from 'fontless/runtime'
+
 const DESCRIPTION = 'Look up a typeface across every font CDN in one place: metadata, specimens, coverage, and the CSS to ship it.'
+
+/*
+ * The faces `fontless` has no usage site in CSS to inject at, and the preload hints for the ones
+ * the interface is set in: it emits both through `transformIndexHtml`, which a server-rendered app
+ * never runs.
+ *
+ * Ahead of the rest of the head, so the browser can start on the files before it has parsed a
+ * stylesheet.
+ */
+useHead({
+  style: globalFontFaces ? [{ innerHTML: globalFontFaces, tagPriority: 'critical' as const }] : [],
+  // A font is always fetched anonymously, and unhead's `Link` does not accept the empty string
+  // `fontless` allows for it.
+  link: preloads.map(({ crossorigin, ...link }) => ({ ...link, crossorigin: crossorigin || 'anonymous' })),
+})
 
 // The template has to survive into the client, where a navigation sets a title through it.
 useSeoMeta({

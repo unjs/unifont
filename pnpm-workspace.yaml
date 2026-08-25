@@ -1,5 +1,6 @@
 minimumReleaseAgeExclude:
   - '@nuxt/cli-nightly@4.0.0-20260824-125839-d3213ce'
+  - fontless@0.4.2
 
 packages:
   - docs

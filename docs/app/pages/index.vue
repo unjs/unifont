@@ -152,7 +152,7 @@ await unifont.getFontProperties('Switzer')
             <!-- The name is set once, in its own face, and is the link's accessible name. -->
             <span
               class="cell__specimen"
-              :data-specimen="family"
+              :style="{ fontFamily: `'${family}', var(--font-display)` }"
             >{{ family }}</span>
           </NuxtLink>
         </li>

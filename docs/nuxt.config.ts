@@ -167,34 +167,40 @@ export default defineNuxtConfig({
     plugins: [
       fontless({
         /*
-         * One file per family and style, and preloaded: every page sets its first paragraph in
-         * these. `fontaine`'s metric fallback cannot cover a swap here, because `local("serif")`
-         * matches no installed family and the face never loads.
+         * Every page sets its first paragraph in the three families below, so they are preloaded;
+         * italic is rare enough on a given page to be worth a late request. `fontaine`'s metric
+         * fallback cannot cover a swap here, because `local("serif")` matches no installed family
+         * and the face never loads.
          *
          * The interface is in English, so `latin` is the whole of it.
          */
+        defaults: { preload: (_family, font) => font.style !== 'italic' },
         families: [
           // The variable cut carries Newsreader's optical-size axis.
-          { name: 'Newsreader', provider: 'google', weights: ['200 800'], styles: ['normal'], subsets: ['latin'], preload: true },
+          { name: 'Newsreader', provider: 'google', weights: ['200 800'], styles: ['normal'], subsets: ['latin'] },
           // The variable cut, so the 350 and 450 body weights are real rather than rounded.
-          { name: 'Switzer', provider: 'fontshare', weights: ['100 900'], styles: ['normal', 'italic'], subsets: ['latin'], preload: true },
-          { name: 'JetBrains Mono', provider: 'google', weights: ['400'], styles: ['normal'], subsets: ['latin'], preload: true },
+          { name: 'Switzer', provider: 'fontshare', weights: ['100 900'], styles: ['normal', 'italic'], subsets: ['latin'] },
+          { name: 'JetBrains Mono', provider: 'google', weights: ['400'], styles: ['normal'], subsets: ['latin'] },
           /*
            * The front page's specimens. The grid is fixed, so the faces belong in the build rather
-           * than behind a provider stylesheet. `glyphs` is the specimen text and the family's own
-           * name, which Google will subset to; no fallback, because `local()` matches nothing here
-           * and each one costs five more `@font-face` rules.
+           * than behind a provider stylesheet, cut down to the characters a card sets: the family's
+           * own name and the specimen line.
+           *
+           * `global`, because a card sets its face through an inline `font-family` that no
+           * stylesheet scan can find. No fallback, because `local()` matches nothing here and each
+           * one costs five more `@font-face` rules.
            */
           ...FEATURED_FAMILIES
             .filter(name => !INTERFACE_FAMILIES.includes(name))
             .map(name => ({
               name,
+              global: true,
               preload: false,
               fallbacks: [],
+              glyphs: specimenGlyphs(name),
               weights: ['400'],
               styles: ['normal' as const],
               subsets: ['latin'],
-              providerOptions: { google: { experimental: { glyphs: specimenGlyphs(name) } } },
             })),
         ],
       }),
