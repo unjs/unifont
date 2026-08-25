@@ -348,6 +348,10 @@ function turn(delta: number) {
 .cell {
   border-right: var(--rule-hair) solid var(--color-rule);
   border-bottom: var(--rule-hair) solid var(--color-rule);
+  /* A cell off screen is not laid out and its face is not fetched, so the grid does not compete
+     with the interface's own fonts for the first paint. */
+  content-visibility: auto;
+  contain-intrinsic-size: auto 8rem;
 }
 
 .cell__link {

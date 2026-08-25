@@ -1,4 +1,8 @@
-/** The families on the front index, spanning providers and typographic registers. */
+/**
+ * The families on the front index, spanning providers and typographic registers. Order is load
+ * order: the Fontshare faces sit late because only Google will subset to a glyph list, so they are
+ * five times the size of the rest.
+ */
 export const FEATURED_FAMILIES = [
   'Newsreader',
   'Instrument Serif',
@@ -7,14 +11,15 @@ export const FEATURED_FAMILIES = [
   'Bricolage Grotesque',
   'Space Grotesk',
   'Switzer',
-  'Cabinet Grotesk',
-  'Erode',
-  'Sentient',
   'Spectral',
   'Cormorant Garamond',
   'DM Serif Display',
   'Big Shoulders Display',
   'Anton',
+  // Fontshare, unsubsetted.
+  'Cabinet Grotesk',
+  'Erode',
+  'Sentient',
   'JetBrains Mono',
   'IBM Plex Mono',
   'Space Mono',
