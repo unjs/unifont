@@ -195,6 +195,7 @@ function turn(delta: number) {
             class="cell__specimen"
             :style="{ fontFamily: `'${entry.family}', var(--font-display)` }"
           >{{ entry.family }}</span>
+          {{ ' ' }}
           <span class="cell__providers">{{ entry.providers.join(' · ') }}</span>
         </NuxtLink>
       </li>

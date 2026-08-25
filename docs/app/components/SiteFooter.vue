@@ -9,6 +9,8 @@ const { data: credits } = await useFetch<ContributorsResponse>('/api/v1/contribu
 })
 
 const contributors = computed(() => credits.value?.contributors ?? [])
+// The API sorts by commit count, so the first entry leads.
+const top = computed(() => contributors.value[0]!)
 </script>
 
 <template>
@@ -29,36 +31,31 @@ const contributors = computed(() => credits.value?.contributors ?? [])
         v-if="contributors.length"
         class="credits"
       >
-        <ul
-          class="credits__list"
-          aria-label="Contributors"
+        <!-- A link per avatar is a link and a list item per person once the styles are gone, so the
+             row is decorative and the sentence below carries the same information as text. -->
+        <div
+          class="credits__row"
+          aria-hidden="true"
         >
-          <li
+          <img
             v-for="person in contributors"
             :key="person.login"
+            class="credits__avatar"
+            :src="person.avatar"
+            alt=""
+            width="28"
+            height="28"
+            loading="lazy"
+            decoding="async"
           >
-            <!-- The avatar carries no text of its own, so the link is labelled instead. -->
-            <a
-              class="credits__person"
-              :href="person.url"
-              :aria-label="`${person.login}, ${person.contributions} ${person.contributions === 1 ? 'commit' : 'commits'}`"
-            >
-              <img
-                class="credits__avatar"
-                :src="person.avatar"
-                alt=""
-                width="28"
-                height="28"
-                loading="lazy"
-                decoding="async"
-              >
-            </a>
-          </li>
-        </ul>
-        <a
-          class="credits__all"
-          href="https://github.com/unjs/unifont/graphs/contributors"
-        >all contributors</a>
+        </div>
+        <p class="credits__summary">
+          {{ contributors.length }}
+          {{ contributors.length === 1 ? 'person has' : 'people have' }}
+          landed a commit, {{ top.login }} the most with {{ top.contributions }}
+          {{ top.contributions === 1 ? 'commit' : 'commits' }}.
+          <a href="https://github.com/unjs/unifont/graphs/contributors">all contributors</a>
+        </p>
       </div>
 
       <p class="colophon__line colophon__line--fine">
@@ -119,37 +116,23 @@ const contributors = computed(() => credits.value?.contributors ?? [])
 
 .credits {
   display: flex;
-  gap: var(--space-sm) var(--space-md);
-  align-items: baseline;
-  flex-wrap: wrap;
-  margin-block: var(--space-xs);
+  flex-direction: column;
+  gap: var(--space-2xs);
+  margin-block: var(--space-sm);
+  padding-top: var(--space-sm);
+  border-top: var(--rule-hair) solid var(--color-rule);
 }
 
-.credits__list {
+.credits__row {
   display: flex;
   gap: var(--space-2xs);
   flex-wrap: wrap;
   min-height: 28px;
-  margin: 0;
-  padding: 0;
-  list-style: none;
 }
 
-.credits__all {
+.credits__summary {
   color: var(--color-neutral);
-  font-family: var(--font-mono);
   font-size: var(--text-xs);
-}
-
-.credits__person {
-  display: block;
-  border-radius: var(--radius-pill);
-  text-decoration: none;
-  transition: transform var(--dur-micro) var(--ease-out);
-}
-
-.credits__person:hover {
-  transform: translateY(-2px);
 }
 
 .credits__avatar {
@@ -165,8 +148,7 @@ const contributors = computed(() => credits.value?.contributors ?? [])
     opacity var(--dur-short) var(--ease-out);
 }
 
-.credits__person:hover .credits__avatar,
-.credits__person:focus-visible .credits__avatar {
+.credits__row:hover .credits__avatar {
   filter: none;
   opacity: 1;
 }

@@ -32,6 +32,9 @@ function isCurrent(to: string) {
         @click="palette.open()"
       >
         <span class="pill__label">Search every provider</span>
+        <!-- Vue condenses whitespace between elements, so the separator is explicit or the two
+             labels concatenate in the accessible name and in extracted text. -->
+        {{ ' ' }}
         <kbd class="pill__hint">{{ shortcut }}</kbd>
       </button>
 

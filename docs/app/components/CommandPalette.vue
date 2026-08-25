@@ -276,10 +276,14 @@ onMounted(() => {
               class="row__specimen"
               :style="{ fontFamily: `'${row.item.family}', var(--font-display)` }"
             >{{ row.item.family }}</span>
+            {{ ' ' }}
             <span class="row__meta">{{ row.item.providers.join(' · ') }}</span>
           </template>
           <template v-else>
+            <!-- Vue condenses whitespace between elements, so the separator is explicit or the
+                 label and the hint concatenate when the option is read out. -->
             <span class="row__label">{{ row.item.label }}</span>
+            {{ ' ' }}
             <span class="row__meta">{{ row.item.hint }}</span>
           </template>
         </li>

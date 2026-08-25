@@ -50,6 +50,9 @@ await unifont.getFontProperties('Switzer')
           @click="palette.open()"
         >
           <span>Find a family</span>
+          <!-- Vue condenses whitespace between elements, so the separator is explicit or the label
+               and the shortcut concatenate in the accessible name and in extracted text. -->
+          {{ ' ' }}
           <kbd>{{ shortcut }}</kbd>
         </button>
         <NuxtLink
@@ -386,7 +389,7 @@ await unifont.getFontProperties('Switzer')
   grid-template-columns: minmax(0, 5fr) minmax(0, 7fr);
   gap: var(--space-2xl);
   align-items: start;
-  padding-block: var(--space-3xl) var(--space-xl);
+  padding-block: var(--space-2xl) var(--space-lg);
   border-bottom: var(--rule-hair) solid var(--color-rule);
 }
 
@@ -433,7 +436,7 @@ await unifont.getFontProperties('Switzer')
 
 /* ── Providers table ──────────────────────────────────────── */
 .providers {
-  padding-block: var(--space-2xl);
+  padding-block: var(--space-xl);
   border-bottom: var(--rule-hair) solid var(--color-rule);
 }
 
@@ -513,7 +516,7 @@ await unifont.getFontProperties('Switzer')
 
 .surfaces__row dt {
   font-family: var(--font-display);
-  font-size: var(--text-md);
+  font-size: var(--text-lg);
 }
 
 .surfaces__row dd {
