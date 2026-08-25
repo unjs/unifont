@@ -45,6 +45,8 @@ useHead(() => ({
   })),
 }))
 
+useProviderPreconnect()
+
 usePageSeo({
   title: () => (family.value ? `${family.value} across providers` : 'Compare providers'),
   description: 'Ask every font provider for the same family and compare weights, subsets, hosts and file counts.',

@@ -22,7 +22,21 @@ export function useInlinedSpecimens(href: string) {
     }
   }
 
-  onBeforeUnmount(release)
+  /*
+   * The page being navigated to sets the same family, and dropping the only declaration of it
+   * before that page's own stylesheet has loaded flashes the specimen back to the fallback.
+   */
+  onBeforeUnmount(async () => {
+    if (!covered.value || !tag) {
+      return
+    }
+    covered.value = false
+    await nextTick()
+    // A frame, so a destination that declares its faces through `useHead` has rendered them.
+    await new Promise(resolve => requestAnimationFrame(resolve))
+    await document.fonts.ready
+    tag.remove()
+  })
 
   return { covered, release }
 }

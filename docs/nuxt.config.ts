@@ -1,31 +1,22 @@
-import { readdirSync } from 'node:fs'
 import { createRequire } from 'node:module'
 import { tmpdir } from 'node:os'
 import { dirname, join } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { fontless } from 'fontless'
+import { FEATURED_FAMILIES, specimenGlyphs } from './shared/featured.ts'
 
-/**
- * Documentation slugs, read from the content directory at build time. `1.index.md` is the root of
- * the section; every other file keeps its name without the ordering prefix.
- */
-const docSlugs = readdirSync(fileURLToPath(new URL('content', import.meta.url)))
-  .filter(name => name.endsWith('.md'))
-  .map(name => name.replace(/^\d+\./, '').replace(/\.md$/, ''))
-  .map(slug => (slug === 'index' ? '' : slug))
+/** The families the interface is set in, resolved in full rather than to a glyph list. */
+const INTERFACE_FAMILIES = ['Newsreader', 'Switzer', 'JetBrains Mono']
 
-/**
- * The pages and the content endpoints behind them, prerendered so no request has to read markdown
- * from a filesystem that a serverless deployment does not have.
- */
-const docRoutes = [
-  '/docs',
-  ...docSlugs.filter(Boolean).map(slug => `/docs/${slug}`),
-  '/api/content/navigation',
-  ...docSlugs.map(slug => `/api/content/get/${slug}`),
-  // Inlined into the page that shows them, so they are on the critical path.
-  '/api/v1/specimens.css',
+/** Routes whose answer depends on nothing about the request. */
+const staticRoutes = [
+  '/',
+  '/fonts',
+  '/compare',
+  '/api',
   '/api/v1/catalogue.css',
+  '/api/v1/specimens.css',
+  '/api/content/navigation',
 ]
 
 /**
@@ -52,11 +43,6 @@ export default defineNuxtConfig({
          */
         { rel: 'icon', href: '/favicon-dark.svg', type: 'image/svg+xml', media: '(prefers-color-scheme: dark)' },
         { rel: 'icon', href: '/favicon-light.svg', type: 'image/svg+xml' },
-        // Specimen faces come straight from the provider that resolved them, and their URLs are
-        // only known once a stylesheet has parsed.
-        { rel: 'preconnect', href: 'https://fonts.gstatic.com', crossorigin: 'anonymous' },
-        { rel: 'preconnect', href: 'https://cdn.fontshare.com', crossorigin: 'anonymous' },
-        { rel: 'preconnect', href: 'https://fonts.bunny.net', crossorigin: 'anonymous' },
       ],
     },
   },
@@ -65,6 +51,11 @@ export default defineNuxtConfig({
     public: {
       siteUrl: 'https://unifont.dev',
     },
+  },
+  features: {
+    // Global CSS as well as component styles: it carries the interface's `@font-face` rules, so a
+    // link to it costs a round trip before the browser can discover a single font file.
+    inlineStyles: true,
   },
   experimental: {
     typedPages: true,
@@ -105,8 +96,8 @@ export default defineNuxtConfig({
       '/api/v1/catalogue.css': { headers: { 'cache-control': 'public, max-age=3600, stale-while-revalidate=86400' } },
     },
     prerender: {
-      routes: docRoutes,
-      // The docs pages are listed explicitly, and crawling them would pull in every family page.
+      routes: staticRoutes,
+      // Crawling would pull in a family page per specimen.
       crawlLinks: false,
     },
     // `unifont` is linked from the repository root, so nitro inlines it and `css-tree` with it.
@@ -129,6 +120,23 @@ export default defineNuxtConfig({
           // The variable cut, so the 350 and 450 body weights are real rather than rounded.
           { name: 'Switzer', provider: 'fontshare', weights: ['100 900'], styles: ['normal', 'italic'], subsets: ['latin'], preload: true },
           { name: 'JetBrains Mono', provider: 'google', weights: ['400'], styles: ['normal'], subsets: ['latin'], preload: true },
+          /*
+           * The front page's specimens. The grid is fixed, so the faces belong in the build rather
+           * than behind a provider stylesheet. `glyphs` is the specimen text and the family's own
+           * name, which Google will subset to; no fallback, because `local()` matches nothing here
+           * and each one costs five more `@font-face` rules.
+           */
+          ...FEATURED_FAMILIES
+            .filter(name => !INTERFACE_FAMILIES.includes(name))
+            .map(name => ({
+              name,
+              preload: false,
+              fallbacks: [],
+              weights: ['400'],
+              styles: ['normal' as const],
+              subsets: ['latin'],
+              providerOptions: { google: { experimental: { glyphs: specimenGlyphs(name) } } },
+            })),
         ],
       }),
     ],
@@ -141,6 +149,18 @@ export default defineNuxtConfig({
   },
   typescript: {
     hoist: ['nitro/h3', 'h3'],
+  },
+  hooks: {
+    // The documentation pages and the endpoints behind them, so no request has to read markdown
+    // from a filesystem a serverless deployment does not have.
+    'prerender:routes': async ({ routes }) => {
+      const { content } = await import('./server/utils/content.ts')
+      for (const { path } of await content.list()) {
+        const slug = path === '/' ? '' : path.replace(/^\//, '')
+        routes.add(`/docs${slug ? `/${slug}` : ''}`)
+        routes.add(`/api/content/get/${slug}`)
+      }
+    },
   },
 
   eslint: {

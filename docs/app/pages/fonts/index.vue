@@ -61,6 +61,8 @@ useHead(() => ({
   link: stylesheet.value ? [{ rel: 'stylesheet', href: stylesheet.value }] : [],
 }))
 
+useProviderPreconnect()
+
 usePageSeo({
   title: 'Catalogue',
   description: 'Search every font family unifont can list, across Google Fonts, Bunny, Fontshare and Fontsource.',

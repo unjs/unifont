@@ -30,6 +30,9 @@
   --font-display: 'Newsreader', ui-serif, Charter, Georgia, serif;
   --font-body: 'Switzer', ui-sans-serif, system-ui, sans-serif;
   --font-mono: 'JetBrains Mono', ui-monospace, monospace;
+  /* The display stack without its own family. Not `--font-*`: `fontless` resolves those, and this
+     one would declare Newsreader's face a second time. */
+  --specimen-fallback: ui-serif, Charter, Georgia, serif;
 
   /* Major third from 16px, except `--text-xs`, held at the 12px floor for body text. */
   --text-xs: 0.75rem;

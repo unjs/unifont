@@ -1,25 +1,10 @@
 <script setup lang="ts">
 import { FEATURED_FAMILIES } from '#shared/featured'
 
-const { warm } = useFontWarmup()
-
-function prefetch(family: string) {
-  warm(family)
-  prefetchFamilyData(family)
-}
-
 const palette = useCommandPalette()
 const shortcut = useCommandShortcut()
 
 const { data: catalogue } = await useProviders()
-
-// Inlined into the server-rendered head; a navigation that arrives client-side links it instead.
-const SPECIMEN_SHEET = '/api/v1/specimens.css'
-const { covered } = useInlinedSpecimens(SPECIMEN_SHEET)
-
-useHead(() => ({
-  link: covered.value ? [] : [{ rel: 'stylesheet', href: SPECIMEN_SHEET }],
-}))
 
 usePageSeo({
   title: 'Every font CDN, one lookup',
@@ -74,7 +59,7 @@ await unifont.getFontProperties('Switzer')
       </div>
     </section>
 
-    <!-- The index. Each name is set in its own face, resolved live by unifont. -->
+    <!-- The index. Each name is set in its own face, resolved by unifont at build time. -->
     <section
       class="index"
       aria-labelledby="index-heading"
@@ -87,8 +72,8 @@ await unifont.getFontProperties('Switzer')
           Some fonts you might like &hellip;
         </h2>
         <p class="index__note">
-          {{ FEATURED_FAMILIES.length }} families, resolved through <code>google</code> and <code>fontshare</code> by this
-          site's own <NuxtLink to="/api">CSS endpoint</NuxtLink>, and inlined above.
+          {{ FEATURED_FAMILIES.length }} families, resolved through <code>google</code> and <code>fontshare</code> at
+          build time, subsetted to the glyphs below and served from here.
         </p>
       </div>
       <ul class="grid">
@@ -100,14 +85,14 @@ await unifont.getFontProperties('Switzer')
           <NuxtLink
             class="cell__link"
             :to="`/fonts/${encodeURIComponent(family)}`"
-            @mouseenter="prefetch(family)"
-            @focus="prefetch(family)"
+            @mouseenter="prefetchFamilyData(family)"
+            @focus="prefetchFamilyData(family)"
           >
             <!-- Set twice, in its own face and in mono; only one of them is read out. -->
             <span
               class="cell__specimen"
               aria-hidden="true"
-              :style="{ fontFamily: `'${family}', var(--font-display)` }"
+              :data-specimen="family"
             >{{ family }}</span>
             <span class="cell__name">{{ family }}</span>
           </NuxtLink>

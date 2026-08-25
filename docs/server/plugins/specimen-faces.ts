@@ -7,7 +7,6 @@ import { specimenSheet } from '#server/utils/specimens'
  * `useHead`, which would serialise the same kilobytes into the hydration payload as well.
  */
 const SHEETS = {
-  '/': { grid: 'featured', href: '/api/v1/specimens.css' },
   '/fonts': { grid: 'catalogue', href: '/api/v1/catalogue.css' },
 } as const
 

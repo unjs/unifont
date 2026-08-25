@@ -10,15 +10,8 @@ const weights = computed(() => String(route.query.weights ?? ''))
 const subsets = computed(() => String(route.query.subsets ?? ''))
 const styles = computed(() => String(route.query.styles ?? ''))
 
-// The providers this page may answer from, in the same shape as the other facets: empty means all
-// of them, and unticking narrows the cascade.
+// Absent, the cascade picks, and the answer says which one it was.
 const provider = computed(() => String(route.query.provider ?? ''))
-const allowedProviders = computed(() => {
-  const all: string[] = data.value?.providers ?? []
-  const listed = provider.value.split(',').filter(Boolean)
-  const allowed = listed.filter(name => all.includes(name))
-  return allowed.length ? allowed : all
-})
 
 // A chip toggle refetches against the same entry, keeping the previous answer on screen rather
 // than blanking the page.
@@ -65,6 +58,8 @@ if (import.meta.client) {
     drop(family.value)
   }, { immediate: true, flush: 'post' })
 }
+
+useProviderPreconnect()
 
 usePageSeo({
   title: () => family.value,
@@ -154,17 +149,17 @@ function toggleValue(current: string[], value: string) {
   return current.includes(value) ? current.filter(item => item !== value) : [...current, value]
 }
 
+const selectedProvider = computed(() => provider.value || data.value?.provider || '')
+
 /** Providers publish different facets for the same name, so changing them resets the selection. */
-function toggleProvider(name: string) {
-  const current = allowedProviders.value
-  if (current.length === 1 && current[0] === name) {
+function setProvider(name: string) {
+  if (name === selectedProvider.value) {
     return
   }
-  const next = toggleValue([...current], name)
   router.replace({
     query: {
       ...route.query,
-      provider: next.length === (data.value?.providers.length ?? 0) ? undefined : next.join(','),
+      provider: name,
       weights: undefined,
       styles: undefined,
       subsets: undefined,
@@ -218,11 +213,6 @@ function weightLocked(value: string) {
 
 function facetLocked(current: string[], value: string) {
   return current.length === 1 && current[0] === value
-}
-
-function providerLocked(name: string) {
-  const current = allowedProviders.value
-  return current.length === 1 && current[0] === name
 }
 
 const selectedWeights = computed(() => requested.value?.weights ?? [])
@@ -598,37 +588,31 @@ export default defineNuxtConfig({
             &times; {{ selectedSubsets.length }}
             {{ selectedSubsets.length === 1 ? 'subset' : 'subsets' }}
           </p>
-          <div
+          <fieldset
             v-if="(data?.providers.length ?? 0) > 1"
-            class="meta__group"
+            class="meta__group providers"
           >
-            <h3 class="meta__label">
+            <legend class="meta__label">
               Providers
-            </h3>
-            <ul class="chips">
-              <li
+            </legend>
+            <div class="chips">
+              <label
                 v-for="name in data?.providers ?? []"
                 :key="name"
+                class="radio"
               >
-                <button
-                  class="chip"
-                  type="button"
-                  :aria-pressed="allowedProviders.includes(name)"
-                  :aria-disabled="providerLocked(name)"
-                  @click="toggleProvider(name)"
+                <input
+                  class="radio__input"
+                  type="radio"
+                  name="provider"
+                  :value="name"
+                  :checked="selectedProvider === name"
+                  @change="setProvider(name)"
                 >
-                  {{ name }}<span
-                    v-if="data?.provider === name"
-                    class="chip__dot"
-                    aria-hidden="true"
-                  >&bull;</span><span
-                    v-if="data?.provider === name"
-                    class="visually-hidden"
-                  > (resolved from here)</span>
-                </button>
-              </li>
-            </ul>
-          </div>
+                {{ name }}
+              </label>
+            </div>
+          </fieldset>
 
           <div class="meta__group">
             <h3 class="meta__label">
@@ -1180,9 +1164,60 @@ export default defineNuxtConfig({
   color: var(--color-neutral);
 }
 
-.chip__dot {
-  margin-left: var(--space-2xs);
-  color: var(--color-accent);
+/* A fieldset carries a border, an inline margin and a min-width of its content; none is wanted. */
+.providers {
+  min-width: 0;
+  margin-inline: 0;
+  padding: 0;
+  border: 0;
+}
+
+.providers legend {
+  padding: 0;
+}
+
+.radio {
+  display: inline-flex;
+  position: relative;
+  min-height: 2rem;
+  align-items: center;
+  padding: var(--space-2xs) var(--space-xs);
+  border: var(--rule-hair) solid var(--color-rule);
+  color: var(--color-muted);
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+  cursor: pointer;
+  transition:
+    color var(--dur-micro) var(--ease-out),
+    border-color var(--dur-micro) var(--ease-out);
+}
+
+.radio:hover {
+  border-color: var(--color-rule-strong);
+  color: var(--color-ink);
+}
+
+/* The control fills the chip, so the whole chip is the target rather than a 24px corner of it. */
+.radio__input {
+  position: absolute;
+  inset: 0;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  appearance: none;
+  background: none;
+  cursor: pointer;
+}
+
+.radio:has(.radio__input:checked) {
+  border-color: var(--color-ink);
+  color: var(--color-ink-strong);
+  box-shadow: inset 0 -2px 0 var(--color-accent);
+}
+
+.radio:has(.radio__input:focus-visible) {
+  outline: var(--rule-hair) solid var(--color-ink);
+  outline-offset: 2px;
 }
 
 .meta__note {
