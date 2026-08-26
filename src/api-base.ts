@@ -1,4 +1,4 @@
-import type { ProviderContext } from './types'
+import type { APIFetch } from './internal'
 import { hasWindow, provider } from 'std-env'
 import { fetchWithRetries } from './fetch'
 import { formatFromUserAgent } from './providers/google'
@@ -71,7 +71,7 @@ export function resolveAPIBase(apiBase: string | false | undefined): string | un
  * A browser cannot set `user-agent`, which is how Google's endpoints pick a font format, so the
  * requested format moves into the query string for the proxy to apply on our behalf.
  */
-export function createAPIFetch(configuredAPIBase: string | false | undefined): ProviderContext['fetch'] {
+export function createAPIFetch(configuredAPIBase: string | false | undefined): APIFetch {
   const apiBase = resolveAPIBase(configuredAPIBase)
   if (!apiBase) {
     return fetchWithRetries

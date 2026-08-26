@@ -2,6 +2,7 @@ import type { FontStyles, ResolveFontOptions } from '../types'
 
 import { hash } from 'ohash'
 import { extractFontFaceData } from '../css/parse'
+import { fetchAPI } from '../internal'
 import { cleanFontFaces, defineFontProvider, prepareWeights } from '../utils'
 
 const BASE_URL = 'https://api.fontshare.com/v2'
@@ -22,7 +23,7 @@ export default defineFontProvider('fontshare', async (_options, ctx) => {
     let offset = 0
     let chunk
     do {
-      chunk = await ctx.fetch(`${BASE_URL}/fonts?offset=${offset}&limit=100`).then(res => res.json() as Promise<{ fonts: FontshareFontMeta[], has_more: boolean }>)
+      chunk = await fetchAPI(ctx, `${BASE_URL}/fonts?offset=${offset}&limit=100`).then(res => res.json() as Promise<{ fonts: FontshareFontMeta[], has_more: boolean }>)
       fonts.push(...chunk.fonts)
       offset++
     } while (chunk.has_more)
@@ -88,7 +89,7 @@ export default defineFontProvider('fontshare', async (_options, ctx) => {
     if (numbers.length === 0)
       return []
 
-    const css = await ctx.fetch(`${BASE_URL}/css?f[]=${font.slug}@${numbers.join(',')}`).then(res => res.text())
+    const css = await fetchAPI(ctx, `${BASE_URL}/css?f[]=${font.slug}@${numbers.join(',')}`).then(res => res.text())
 
     const fontFaces = extractFontFaceData(css)
     for (const face of fontFaces) {
