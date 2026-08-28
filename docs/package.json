@@ -33,7 +33,7 @@
     "vue": "3.5.42"
   },
   "devDependencies": {
-    "@nuxt/test-utils": "4.1.0",
+    "@nuxt/test-utils": "4.2.0",
     "@playwright/test": "1.62.1",
     "@vitejs/devtools-kit": "^0.5.2",
     "axe-core": "4.13.0",
