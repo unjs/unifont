@@ -30,7 +30,7 @@
     "microlighter": "^2.1.0",
     "nuxt": "npm:nuxt-nightly@5x",
     "unifont": "link:..",
-    "vue": "3.5.41"
+    "vue": "3.5.42"
   },
   "devDependencies": {
     "@nuxt/test-utils": "4.1.0",
