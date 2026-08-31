@@ -5,7 +5,7 @@ settings:
   excludeLinksFromLockfile: false
 
 overrides:
-  '@nuxt/cli': npm:@nuxt/cli-nightly@4.0.0-20260824-125839-d3213ce
+  '@nuxt/cli': npm:@nuxt/cli-nightly@4.0.0-20260829-200936-84e7673
   ofetch: ^2.0.0-alpha.3
   unifont: link:.
 
@@ -39,23 +39,23 @@ importers:
         specifier: 4.1.11
         version: 4.1.11(vitest@4.1.11)
       bumpp:
-        specifier: 12.2.1
-        version: 12.2.1
+        specifier: 12.2.2
+        version: 12.2.2
       changelogithub:
-        specifier: 15.0.4
-        version: 15.0.4
+        specifier: 15.0.5
+        version: 15.0.5
       eslint:
         specifier: 10.9.1
         version: 10.9.1(jiti@2.7.0)(supports-color@10.2.2)
       lint-staged:
-        specifier: 17.3.0
-        version: 17.3.0
+        specifier: 17.4.1
+        version: 17.4.1
       rou3:
         specifier: 0.9.2
         version: 0.9.2
       simple-git-hooks:
-        specifier: 2.13.1
-        version: 2.13.1
+        specifier: 2.14.0
+        version: 2.14.0
       tsdown:
         specifier: 0.22.14
         version: 0.22.14(@vitejs/devtools@0.5.2)(@volar/typescript@2.4.28(typescript@6.0.3))(typescript@6.0.3)(vue-tsc@3.3.11(typescript@6.0.3))
@@ -82,19 +82,19 @@ importers:
         version: 1.17.0(@typescript-eslint/utils@8.67.0(eslint@10.9.1(jiti@2.7.0)(supports-color@10.2.2))(supports-color@10.2.2)(typescript@6.0.3))(@vue/compiler-sfc@3.5.42)(esbuild@0.28.2)(eslint@10.9.1(jiti@2.7.0)(supports-color@10.2.2))(magic-string@1.2.3)(magicast@0.5.4)(ocache@0.3.0)(oxc-parser@0.143.0)(rolldown@1.2.5)(rollup@4.62.5)(srvx@0.11.22)(supports-color@10.2.2)(typescript@6.0.3)(unplugin@3.3.0(esbuild@0.28.2)(rolldown@1.2.5)(rollup@4.62.5)(vite@8.2.2))(vite@8.2.2)
       '@takumi-rs/core':
         specifier: ^2.11.0
-        version: 2.11.0(csstype@3.2.3)
+        version: 2.13.2(csstype@3.2.3)
       '@takumi-rs/helpers':
         specifier: ^2.12.0
-        version: 2.12.0
+        version: 2.13.2
       comark-content:
         specifier: ^0.3.0
         version: 0.3.0(db0@0.3.4)(ioredis@5.11.1(supports-color@10.2.2))
       fontaine:
-        specifier: 0.8.0
-        version: 0.8.0
+        specifier: 0.8.1
+        version: 0.8.1(esbuild@0.28.2)(postcss@8.5.26)(rolldown@1.2.5)(rollup@4.62.5)(vite@8.2.2)
       fontless:
         specifier: ^0.4.2
-        version: 0.4.2(db0@0.3.4)(esbuild@0.28.2)(ioredis@5.11.1(supports-color@10.2.2))(postcss@8.5.26)(rolldown@1.2.5)(rollup@4.62.5)(subset-font@2.5.0)(vite@8.2.2)
+        version: 0.4.2(db0@0.3.4)(esbuild@0.28.2)(ioredis@5.11.1(supports-color@10.2.2))(postcss@8.5.26)(rolldown@1.2.5)(rollup@4.62.5)(subset-font@2.7.0)(vite@8.2.2)
       microlighter:
         specifier: ^2.1.0
         version: 2.1.0
@@ -103,7 +103,7 @@ importers:
         version: nuxt-nightly@5.0.0-29800730.fb02c57e(d75c26a1fd00a1e0dc7a74a4849550c1)
       subset-font:
         specifier: ^2.5.0
-        version: 2.5.0
+        version: 2.7.0
       unifont:
         specifier: link:..
         version: link:..
@@ -133,8 +133,8 @@ importers:
         specifier: 1.0.3
         version: 1.0.3
       h3:
-        specifier: 2.0.1-rc.22
-        version: 2.0.1-rc.22(crossws@0.4.12(srvx@0.11.22))
+        specifier: 2.0.1-rc.29
+        version: 2.0.1-rc.29(crossws@0.4.12(srvx@0.11.22))(ocache@0.3.0)
       nitro:
         specifier: 3.0.260610-beta
         version: 3.0.260610-beta(chokidar@5.0.0)(dotenv@17.4.2)(giget@3.3.1)(ioredis@5.11.1(supports-color@10.2.2))(jiti@2.7.0)(lru-cache@11.5.2)(rollup@4.62.5)(vite@8.2.2)
@@ -896,8 +896,8 @@ packages:
     resolution: {integrity: sha512-oGB+UxlgWcgQkgwo8GcEGwemoTFt3FIO9ababBmaGwXIoBKZ+GTy0pP185beGg7Llih/NSHSV2XAs1lnznocSg==}
     engines: {node: '>= 8'}
 
-  '@nuxt/cli-nightly@4.0.0-20260824-125839-d3213ce':
-    resolution: {integrity: sha512-sSAwrCazR4VzcdBn+9y0OyhbcRPIQP1QkVLfNF78GI3LNBcQMV5DqUe9Zd1LRXzQS/9L+BHiJIRvgbhv8SFpRQ==}
+  '@nuxt/cli-nightly@4.0.0-20260829-200936-84e7673':
+    resolution: {integrity: sha512-8rnm+GnYmS3UwnXMtj43uojm9OzUTpAo+ZA6njCW42tSfdYYV9MOicv4Z8uGmeDOdm+wPdtjaZod/OkzONUIAw==}
     engines: {node: ^22.19.0 || ^24.11.0 || >=26.0.0}
     hasBin: true
     peerDependencies:
@@ -1612,60 +1612,60 @@ packages:
     peerDependencies:
       eslint: ^9.0.0 || ^10.0.0
 
-  '@takumi-rs/core-darwin-arm64@2.11.0':
-    resolution: {integrity: sha512-oPcfaq0ZjEbCqFcYF9KG7pqlA5hJy6exxDNUrjZNJiOPV3jP4RLDWeSTX7jauK4y4y0lqEwPC0oivTlM4WXl4Q==}
+  '@takumi-rs/core-darwin-arm64@2.13.2':
+    resolution: {integrity: sha512-1PefY+zWxuvg9KkOOFXhmDfPPsPQd6fKiIckbKBO2LbdxCM1NRTICmfMW13SYkiCFjNQCMS8LeFxupsrdf/TfQ==}
     engines: {node: '>=18'}
     cpu: [arm64]
     os: [darwin]
 
-  '@takumi-rs/core-darwin-x64@2.11.0':
-    resolution: {integrity: sha512-TObaoFLaIaDem4UEHnFtiDZ7sjqtzVDccf9JLSzYbHWF5/trsERESH+GWW046E9+ZICb0uF91VZEn2NaabbzqQ==}
+  '@takumi-rs/core-darwin-x64@2.13.2':
+    resolution: {integrity: sha512-uTevS9c74wB98NlmU0lhpNH+rhtNOPp4pi+B5Z21ACsjAwacVS3i0oFBhkUTYhng7ec1iGxPMJzt3ocjEe8reg==}
     engines: {node: '>=18'}
     cpu: [x64]
     os: [darwin]
 
-  '@takumi-rs/core-linux-arm64-gnu@2.11.0':
-    resolution: {integrity: sha512-fXvUdo+vX0oUMnH9jlJRvOCcjkPg7L872D7TjCzaeIWlEg09KXW8ZIiXlHhJWANVyUapIu51lMHkp0I2oFGfRA==}
+  '@takumi-rs/core-linux-arm64-gnu@2.13.2':
+    resolution: {integrity: sha512-ovSzAJ/S5KFwELiSoomjWpWjjGkidpj1pu1pNuP4bVQJ0xruLAUqMiYaPe2PNV3QIPyeWqO0wI1NfhQ7cCThkQ==}
     engines: {node: '>=18'}
     cpu: [arm64]
     os: [linux]
     libc: [glibc]
 
-  '@takumi-rs/core-linux-arm64-musl@2.11.0':
-    resolution: {integrity: sha512-FhRnAFIQlQ0WR4q5EldMal8cKZY5nbssuR9Qn9TNATY9PN6zlhV2oDud/b2XhYP2wf19+y1Ggouxk6RD4MnYPA==}
+  '@takumi-rs/core-linux-arm64-musl@2.13.2':
+    resolution: {integrity: sha512-9jN6nN9XFw+cKPNc2Fb3YrTVZZVV7eWdQuo+nbWMK6UVikc9g0r/Xazuy58HVbDtOmr0wpJ1SnKzrVHFa0bC9g==}
     engines: {node: '>=18'}
     cpu: [arm64]
     os: [linux]
     libc: [musl]
 
-  '@takumi-rs/core-linux-x64-gnu@2.11.0':
-    resolution: {integrity: sha512-i3IolpGWfDGHHEdKgw8NSW7WOZbxdL6jcVuRGyU47ZsSsWJlr0PguMjBCmprB+NVqCq3Kudw54Z4LVtCSxmuxw==}
+  '@takumi-rs/core-linux-x64-gnu@2.13.2':
+    resolution: {integrity: sha512-ScIjE6fZkL5FN6Abru1EelYaeyjsSH5PBGRYQOZ5mI6LyIm4dfEsfILWTOMqUGAuBW5KcU8ScDQg8L6eeuHX6A==}
     engines: {node: '>=18'}
     cpu: [x64]
     os: [linux]
     libc: [glibc]
 
-  '@takumi-rs/core-linux-x64-musl@2.11.0':
-    resolution: {integrity: sha512-EMZK8ck8kQuP28s41jx5paM4rznud2qC6x6kI1W2W1eV/w7hWIUQqq5QpZ6pDGkfcuWmVBz5ojeJI9my3aZfoA==}
+  '@takumi-rs/core-linux-x64-musl@2.13.2':
+    resolution: {integrity: sha512-2KGSKY6y6eqif4ED3zCKEfdwmxP1VQtN+d9CBfHh1fCH3u5Hf0IIudpPVQyqzHHARp3xtS++wD1eqNndpwV2AQ==}
     engines: {node: '>=18'}
     cpu: [x64]
     os: [linux]
     libc: [musl]
 
-  '@takumi-rs/core-win32-arm64-msvc@2.11.0':
-    resolution: {integrity: sha512-CAGV1TSwfXfIYxCOJehvZGxbuYuEIs/4aqRgC7XcY/2tBv9uc01dBBsfVGdk8wFbJ/WLVperfmX+Hz3w/xEyhw==}
+  '@takumi-rs/core-win32-arm64-msvc@2.13.2':
+    resolution: {integrity: sha512-Wck0eWTdpRATFLuOTGybOvuZnDLVjQ5xmGE8+2hI0DzZPQTSfmOyW+6Rx+4xOjKT7GW/r9qaeGtNFtznqJF7kg==}
     engines: {node: '>=18'}
     cpu: [arm64]
     os: [win32]
 
-  '@takumi-rs/core-win32-x64-msvc@2.11.0':
-    resolution: {integrity: sha512-75oyQe8eye6aQrLV+bVK7s7NXksr+KOBDcSeYPVXeQaE/xZ5REn0ooThdsgM5o2G3jjqWxf42Wd8Ajc6wl9Lyw==}
+  '@takumi-rs/core-win32-x64-msvc@2.13.2':
+    resolution: {integrity: sha512-+/OeGaxpoYWQFoTKWGexcZX8Lxo4b6D14KoA1gW3H1N7Wo8rB6yK9mtiDo17OTzbMqJXLZD0ng5mIbYvCvSnnw==}
     engines: {node: '>=18'}
     cpu: [x64]
     os: [win32]
 
-  '@takumi-rs/core@2.11.0':
-    resolution: {integrity: sha512-aAM0TfhNKgHjjtl26gUYL2Gta1sMru3hMQ1jhyFmf5mhqjw+V756OMBtV30LY8R9zH7S4G5zFFPlqlXPN0vluw==}
+  '@takumi-rs/core@2.13.2':
+    resolution: {integrity: sha512-HEWNqACqBy+nvisWr79LQdOdXEuw58dvOyb9CFVSQ0GDAe/CP4PqFGXbnPc/MGCGpdx4WfqyekqohL3CqCL10g==}
     engines: {node: '>=18'}
     peerDependencies:
       csstype: '*'
@@ -1673,20 +1673,8 @@ packages:
       csstype:
         optional: true
 
-  '@takumi-rs/helpers@2.11.0':
-    resolution: {integrity: sha512-Ik2rhAt7yZeWBVWiMRr6EaXk2Ccke1FZTlwB+1LS/SZzxB4v2OawbZftRX1N0ho8U3niq+M4OBPpno696M0XrQ==}
-    engines: {node: '>=18'}
-    peerDependencies:
-      preact: ^10.0.0
-      react: ^18.0.0 || ^19.0.0
-    peerDependenciesMeta:
-      preact:
-        optional: true
-      react:
-        optional: true
-
-  '@takumi-rs/helpers@2.12.0':
-    resolution: {integrity: sha512-3DF+spdZEKvFahc3SXQ3roXL9DzQkPoQ/oqopKT0bcXd3QiROTyYncRgzqUnEfBlFp236m9pSFVRSwW2GvLO9w==}
+  '@takumi-rs/helpers@2.13.2':
+    resolution: {integrity: sha512-3GeoDLq30EgOW+fQlE14AQ2Ya3vmjRoKaqOQo6vlFGh7OMeRL0odDGI7AbWTgjpVWIE2tsyS/77Si2pFtOtVxg==}
     engines: {node: '>=18'}
     peerDependencies:
       preact: ^10.0.0
@@ -2501,8 +2489,8 @@ packages:
     resolution: {integrity: sha512-hMQUl2bUFG339QygPM97E+mc8OY1IAchORZxm4a/frcYwKzozMzRVDBwHW0NjOqGElLm2O37AVQE8ikxlZHrMQ==}
     engines: {node: '>=18.20'}
 
-  bumpp@12.2.1:
-    resolution: {integrity: sha512-8inGPx8PC/BaEOWhzfxrNHGj/x5Srt0EeJatAcTJ9N7AZpQG/HlH4kGp5JWbEL8zffYXI5iBkMjG8SHnJ9e/6g==}
+  bumpp@12.2.2:
+    resolution: {integrity: sha512-tS7KZs+e1mRpN+N9mQU2greqHbqMLZrjBA0iQ4qVS/UB8yFPUgcvQHps4dVvRe37AEMNSOyNlnGuhnoklKlacg==}
     engines: {node: ^22.18.0 || ^24.11.0 || >=26.0.0}
     hasBin: true
 
@@ -2550,8 +2538,8 @@ packages:
     resolution: {integrity: sha512-cTZXBcJMl3pudE40WENOakXkcVtrbBpbkmSkM20NdRiUqa4+VYRdXdEsgQ0BNQ6JBE2YymTNWtPKVF7UCTN5+g==}
     hasBin: true
 
-  changelogithub@15.0.4:
-    resolution: {integrity: sha512-ZAVZRfE38jsT4FqBA2FZlyYXR6hNHWammR10QJSr5rnZB2XP0motbSgLAaj1OPZoKRvvVo6zCRPLGyjECuNwEg==}
+  changelogithub@15.0.5:
+    resolution: {integrity: sha512-GjRsZ+TPHieTBu8pMGP8pv2CdpCPl+OVDbz+oTxFwNIihCvg69oqsx+epo7EXypzSF46gr3HJPOTTjxm1nQRgw==}
     engines: {node: ^22.19.0 || ^24.11.0 || >=26.0.0}
     hasBin: true
 
@@ -3368,10 +3356,6 @@ packages:
   fnv1a-64@0.1.2:
     resolution: {integrity: sha512-mJbcILTPybAR1jdOwt/lVv8N2cffeJFFP+gVbSAwLEx1ujXH27RpPd8Rokec/KX9c76UYIB6Co+H4lQzxPnJfA==}
 
-  fontaine@0.8.0:
-    resolution: {integrity: sha512-eek1GbzOdWIj9FyQH/emqW1aEdfC3lYRCHepzwlFCm5T77fBSRSyNRKE6/antF1/B1M+SfJXVRQTY9GAr7lnDg==}
-    engines: {node: '>=18.12.0'}
-
   fontaine@0.8.1:
     resolution: {integrity: sha512-IA3MDtmvstTwnyuZTUD1IL42qTR6lI6ND3DEGBHLT5alcBeC/0jo+4jN5XFgG+E7HoPqJqlAUuIL+MhGonyCbQ==}
     engines: {node: ^20.19.0 || >=22.12.0}
@@ -3892,8 +3876,8 @@ packages:
   linkify-it@5.0.2:
     resolution: {integrity: sha512-ONTm2jCMAVZjgQa/Fy1kScXsuOoF5NPTsoFBdE1KVIZ2vAh/r9+Bqo+0jINCBYnavTPQZz38QzFTme79ENoN3Q==}
 
-  lint-staged@17.3.0:
-    resolution: {integrity: sha512-woZS3vNe3UKqBaLPvbLOtKRY4tLANpWQhom12MGWqC8Mh1lCOO+WgSwmX2amjJAqTY9BkXYW87fCUH5H9Ph6xw==}
+  lint-staged@17.4.1:
+    resolution: {integrity: sha512-FmJeudcalbSfg1du+JCfvi5vS6Qt08KgbfLWiHinbef+2JJwUZwAWVoaO1AcJVUTWPfk0t30PMQNwPAeCzYQ+Q==}
     engines: {node: '>=22.22.1'}
     hasBin: true
 
@@ -3937,9 +3921,6 @@ packages:
 
   lru-cache@5.1.1:
     resolution: {integrity: sha512-KpNARQA3Iwv+jTA0utUVVbrh+Jlrr1Fv0e56GGzAFOXN7dk/FviaDW8LHmK52DlcH4WP2n6gI8vN1aesBFgo9w==}
-
-  magic-regexp@0.10.0:
-    resolution: {integrity: sha512-Uly1Bu4lO1hwHUW0CQeSWuRtzCMNO00CmXtS8N6fyvB3B979GOEEeAkiTUDsmbYLAbvpUS/Kt5c4ibosAzVyVg==}
 
   magic-regexp@0.11.0:
     resolution: {integrity: sha512-LG77Z/gVnwz7oaDpD4heX6ryl+lcr4l1B2gnP4MMvt2pGhGC1Dfj7dl1pXpP4ih+VQFLuAadeKVa+lARAzfW+Q==}
@@ -4963,8 +4944,8 @@ packages:
     resolution: {integrity: sha512-bzyZ1e88w9O1iNJbKnOlvYTrWPDl46O1bG0D3XInv+9tkPrxrN8jUUTiFlDkkmKWgn1M6CfIA13SuGqOa9Korw==}
     engines: {node: '>=14'}
 
-  simple-git-hooks@2.13.1:
-    resolution: {integrity: sha512-WszCLXwT4h2k1ufIXAgsbiTOazqqevFCIncOuUBZJ91DdvWcC5+OFkluWRQPrcuSYd8fjq+o2y1QfWqYMoAToQ==}
+  simple-git-hooks@2.14.0:
+    resolution: {integrity: sha512-kkTORPAuxQz2g1QUuN0J8yGWT28tjGBfPOdJ4xT7Vbeu30veKUZQIoID2qGgCDAakaQn59UeZJJ4cFGB8PVP2A==}
     hasBin: true
 
   sisteransi@1.0.5:
@@ -5094,8 +5075,8 @@ packages:
     peerDependencies:
       postcss: ^8.5.26
 
-  subset-font@2.5.0:
-    resolution: {integrity: sha512-Vsa8ngQ/ohhUj0an7on49y9jLZ2rK5U+T1FzPM4/ZQY0xUy5mLis6BfFtPGzecTjFgYXQlvY7FlsJF4t3R/6Ug==}
+  subset-font@2.7.0:
+    resolution: {integrity: sha512-KoBEshkhodCspvR8DweQFkxRB0OxLmXiWV49y8O5fksD9gf/qBK8gcLwUOlGP4ktm55t2Ot0gLRsVQLT4391QQ==}
 
   super-regex@1.1.0:
     resolution: {integrity: sha512-WHkws2ZflZe41zj6AolvvmaTrWds/VuyeYr9iPVv/oQeaIoVxMKaushfFWpOGDT+GuBrM/sVqF8KUCYQlSSTdQ==}
@@ -6716,7 +6697,7 @@ snapshots:
       fastq: 1.20.1
     optional: true
 
-  '@nuxt/cli-nightly@4.0.0-20260824-125839-d3213ce(@nuxt/schema-nightly@5.0.0-29800730.fb02c57e)(jiti@2.7.0)(oxc-parser@0.143.0)(rolldown@1.2.5)':
+  '@nuxt/cli-nightly@4.0.0-20260829-200936-84e7673(@nuxt/schema-nightly@5.0.0-29800730.fb02c57e)(jiti@2.7.0)(oxc-parser@0.143.0)(rolldown@1.2.5)':
     dependencies:
       '@clack/prompts': 1.7.0
       args-tokenizer: 0.3.0
@@ -7545,50 +7526,48 @@ snapshots:
       estraverse: 5.3.0
       picomatch: 4.0.7
 
-  '@takumi-rs/core-darwin-arm64@2.11.0':
+  '@takumi-rs/core-darwin-arm64@2.13.2':
     optional: true
 
-  '@takumi-rs/core-darwin-x64@2.11.0':
+  '@takumi-rs/core-darwin-x64@2.13.2':
     optional: true
 
-  '@takumi-rs/core-linux-arm64-gnu@2.11.0':
+  '@takumi-rs/core-linux-arm64-gnu@2.13.2':
     optional: true
 
-  '@takumi-rs/core-linux-arm64-musl@2.11.0':
+  '@takumi-rs/core-linux-arm64-musl@2.13.2':
     optional: true
 
-  '@takumi-rs/core-linux-x64-gnu@2.11.0':
+  '@takumi-rs/core-linux-x64-gnu@2.13.2':
     optional: true
 
-  '@takumi-rs/core-linux-x64-musl@2.11.0':
+  '@takumi-rs/core-linux-x64-musl@2.13.2':
     optional: true
 
-  '@takumi-rs/core-win32-arm64-msvc@2.11.0':
+  '@takumi-rs/core-win32-arm64-msvc@2.13.2':
     optional: true
 
-  '@takumi-rs/core-win32-x64-msvc@2.11.0':
+  '@takumi-rs/core-win32-x64-msvc@2.13.2':
     optional: true
 
-  '@takumi-rs/core@2.11.0(csstype@3.2.3)':
+  '@takumi-rs/core@2.13.2(csstype@3.2.3)':
     dependencies:
-      '@takumi-rs/helpers': 2.11.0
+      '@takumi-rs/helpers': 2.13.2
     optionalDependencies:
-      '@takumi-rs/core-darwin-arm64': 2.11.0
-      '@takumi-rs/core-darwin-x64': 2.11.0
-      '@takumi-rs/core-linux-arm64-gnu': 2.11.0
-      '@takumi-rs/core-linux-arm64-musl': 2.11.0
-      '@takumi-rs/core-linux-x64-gnu': 2.11.0
-      '@takumi-rs/core-linux-x64-musl': 2.11.0
-      '@takumi-rs/core-win32-arm64-msvc': 2.11.0
-      '@takumi-rs/core-win32-x64-msvc': 2.11.0
+      '@takumi-rs/core-darwin-arm64': 2.13.2
+      '@takumi-rs/core-darwin-x64': 2.13.2
+      '@takumi-rs/core-linux-arm64-gnu': 2.13.2
+      '@takumi-rs/core-linux-arm64-musl': 2.13.2
+      '@takumi-rs/core-linux-x64-gnu': 2.13.2
+      '@takumi-rs/core-linux-x64-musl': 2.13.2
+      '@takumi-rs/core-win32-arm64-msvc': 2.13.2
+      '@takumi-rs/core-win32-x64-msvc': 2.13.2
       csstype: 3.2.3
     transitivePeerDependencies:
       - preact
       - react
 
-  '@takumi-rs/helpers@2.11.0': {}
-
-  '@takumi-rs/helpers@2.12.0': {}
+  '@takumi-rs/helpers@2.13.2': {}
 
   '@tybys/wasm-util@0.10.3':
     dependencies:
@@ -8487,7 +8466,7 @@ snapshots:
 
   builtin-modules@5.3.0: {}
 
-  bumpp@12.2.1:
+  bumpp@12.2.2:
     dependencies:
       args-tokenizer: 0.3.0
       cac: 7.0.0
@@ -8570,7 +8549,7 @@ snapshots:
     transitivePeerDependencies:
       - magicast
 
-  changelogithub@15.0.4:
+  changelogithub@15.0.5:
     dependencies:
       ansis: 4.3.1
       c12: 3.3.4(magicast@0.5.4)
@@ -8580,7 +8559,7 @@ snapshots:
       ofetch: 2.0.0-alpha.3
       tinyexec: 1.3.0
       tinyglobby: 0.2.17
-      verkit: 0.3.2
+      verkit: 0.4.0
     transitivePeerDependencies:
       - magicast
 
@@ -9505,16 +9484,6 @@ snapshots:
 
   fnv1a-64@0.1.2: {}
 
-  fontaine@0.8.0:
-    dependencies:
-      '@capsizecss/unpack': 4.0.1
-      css-tree: 3.2.1
-      magic-regexp: 0.10.0
-      magic-string: 0.30.21
-      pathe: 2.0.3
-      ufo: 1.6.4
-      unplugin: 2.3.11
-
   fontaine@0.8.1(esbuild@0.28.2)(postcss@8.5.26)(rolldown@1.2.5)(rollup@4.62.5)(vite@8.2.2):
     dependencies:
       '@capsizecss/unpack': 4.0.1
@@ -9541,7 +9510,7 @@ snapshots:
     dependencies:
       tiny-inflate: 1.0.3
 
-  fontless@0.4.2(db0@0.3.4)(esbuild@0.28.2)(ioredis@5.11.1(supports-color@10.2.2))(postcss@8.5.26)(rolldown@1.2.5)(rollup@4.62.5)(subset-font@2.5.0)(vite@8.2.2):
+  fontless@0.4.2(db0@0.3.4)(esbuild@0.28.2)(ioredis@5.11.1(supports-color@10.2.2))(postcss@8.5.26)(rolldown@1.2.5)(rollup@4.62.5)(subset-font@2.7.0)(vite@8.2.2):
     dependencies:
       consola: 3.4.2
       css-tree: 3.2.1
@@ -9557,7 +9526,7 @@ snapshots:
       unifont: 'link:'
       unstorage: 1.17.5(db0@0.3.4)(ioredis@5.11.1(supports-color@10.2.2))
     optionalDependencies:
-      subset-font: 2.5.0
+      subset-font: 2.7.0
       vite: 8.2.2(@types/node@24.13.3)(@vitejs/devtools@0.5.2)(esbuild@0.28.2)(jiti@2.7.0)(terser@5.50.0)(yaml@2.9.0)
     transitivePeerDependencies:
       - '@azure/app-configuration'
@@ -10066,7 +10035,7 @@ snapshots:
     dependencies:
       uc.micro: 2.1.0
 
-  lint-staged@17.3.0:
+  lint-staged@17.4.1:
     dependencies:
       picomatch: 4.0.7
       string-argv: 0.3.2
@@ -10112,7 +10081,8 @@ snapshots:
     dependencies:
       p-locate: 6.0.0
 
-  lodash@4.18.1: {}
+  lodash@4.18.1:
+    optional: true
 
   longest-streak@3.1.0: {}
 
@@ -10125,16 +10095,6 @@ snapshots:
     dependencies:
       yallist: 3.1.1
     optional: true
-
-  magic-regexp@0.10.0:
-    dependencies:
-      estree-walker: 3.0.3
-      magic-string: 0.30.21
-      mlly: 1.8.2
-      regexp-tree: 0.1.27
-      type-level-regexp: 0.1.17
-      ufo: 1.6.4
-      unplugin: 2.3.11
 
   magic-regexp@0.11.0(esbuild@0.28.2)(rolldown@1.2.5)(rollup@4.62.5)(vite@8.2.2):
     dependencies:
@@ -10838,7 +10798,7 @@ snapshots:
   nuxt-nightly@5.0.0-29800730.fb02c57e(d75c26a1fd00a1e0dc7a74a4849550c1):
     dependencies:
       '@dxup/nuxt': 0.5.10(esbuild@0.28.2)(magicast@0.5.4)(oxc-parser@0.143.0)(rolldown@1.2.5)(rollup@4.62.5)(vite@8.2.2)
-      '@nuxt/cli': '@nuxt/cli-nightly@4.0.0-20260824-125839-d3213ce(@nuxt/schema-nightly@5.0.0-29800730.fb02c57e)(jiti@2.7.0)(oxc-parser@0.143.0)(rolldown@1.2.5)'
+      '@nuxt/cli': '@nuxt/cli-nightly@4.0.0-20260829-200936-84e7673(@nuxt/schema-nightly@5.0.0-29800730.fb02c57e)(jiti@2.7.0)(oxc-parser@0.143.0)(rolldown@1.2.5)'
       '@nuxt/devtools': 4.0.0-alpha.15(1206d1fbea8ad52569a2b06ba213684f)
       '@nuxt/kit': '@nuxt/kit-nightly@5.0.0-29800730.fb02c57e(confbox@0.2.4)(dotenv@17.4.2)(giget@3.3.1)(jiti@2.7.0)(magic-string@1.2.3)(mlly@1.8.2)(oxc-parser@0.143.0)(rolldown@1.2.5)(unplugin@3.3.0(esbuild@0.28.2)(rolldown@1.2.5)(rollup@4.62.5)(vite@8.2.2))'
       '@nuxt/nitro-server': '@nuxt/nitro-server-nightly@5.0.0-29800730.fb02c57e(@babel/plugin-syntax-typescript@7.29.7(@babel/core@7.29.7(supports-color@10.2.2)))(@oxc-project/types@0.146.0)(@vitejs/devtools-kit@0.6.2(cac@7.0.0)(crossws@0.4.12(srvx@0.11.22))(ocache@0.3.0)(srvx@0.11.22)(vite@8.2.2))(chokidar@5.0.0)(confbox@0.2.4)(db0@0.3.4)(dotenv@17.4.2)(esbuild@0.28.2)(giget@3.3.1)(ioredis@5.11.1(supports-color@10.2.2))(jiti@2.7.0)(lightningcss@1.33.0)(mlly@1.8.2)(nuxt-nightly@5.0.0-29800730.fb02c57e)(ofetch@2.0.0-alpha.3)(oxc-parser@0.143.0)(rolldown@1.2.5)(rollup@4.62.5)(typescript@6.0.3)(unplugin@3.3.0(esbuild@0.28.2)(rolldown@1.2.5)(rollup@4.62.5)(vite@8.2.2))(vite@8.2.2)'
@@ -11694,7 +11654,7 @@ snapshots:
 
   signal-exit@4.1.0: {}
 
-  simple-git-hooks@2.13.1: {}
+  simple-git-hooks@2.14.0: {}
 
   sisteransi@1.0.5: {}
 
@@ -11824,11 +11784,10 @@ snapshots:
       postcss-selector-parser: 7.1.5
     optional: true
 
-  subset-font@2.5.0:
+  subset-font@2.7.0:
     dependencies:
       fontverter: 2.0.0
       harfbuzzjs: 0.10.3
-      lodash: 4.18.1
       p-limit: 3.1.0
 
   super-regex@1.1.0:

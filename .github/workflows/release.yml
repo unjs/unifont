@@ -35,7 +35,7 @@ jobs:
       contents: write
       pull-requests: write
     steps:
-      - uses: danielroe/uppt/pr@a270063dd6a75376b151cdfb85c96266c62bd70e # v0.6.6
+      - uses: danielroe/uppt/pr@09882a5a0a1a20a0e802613a77ad59fcb1c1611c # v0.6.9
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
           prerelease: ${{ inputs.prerelease }}
@@ -56,7 +56,7 @@ jobs:
       contents: write
       actions: write
     steps:
-      - uses: danielroe/uppt/release@a270063dd6a75376b151cdfb85c96266c62bd70e # v0.6.6
+      - uses: danielroe/uppt/release@09882a5a0a1a20a0e802613a77ad59fcb1c1611c # v0.6.9
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
 
@@ -72,7 +72,7 @@ jobs:
       files: ${{ steps.pack.outputs.files }}
     steps:
       - id: pack
-        uses: danielroe/uppt/pack@a270063dd6a75376b151cdfb85c96266c62bd70e # v0.6.6
+        uses: danielroe/uppt/pack@09882a5a0a1a20a0e802613a77ad59fcb1c1611c # v0.6.9
 
   # stage the prebuilt tarball(s) to npm via OIDC
   publish:
@@ -89,6 +89,6 @@ jobs:
       id-token: write
     environment: npm
     steps:
-      - uses: danielroe/uppt/publish@a270063dd6a75376b151cdfb85c96266c62bd70e # v0.6.6
+      - uses: danielroe/uppt/publish@09882a5a0a1a20a0e802613a77ad59fcb1c1611c # v0.6.9
         with:
           files: ${{ needs.pack.outputs.files }}
