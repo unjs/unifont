@@ -35,7 +35,7 @@
   "devDependencies": {
     "@nuxt/test-utils": "4.2.0",
     "@playwright/test": "1.62.1",
-    "@vitejs/devtools-kit": "^0.5.2",
+    "@vitejs/devtools-kit": "0.5.2",
     "axe-core": "4.13.0",
     "eslint": "10.9.0",
     "eslint-plugin-vuejs-accessibility": "^2.6.0",
