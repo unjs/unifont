@@ -46,7 +46,7 @@
     "@vitest/coverage-v8": "4.1.11",
     "bumpp": "12.2.1",
     "changelogithub": "15.0.4",
-    "eslint": "10.9.0",
+    "eslint": "10.9.1",
     "lint-staged": "17.3.0",
     "rou3": "0.9.2",
     "simple-git-hooks": "2.13.1",
