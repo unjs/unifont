@@ -1,10 +1,34 @@
-import type { FontStyles, ResolveFontOptions } from '../types'
+import type { FontMetrics, FontStyles, ResolveFontOptions } from '../types'
 
 import { hash } from 'ohash'
 import { extractFontFaceData } from '../css/parse'
 import { cleanFontFaces, defineFontProvider, prepareWeights } from '../utils'
 
 const BASE_URL = 'https://api.fontshare.com/v2'
+
+// every family fontshare serves is drawn on a 1000-unit em, and its API reports metrics in
+// font units without saying so
+const UNITS_PER_EM = 1000
+
+function getMetrics(style: FontshareFontStyle): FontMetrics | undefined {
+  const properties = style.properties
+  if (!properties) {
+    return
+  }
+  const metrics: FontMetrics = { unitsPerEm: UNITS_PER_EM }
+  // `y_min`/`y_max` are glyph bounds rather than vertical metrics, and `descending_leading` does
+  // not match the font's descender, so the descender is not reported
+  if (properties.ascending_leading != null) {
+    metrics.ascent = properties.ascending_leading
+  }
+  if (properties.cap_height != null) {
+    metrics.capHeight = properties.cap_height
+  }
+  if (properties.x_height != null) {
+    metrics.xHeight = properties.x_height
+  }
+  return metrics
+}
 
 function getFallbacks(category: string): string[] | undefined {
   if (category.includes('Serif'))
@@ -101,7 +125,22 @@ export default defineFontProvider('fontshare', async (_options, ctx) => {
       }
     }
 
-    return cleanFontFaces(fontFaces, options.formats)
+    const faces = cleanFontFaces(fontFaces, options.formats)
+
+    for (const face of faces) {
+      const isItalic = face.style === 'italic'
+      const isVariable = Array.isArray(face.weight)
+      const style = font.styles.find(style => !!style.is_italic === isItalic
+        && (isVariable
+          ? style.is_variable
+          : !style.is_variable && String(style.weight.weight) === String(face.weight)))
+      const metrics = style && getMetrics(style)
+      if (metrics) {
+        face.metrics = metrics
+      }
+    }
+
+    return faces
   }
 
   return {
@@ -128,10 +167,13 @@ export default defineFontProvider('fontshare', async (_options, ctx) => {
           weights.add(style.weight.weight.toString())
         }
       }
+      const metrics = getMetrics(font.styles.find(style => style.default) ?? font.styles[0]!)
+
       return {
         formats: ['woff2', 'woff', 'ttf'],
         styles: [...styles],
         weights: [...weights],
+        ...(metrics ? { metrics } : {}),
       }
     },
     async resolveFont(fontFamily, defaults) {
@@ -152,34 +194,36 @@ export default defineFontProvider('fontshare', async (_options, ctx) => {
 
 /** internal */
 
+interface FontshareFontStyle {
+  default: boolean
+  file: string
+  id: string
+  is_italic: boolean
+  is_variable: boolean
+  properties: {
+    ascending_leading: number
+    body_height: null
+    cap_height: number
+    descending_leading: number
+    max_char_width: number
+    x_height: number
+    y_max: number
+    y_min: number
+  }
+  weight: {
+    label: string
+    name: string
+    native_name: null
+    number: number
+    weight: number
+  }
+}
+
 interface FontshareFontMeta {
   slug: string
   name: string
   category: string
-  styles: Array<{
-    default: boolean
-    file: string
-    id: string
-    is_italic: boolean
-    is_variable: boolean
-    properties: {
-      ascending_leading: number
-      body_height: null
-      cap_height: number
-      descending_leading: number
-      max_char_width: number
-      x_height: number
-      y_max: number
-      y_min: number
-    }
-    weight: {
-      label: string
-      name: string
-      native_name: null
-      number: number
-      weight: number
-    }
-  }>
+  styles: FontshareFontStyle[]
   axes: Array<{
     name: string
     property: 'wght' | 'ital' | 'opsz'
