@@ -56,6 +56,28 @@ export interface FontFaceMeta {
   init?: RequestInit
 }
 
+/**
+ * Font metrics in font units, using the same vocabulary as `@capsizecss/metrics`, from which
+ * fallback metric overrides (`size-adjust`, `ascent-override`, ...) can be calculated without
+ * downloading and parsing the font file.
+ */
+export interface FontMetrics {
+  /** The number of font units per em square. */
+  unitsPerEm: number
+  /** The ascender, in font units. */
+  ascent?: number
+  /** The descender, in font units. Usually negative. */
+  descent?: number
+  /** The line gap, in font units. */
+  lineGap?: number
+  /** The height of capital letters, in font units. */
+  capHeight?: number
+  /** The height of lowercase letters, in font units. */
+  xHeight?: number
+  /** The average width of a lowercase character, in font units. */
+  xWidthAvg?: number
+}
+
 // TODO: name
 export interface FontFaceData {
   src: Array<LocalFontSource | RemoteFontSource>
@@ -76,6 +98,11 @@ export interface FontFaceData {
   featureSettings?: string
   /** Allows low-level control over OpenType or TrueType font variations, by specifying the four letter axis names of the features to vary, along with their variation values. */
   variationSettings?: string
+  /**
+   * Metrics reported by the provider for this font face, if it knows them.
+   * @see https://developer.mozilla.org/en-US/docs/Web/CSS/@font-face/size-adjust
+   */
+  metrics?: FontMetrics
   /** Metadata for the font face used by unifont */
   meta?: FontFaceMeta
 }
@@ -107,6 +134,11 @@ export interface FontProperties {
    * per-family availability, so some formats may not exist for every family.
    */
   formats?: FontFormat[]
+  /**
+   * Metrics for the family's default font face, if the provider knows them. Individual
+   * faces may report different metrics from `resolveFont`.
+   */
+  metrics?: FontMetrics
 }
 
 export interface InitializedProvider<

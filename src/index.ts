@@ -6,7 +6,7 @@ export type { AdobeProviderOptions } from './providers/adobe'
 export type { GoogleFamilyOptions, GoogleProviderOptions } from './providers/google'
 export type { GoogleiconsFamilyOptions, GoogleiconsProviderOptions } from './providers/googleicons'
 export type { NpmFamilyOptions, NpmProviderOptions } from './providers/npm'
-export type { FontFaceData, FontFaceMeta, FontProperties, FontStyles, InitializedProvider, LocalFontSource, Provider, ProviderContext, ProviderDefinition, ProviderFactory, RemoteFontSource, ResolveFontOptions, ResolveFontResult } from './types'
+export type { FontFaceData, FontFaceMeta, FontMetrics, FontProperties, FontStyles, InitializedProvider, LocalFontSource, Provider, ProviderContext, ProviderDefinition, ProviderFactory, RemoteFontSource, ResolveFontOptions, ResolveFontResult } from './types'
 export type { Unifont, UnifontOptions } from './unifont'
 
 export { createUnifont, defaultResolveOptions } from './unifont'
