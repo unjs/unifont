@@ -2,6 +2,7 @@ import type { FontFaceData, FontFormat, FontStyles, ResolveFontOptions } from '.
 
 import { hash } from 'ohash'
 import { extractFontFaceData } from '../css/parse'
+import { fetchAPI } from '../internal'
 import { cleanFontFaces, defineFontProvider, prepareWeights, splitCssIntoSubsets } from '../utils'
 
 type VariableAxis = 'opsz' | 'slnt' | 'wdth' | (string & {})
@@ -66,7 +67,7 @@ function getFallbacks(category: string): string[] | undefined {
 }
 
 export default defineFontProvider('google', async (providerOptions: GoogleProviderOptions, ctx) => {
-  const { familyMetadataList: googleFonts } = await ctx.storage.getItem('google:meta.json', () => ctx.fetch('https://fonts.google.com/metadata/fonts').then(res => res.json() as Promise<{ familyMetadataList: FontIndexMeta[] }>))
+  const { familyMetadataList: googleFonts } = await ctx.storage.getItem('google:meta.json', () => fetchAPI(ctx, 'https://fonts.google.com/metadata/fonts').then(res => res.json() as Promise<{ familyMetadataList: FontIndexMeta[] }>))
 
   const styleMap = {
     italic: '1',
@@ -170,7 +171,7 @@ export default defineFontProvider('google', async (providerOptions: GoogleProvid
         if (glyphs) {
           url += `&text=${encodeURIComponent(glyphs)}`
         }
-        const rawCss = await ctx.fetch(url, {
+        const rawCss = await fetchAPI(ctx, url, {
           headers: {
             'user-agent': userAgent,
           },

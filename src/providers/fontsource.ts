@@ -1,6 +1,7 @@
 import type { FontFaceData, ProviderContext, ResolveFontOptions } from '../types'
 
 import { hash } from 'ohash'
+import { fetchAPI } from '../internal'
 import { cleanFontFaces, defineFontProvider, filterKnownStyles, prepareWeights } from '../utils'
 
 const BASE_URL = 'https://api.fontsource.org/v1'
@@ -21,7 +22,7 @@ function pickFontsourceAxisSlug(axes: string[]): 'wght' | 'standard' | 'full' {
 }
 
 async function getVariableAxes(ctx: ProviderContext, font: FontsourceFontMeta) {
-  return await ctx.storage.getItem(`fontsource:${font.family}-axes.json`, () => ctx.fetch(`${BASE_URL}/variable/${font.id}`).then(res => res.json() as Promise<FontsourceVariableFontDetail>))
+  return await ctx.storage.getItem(`fontsource:${font.family}-axes.json`, () => fetchAPI(ctx, `${BASE_URL}/variable/${font.id}`).then(res => res.json() as Promise<FontsourceVariableFontDetail>))
 }
 
 // There are others like display and handwriting but these are not valid
@@ -34,7 +35,7 @@ function getFallbacks(category: string): string[] | undefined {
 }
 
 export default defineFontProvider('fontsource', async (_options, ctx) => {
-  const fonts = await ctx.storage.getItem('fontsource:meta.json', () => ctx.fetch(`${BASE_URL}/fonts`).then(res => res.json() as Promise<FontsourceFontMeta[]>))
+  const fonts = await ctx.storage.getItem('fontsource:meta.json', () => fetchAPI(ctx, `${BASE_URL}/fonts`).then(res => res.json() as Promise<FontsourceFontMeta[]>))
   const familyMap = new Map<string, FontsourceFontMeta>()
 
   for (const meta of fonts) {
@@ -52,7 +53,7 @@ export default defineFontProvider('fontsource', async (_options, ctx) => {
     if (weights.length === 0 || styles.length === 0)
       return []
 
-    const fontDetail = await ctx.fetch(`${BASE_URL}/fonts/${font.id}`).then(res => res.json() as Promise<FontsourceFontDetail>)
+    const fontDetail = await fetchAPI(ctx, `${BASE_URL}/fonts/${font.id}`).then(res => res.json() as Promise<FontsourceFontDetail>)
     const fontFaceData: FontFaceData[] = []
 
     for (const subset of subsets) {
