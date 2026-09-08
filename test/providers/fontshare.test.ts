@@ -16,6 +16,12 @@ describe('fontshare', () => {
       [
         {
           "display": "swap",
+          "metrics": {
+            "ascent": 1010,
+            "capHeight": 716,
+            "unitsPerEm": 1000,
+            "xHeight": 484,
+          },
           "src": [
             {
               "format": "woff2",
@@ -38,6 +44,12 @@ describe('fontshare', () => {
       [
         {
           "display": "swap",
+          "metrics": {
+            "ascent": 1000,
+            "capHeight": 727,
+            "unitsPerEm": 1000,
+            "xHeight": 525,
+          },
           "src": [
             {
               "format": "woff2",
@@ -82,6 +94,88 @@ describe('fontshare', () => {
     expect(result?.weights).toEqual(expect.arrayContaining(['400', '300 900']))
 
     expect(await unifont.getFontProperties('XXX')).toEqual(undefined)
+  })
+
+  describe('metrics', () => {
+    it('reports metrics per font face', async () => {
+      const unifont = await createUnifont([providers.fontshare()])
+      const { fonts } = await unifont.resolveFont('Satoshi', { weights: ['300', '900'], styles: ['normal'] })
+      expect(fonts.map(font => font.metrics)).toMatchInlineSnapshot(`
+        [
+          {
+            "ascent": 1010,
+            "capHeight": 710,
+            "unitsPerEm": 1000,
+            "xHeight": 480,
+          },
+          {
+            "ascent": 1010,
+            "capHeight": 740,
+            "unitsPerEm": 1000,
+            "xHeight": 500,
+          },
+        ]
+      `)
+    })
+
+    it('reports metrics for variable font faces', async () => {
+      const unifont = await createUnifont([providers.fontshare()])
+      const { fonts } = await unifont.resolveFont('Satoshi', { weights: ['300 900'], styles: ['normal'] })
+      const variable = fonts.find(font => Array.isArray(font.weight))
+      expect(variable?.metrics?.unitsPerEm).toBe(1000)
+      expect(variable?.metrics?.ascent).toBeGreaterThan(0)
+    })
+
+    it('reports metrics for the default style from getFontProperties', async () => {
+      const unifont = await createUnifont([providers.fontshare()])
+      const properties = await unifont.getFontProperties('Satoshi')
+      expect(properties?.metrics).toMatchInlineSnapshot(`
+        {
+          "ascent": 1010,
+          "capHeight": 740,
+          "unitsPerEm": 1000,
+          "xHeight": 500,
+        }
+      `)
+    })
+
+    it.each([
+      ['no properties', undefined, undefined],
+      ['empty properties', {}, { unitsPerEm: 1000 }],
+    ])('handles a style with %s', async (_name, properties, expected) => {
+      const restore = mockFetchReturn(/api\.fontshare\.com/, (request) => {
+        const url = String(request)
+        if (url.includes('/fonts?')) {
+          return Promise.resolve({ ok: true, status: 200, json: () => Promise.resolve({
+            has_more: false,
+            fonts: [{
+              name: 'No Metrics',
+              slug: 'no-metrics',
+              category: 'Sans Serif',
+              axes: [],
+              styles: [{ default: true, is_italic: false, is_variable: false, properties, weight: { number: 400, weight: 400 } }],
+            }],
+          }) })
+        }
+        return Promise.resolve({ ok: true, status: 200, text: () => Promise.resolve(`@font-face {
+          font-family: 'No Metrics';
+          font-style: normal;
+          font-weight: 400;
+          src: url(https://cdn.fontshare.com/400.woff2) format('woff2');
+        }`) })
+      })
+
+      try {
+        const unifont = await createUnifont([providers.fontshare()])
+        const { fonts } = await unifont.resolveFont('No Metrics', { weights: ['400'], styles: ['normal'], formats: ['woff2'] })
+        expect(fonts.length).toBe(1)
+        expect(fonts[0]!.metrics).toEqual(expected)
+        expect((await unifont.getFontProperties('No Metrics'))?.metrics).toEqual(expected)
+      }
+      finally {
+        restore()
+      }
+    })
   })
 
   it('omits a variable weight range when the family has no wght axis', async () => {
