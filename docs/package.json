@@ -29,7 +29,7 @@
     "subset-font": "^2.5.0",
     "microlighter": "^2.1.0",
     "nuxt": "npm:nuxt-nightly@5x",
-    "unifont": "link:..",
+    "unifont": "workspace:*",
     "vue": "3.5.42"
   },
   "devDependencies": {
