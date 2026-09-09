@@ -130,10 +130,10 @@ const anchor = (path: string) => path.replace(/[^a-z0-9]+/gi, '-').replace(/^-|-
         The site is an API
       </h1>
       <p class="head__lede">
-        Every page here is a thin layer over these endpoints. They're public, they need no auth, they're
-        cached, and they won't change while they're under <code>/v1</code>. Use them in scripts, editor
-        plugins or CI checks, anywhere you want font metadata without shipping a resolver. There's an
-        <a href="https://modelcontextprotocol.io">MCP</a> server too, if the thing asking is a model.
+        Every page here is a thin layer over these endpoints. They're public, need no auth, are
+        cached, and won't change shape while they're under <code>/v1</code>. Feel free to use them in scripts, editor
+        plugins or CI checks, anywhere you want font metadata. There's an
+        <a href="https://modelcontextprotocol.io">MCP</a> server too, for agents.
       </p>
       <p class="head__machine">
         Machine-readable: <a href="/openapi.json">openapi.json</a> describes every endpoint below,
@@ -141,10 +141,10 @@ const anchor = (path: string) => path.replace(/[^a-z0-9]+/gi, '-').replace(/^-|-
         markdown if you ask for <code>text/markdown</code> or append <code>.md</code> to its path.
       </p>
       <p class="head__warn">
-        Not for production use. This API is best-effort, we'll rate-limit it if we have to, and it can
-        change or go away, the same as <code>proxy.unifont.dev</code>. Build it into a script, an editor
-        plugin or a CI check by all means; if a deployment of yours depends on it, run
-        <code>unifont</code> yourself instead, or
+        Not for production use. This API is best-effort and may be rate-limited,
+        change or go away, just like <code>proxy.unifont.dev</code>. Feel free to use it in a script, an editor
+        plugin or a CI check by all means, but if you need it in production, run
+        <code>unifont</code> yourself, or
         <a href="https://github.com/unjs/unifont/tree/main/proxy">self-host the proxy</a>.
       </p>
     </header>

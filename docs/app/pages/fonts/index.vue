@@ -119,8 +119,7 @@ function turn(delta: number) {
         Catalogue
       </h1>
       <p class="head__lede">
-        Every family the providers here will list. npm and Adobe can resolve a family by name, but they
-        can't list one. npm is the whole registry, and Adobe needs your own Typekit id.
+        Every family listed by any of these providers.
       </p>
 
       <div class="search">

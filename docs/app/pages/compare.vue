@@ -119,7 +119,7 @@ const divergence = computed(() => {
         One family, every provider
       </h1>
       <p class="head__lede">
-        The same request, sent to every provider unifont can ask without credentials. Useful if you're
+        Request font information from all providers that don't require credentials. Useful if you're
         deciding which CDN to pull a font from, or checking whether a family exists outside Google Fonts.
       </p>
 
@@ -172,7 +172,7 @@ const divergence = computed(() => {
       v-if="!family"
       class="empty"
     >
-      Type a family above to see how each provider answers.
+      Type a family above to see the response from eaach provider.
     </p>
 
     <div
@@ -214,7 +214,7 @@ const divergence = computed(() => {
             id="specimens-heading"
             class="section-title"
           >
-            {{ family }}, as each provider serves it
+            {{ family }}, served from each provider
           </h2>
           <ul class="specimens__list">
             <li

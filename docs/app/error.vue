@@ -32,8 +32,7 @@ usePageSeo({
       </h1>
       <p class="fail__body">
         <template v-if="isMissing">
-          If you were after a typeface, search for it. The catalogue has every family the providers here
-          will list.
+          If you were after a typeface, search for it. The catalogue has every family listed by these providers.
         </template>
         <template v-else>
           {{ error.message || 'A provider or this server failed part way through.' }} Reloading usually

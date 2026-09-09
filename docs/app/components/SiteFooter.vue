@@ -41,7 +41,7 @@ const others = computed(() => credits.value?.others ?? 0)
         <a href="https://roe.dev">danielroe</a>, <a href="https://github.com/qwerzl">qwerzl</a><template v-if="others">, </template><template v-else> and </template><a href="https://florian-lefebvre.dev/">florian-lefebvre</a><template v-if="others">
           and <a href="https://github.com/unjs/unifont/graphs/contributors">{{ others }} other contributor{{ others === 1 ? '' : 's' }}</a>
         </template> ·
-        MIT · font data belongs to its foundries and is licensed by them, not by us
+        MIT · font data belongs to its foundries
       </p>
     </div>
   </footer>
