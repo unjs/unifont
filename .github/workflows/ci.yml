@@ -20,12 +20,7 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
       - uses: pnpm/setup@84cb39b217b10273981911c288cd62326dc7c6d2 # v2
         with:
-          runtime: node@22
           cache: true
-          install: false
-
-      - name: 📦 Install dependencies
-        run: pnpm install
 
       - name: 🔠 Lint project
         run: pnpm lint
@@ -37,12 +32,7 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
       - uses: pnpm/setup@84cb39b217b10273981911c288cd62326dc7c6d2 # v2
         with:
-          runtime: node@22
           cache: true
-          install: false
-
-      - name: 📦 Install dependencies
-        run: pnpm install
 
       - name: 🛠 Build project
         run: pnpm build
@@ -68,12 +58,7 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
       - uses: pnpm/setup@84cb39b217b10273981911c288cd62326dc7c6d2 # v2
         with:
-          runtime: node@22
           cache: true
-          install: false
-
-      - name: 📦 Install dependencies
-        run: pnpm install
 
       - name: 🎭 Install Chromium
         run: pnpm --filter unifont-site exec playwright install --with-deps chromium
@@ -97,12 +82,7 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
       - uses: pnpm/setup@84cb39b217b10273981911c288cd62326dc7c6d2 # v2
         with:
-          runtime: node@22
           cache: true
-          install: false
-
-      - name: 📦 Install dependencies
-        run: pnpm install
 
       - name: 🛠 Build project
         run: pnpm build
@@ -117,12 +97,7 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
       - uses: pnpm/setup@84cb39b217b10273981911c288cd62326dc7c6d2 # v2
         with:
-          runtime: node@22
           cache: true
-          install: false
-
-      - name: 📦 Install dependencies
-        run: pnpm install
 
       - name: 🛠 Build proxy
         run: pnpm --filter unifont-proxy build
