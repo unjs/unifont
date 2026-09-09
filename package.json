@@ -2,7 +2,18 @@
   "name": "unifont",
   "type": "module",
   "version": "0.8.3",
-  "packageManager": "pnpm@11.24.0",
+  "devEngines": {
+    "runtime": {
+      "name": "node",
+      "version": "^24.0.0",
+      "onFail": "warn"
+    },
+    "packageManager": {
+      "name": "pnpm",
+      "version": "11.24.0",
+      "onFail": "download"
+    }
+  },
   "description": "Framework agnostic tools for accessing data from font CDNs and providers",
   "license": "MIT",
   "repository": {
@@ -58,11 +69,11 @@
     "vitest": "4.1.11"
   },
   "simple-git-hooks": {
-    "pre-commit": "npx lint-staged"
+    "pre-commit": "pnpm exec lint-staged"
   },
   "lint-staged": {
     "*.{js,ts,mjs,cjs,json,.*rc}": [
-      "npx eslint --fix"
+      "pnpm exec eslint --fix"
     ]
   }
 }

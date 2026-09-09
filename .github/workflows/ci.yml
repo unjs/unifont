@@ -18,14 +18,9 @@ jobs:
 
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
-      - run: corepack enable
-      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7
+      - uses: pnpm/setup@703c52620218391530e48b9e8870d5c0082e1b9b # v2.1.0
         with:
-          node-version: lts/-1
-          cache: pnpm
-
-      - name: 📦 Install dependencies
-        run: pnpm install
+          cache: true
 
       - name: 🔠 Lint project
         run: pnpm lint
@@ -35,14 +30,9 @@ jobs:
 
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
-      - run: corepack enable
-      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7
+      - uses: pnpm/setup@703c52620218391530e48b9e8870d5c0082e1b9b # v2.1.0
         with:
-          node-version: lts/-1
-          cache: pnpm
-
-      - name: 📦 Install dependencies
-        run: pnpm install
+          cache: true
 
       - name: 🛠 Build project
         run: pnpm build
@@ -66,14 +56,9 @@ jobs:
 
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
-      - run: corepack enable
-      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7
+      - uses: pnpm/setup@703c52620218391530e48b9e8870d5c0082e1b9b # v2.1.0
         with:
-          node-version: lts/-1
-          cache: pnpm
-
-      - name: 📦 Install dependencies
-        run: pnpm install
+          cache: true
 
       - name: 🎭 Install Chromium
         run: pnpm --filter unifont-site exec playwright install --with-deps chromium
@@ -95,14 +80,9 @@ jobs:
 
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
-      - run: corepack enable
-      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7
+      - uses: pnpm/setup@703c52620218391530e48b9e8870d5c0082e1b9b # v2.1.0
         with:
-          node-version: lts/-1
-          cache: pnpm
-
-      - name: 📦 Install dependencies
-        run: pnpm install
+          cache: true
 
       - name: 🛠 Build project
         run: pnpm build
@@ -115,14 +95,9 @@ jobs:
 
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
-      - run: corepack enable
-      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7
+      - uses: pnpm/setup@703c52620218391530e48b9e8870d5c0082e1b9b # v2.1.0
         with:
-          node-version: lts/-1
-          cache: pnpm
-
-      - name: 📦 Install dependencies
-        run: pnpm install
+          cache: true
 
       - name: 🛠 Build proxy
         run: pnpm --filter unifont-proxy build
