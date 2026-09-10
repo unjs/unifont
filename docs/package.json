@@ -37,7 +37,7 @@
     "@playwright/test": "1.62.1",
     "@vitejs/devtools-kit": "0.6.2",
     "axe-core": "4.13.0",
-    "eslint": "10.9.1",
+    "eslint": "10.10.0",
     "eslint-plugin-vuejs-accessibility": "2.6.0",
     "fontkitten": "1.0.3",
     "h3": "2.0.1-rc.29",
