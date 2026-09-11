@@ -10,11 +10,6 @@ export interface ProviderContext {
     }
     setItem: (key: string, value: unknown) => Awaitable<void>
   }
-  /**
-   * Requests a provider API, retrying transient failures. Requests are routed through the
-   * `apiBase` proxy if one is configured, so providers should always request the upstream URL.
-   */
-  fetch: (url: string, init?: RequestInit) => Promise<Response>
 }
 
 export type FontStyles = 'normal' | 'italic' | 'oblique'
