@@ -65,7 +65,7 @@
     "tsdown": "0.22.14",
     "typescript": "6.0.3",
     "unstorage": "1.17.5",
-    "vite": "8.2.2",
+    "vite": "8.3.0",
     "vitest": "4.1.11"
   },
   "simple-git-hooks": {
