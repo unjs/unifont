@@ -19,11 +19,11 @@
     "prime": "node scripts/prime-font-cache.mjs"
   },
   "dependencies": {
-    "@comark/vue": "^0.6.2",
+    "@comark/vue": "^0.7.0",
     "@nuxt/eslint": "^1.15.2",
     "@takumi-rs/core": "^2.11.0",
     "@takumi-rs/helpers": "^2.12.0",
-    "comark-content": "^0.3.0",
+    "comark-content": "^0.4.0",
     "fontaine": "0.8.1",
     "fontless": "^0.4.2",
     "subset-font": "^2.5.0",
@@ -34,15 +34,15 @@
   },
   "devDependencies": {
     "@nuxt/test-utils": "4.2.0",
-    "@playwright/test": "1.62.1",
+    "@playwright/test": "1.63.0",
     "@vitejs/devtools-kit": "0.6.2",
     "axe-core": "4.13.0",
     "eslint": "10.9.1",
     "eslint-plugin-vuejs-accessibility": "2.6.0",
     "fontkitten": "1.0.3",
-    "h3": "2.0.1-rc.29",
+    "h3": "2.0.1-rc.31",
     "nitro": "3.0.260610-beta",
-    "playwright": "1.62.1",
+    "playwright": "1.63.0",
     "typescript": "6.0.3",
     "vitest": "4.1.11",
     "vue-tsc": "3.3.11"
