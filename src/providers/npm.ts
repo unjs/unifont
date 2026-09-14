@@ -1,10 +1,10 @@
 import type { FontFaceData, ResolveFontOptions } from '../types'
 
-import { dirname, resolve } from 'node:path'
+import { dirname, relative, resolve } from 'node:path'
 import { fileURLToPath, pathToFileURL } from 'node:url'
 import { hash } from 'ohash'
 
-import { extractFontFaceData } from '../css/parse'
+import { extractFontFaceData, extractFontFaceFamilies, extractImports } from '../css/parse'
 import { cleanFontFaces, defineFontProvider, filterKnownStyles } from '../utils'
 
 export interface NpmProviderOptions {
@@ -106,7 +106,13 @@ export interface NpmFamilyOptions {
    *
    * When not specified, per-weight and per-style entry points
    * (`<weight>.css`, `<weight>-italic.css`) are resolved for the requested
-   * weights and styles, falling back to `index.css`.
+   * weights and styles, falling back to `index.css` and then to the
+   * stylesheet declared in the package's `package.json` `style` field.
+   *
+   * When set, and the file declares exactly one family, that family is used
+   * whatever its name. This is how icon fonts that name their face something
+   * other than the requested family (such as `css/solid.css` in
+   * `@fortawesome/fontawesome-free`) are resolved.
    */
   file?: string
 }
@@ -118,11 +124,19 @@ const DEFAULT_CDN = 'https://cdn.jsdelivr.net/npm'
  *
  * - `match`: regex to match against dependency names in package.json
  * - `family`: extracts the font family name from the package name
+ * - `files`: entry stylesheets to parse, when the package does not ship `index.css`
+ * - `familyMatch`/`package`: reverse lookup from family name to package name
  */
 interface KnownFontPackage {
   match: RegExp
   family: (pkgName: string) => string
+  files?: (pkgName: string) => string[]
+  familyMatch?: RegExp
+  package?: (family: string) => string
 }
+
+const IBM_PLEX_FAMILY_RE = /^ibm plex /i
+const IBM_PLEX_SUBSET_RE = /\b(?:Jp|Kr|Sc|Tc)\b/g
 
 const KNOWN_FONT_PACKAGES: KnownFontPackage[] = [
   {
@@ -140,6 +154,14 @@ const KNOWN_FONT_PACKAGES: KnownFontPackage[] = [
       const slug = pkg.replace('@fontsource/', '')
       return slugToFamily(slug)
     },
+  },
+  {
+    // @ibm/plex-sans-jp → "IBM Plex Sans JP"
+    match: /^@ibm\/plex-[a-z-]+$/,
+    family: pkg => `IBM Plex ${slugToFamily(pkg.replace('@ibm/plex-', '')).replace(IBM_PLEX_SUBSET_RE, subset => subset.toUpperCase())}`,
+    files: pkg => [`css/${pkg.replace('@ibm/', 'ibm-')}-all.css`],
+    familyMatch: IBM_PLEX_FAMILY_RE,
+    package: family => `@ibm/plex-${familyToSlug(family.replace(IBM_PLEX_FAMILY_RE, ''))}`,
   },
   {
     // cal-sans → "Cal Sans"
@@ -167,6 +189,11 @@ const VARIABLE_RE = / Variable$/
  * auto-detected packages. Uses fontsource conventions as fallback.
  */
 function guessPackageForFamily(family: string): string {
+  for (const pattern of KNOWN_FONT_PACKAGES) {
+    if (pattern.familyMatch?.test(family) && pattern.package) {
+      return pattern.package(family)
+    }
+  }
   if (family.endsWith(' Variable')) {
     return `@fontsource-variable/${familyToSlug(family.replace(VARIABLE_RE, ''))}`
   }
@@ -185,6 +212,11 @@ const STANDARD_WEIGHTS = ['100', '200', '300', '400', '500', '600', '700', '800'
  */
 function resolveCssFiles(pkgName: string, options: Pick<ResolveFontOptions, 'weights' | 'styles'>): string[] {
   if (!pkgName.startsWith('@fontsource/')) {
+    for (const pattern of KNOWN_FONT_PACKAGES) {
+      if (pattern.files && pattern.match.test(pkgName)) {
+        return pattern.files(pkgName)
+      }
+    }
     return [DEFAULT_CSS_FILE]
   }
 
@@ -240,6 +272,79 @@ function packageDirFor(path: string, cssFile: string): string {
     return path.slice(0, path.length - suffix.length)
   }
   return dirname(path)
+}
+
+const EXTERNAL_URL_RE = /^(?:[a-z][\w+.-]*:|\/\/)/i
+const MAX_IMPORT_DEPTH = 3
+
+interface Stylesheet {
+  css: string
+  /** URL or filesystem path of the stylesheet, which anchors its relative URLs. */
+  location: string
+}
+
+/** Load the given stylesheets, and recursively the package-relative stylesheets they `@import`. */
+async function collectStylesheets(locations: string[], load: (location: string) => Promise<string | null>, join: (from: string, specifier: string) => string): Promise<Stylesheet[]> {
+  const stylesheets: Stylesheet[] = []
+  const seen = new Set<string>()
+
+  async function loadAll(pending: string[], depth: number): Promise<void> {
+    const next: string[] = []
+
+    await Promise.all(pending.map(async (location) => {
+      if (seen.has(location)) {
+        return
+      }
+      seen.add(location)
+
+      const css = await load(location)
+      if (!css) {
+        return
+      }
+
+      stylesheets.push({ css, location })
+      if (depth < MAX_IMPORT_DEPTH) {
+        for (const specifier of extractImports(css)) {
+          if (!EXTERNAL_URL_RE.test(specifier)) {
+            next.push(join(location, specifier))
+          }
+        }
+      }
+    }))
+
+    if (next.length > 0) {
+      await loadAll(next, depth + 1)
+    }
+  }
+
+  await loadAll(locations, 0)
+
+  return stylesheets
+}
+
+interface FaceGroup {
+  faces: FontFaceData[]
+  location: string
+}
+
+/**
+ * Extract the faces for `family` from each stylesheet. With `allowAnyFamily`, an
+ * unmatched family falls back to every face in the stylesheets, provided they
+ * declare a single family between them.
+ */
+function groupFontFaces(stylesheets: Stylesheet[], family: string, allowAnyFamily: boolean): FaceGroup[] {
+  const groups = stylesheets.map(sheet => ({ faces: extractFontFaceData(sheet.css, family), location: sheet.location }))
+
+  if (!allowAnyFamily || groups.some(group => group.faces.length > 0)) {
+    return groups
+  }
+
+  const declared = new Set(stylesheets.flatMap(sheet => extractFontFaceFamilies(sheet.css)))
+  if (declared.size !== 1) {
+    return groups
+  }
+
+  return stylesheets.map(sheet => ({ faces: extractFontFaceData(sheet.css), location: sheet.location }))
 }
 
 interface DetectedFont {
@@ -398,46 +503,50 @@ export default defineFontProvider('npm', (providerOptions: NpmProviderOptions, c
     return resolved
   }
 
-  async function resolveFromLocal(pkgName: string, cssFiles: string[], family: string, formats: ResolveFontOptions['formats']): Promise<FontFaceData[] | null> {
+  async function resolveFromLocal(pkgName: string, cssFiles: string[], family: string, formats: ResolveFontOptions['formats'], allowAnyFamily: boolean): Promise<FontFaceData[] | null> {
     if (!readFile) {
       return null
     }
 
-    const stylesheets = await Promise.all(cssFiles.map(async (cssFile) => {
+    const entries = await Promise.all(cssFiles.map(async (cssFile) => {
       const path = await resolvePath(`${pkgName}/${cssFile}`)
-      if (!path) {
-        return null
-      }
-      const css = await readFile(path).catch(() => null)
-      return css ? { css, pkgDir: packageDirFor(path, cssFile) } : null
+      return path ? { path, cssFile } : null
     }))
 
-    const found = stylesheets.filter(entry => entry !== null)
-    if (found.length === 0) {
+    const roots = entries.filter(entry => entry !== null)
+    if (roots.length === 0) {
+      return null
+    }
+
+    const stylesheets = await collectStylesheets(
+      roots.map(root => root.path),
+      path => readFile(path).catch(() => null),
+      (from, specifier) => resolve(dirname(from), stripUrlSuffix(specifier)),
+    )
+
+    if (stylesheets.length === 0) {
+      return null
+    }
+
+    const groups = groupFontFaces(stylesheets, family, allowAnyFamily)
+    if (groups.every(group => group.faces.length === 0)) {
       return null
     }
 
     if (!remote) {
       const localFaces: FontFaceData[] = []
-      for (const { css, pkgDir } of found) {
-        localFaces.push(...await resolveUrlsToLocalFiles(extractFontFaceData(css, family), pkgDir))
+      for (const group of groups) {
+        localFaces.push(...await resolveUrlsToLocalFiles(group.faces, dirname(group.location)))
       }
       return localFaces.length > 0 ? cleanFontFaces(localFaces, formats) : null
     }
 
-    const fontFaces: FontFaceData[] = []
-    for (const { css } of found) {
-      fontFaces.push(...extractFontFaceData(css, family))
-    }
-
-    if (fontFaces.length === 0) {
-      return null
-    }
+    const pkgDir = packageDirFor(roots[0]!.path, roots[0]!.cssFile)
 
     // Resolve relative URLs to absolute CDN URLs using the installed version
     let version = 'latest'
     try {
-      const localPkgJson = await readFile(`${found[0]!.pkgDir}/package.json`)
+      const localPkgJson = await readFile(`${pkgDir}/package.json`)
       if (localPkgJson) {
         const parsed = JSON.parse(localPkgJson) as { version?: string }
         if (parsed.version) {
@@ -449,30 +558,108 @@ export default defineFontProvider('npm', (providerOptions: NpmProviderOptions, c
       // Use 'latest' as fallback
     }
 
-    const baseUrl = `${cdn}/${pkgName}@${version}/`
-    resolveUrlsToAbsolute(fontFaces, baseUrl)
+    const fontFaces: FontFaceData[] = []
+    for (const group of groups) {
+      const cssPath = relative(pkgDir, group.location).replaceAll('\\', '/')
+      resolveUrlsToAbsolute(group.faces, `${cdn}/${pkgName}@${version}/${cssPath}`)
+      fontFaces.push(...group.faces)
+    }
 
     return cleanFontFaces(fontFaces, formats)
   }
 
-  async function resolveFromCdn(pkgName: string, pkgVersion: string, cssFiles: string[], family: string, formats: ResolveFontOptions['formats']): Promise<FontFaceData[] | null> {
-    const stylesheets = await Promise.all(cssFiles.map(cssFile => ctx.fetch(`${cdn}/${pkgName}@${pkgVersion}/${cssFile}`).then(res => res.text()).catch(() => null)))
+  async function resolveFromCdn(pkgName: string, pkgVersion: string, cssFiles: string[], family: string, formats: ResolveFontOptions['formats'], allowAnyFamily: boolean): Promise<FontFaceData[] | null> {
+    const stylesheets = await collectStylesheets(
+      cssFiles.map(cssFile => `${cdn}/${pkgName}@${pkgVersion}/${cssFile}`),
+      url => ctx.fetch(url).then(res => res.text()).catch(() => null),
+      (from, specifier) => new URL(specifier, from).href,
+    )
+
+    const groups = groupFontFaces(stylesheets, family, allowAnyFamily)
 
     const fontFaces: FontFaceData[] = []
-    for (const css of stylesheets) {
-      if (css) {
-        fontFaces.push(...extractFontFaceData(css, family))
-      }
+    for (const group of groups) {
+      resolveUrlsToAbsolute(group.faces, group.location)
+      fontFaces.push(...group.faces)
     }
 
     if (fontFaces.length === 0) {
       return null
     }
 
-    const baseUrl = `${cdn}/${pkgName}@${pkgVersion}/`
-    resolveUrlsToAbsolute(fontFaces, baseUrl)
-
     return cleanFontFaces(fontFaces, formats)
+  }
+
+  /** Stylesheet declared by the package's `package.json` `style` field. */
+  async function resolveStyleField(pkgName: string, pkgVersion: string): Promise<string | null> {
+    const read = async () => {
+      if (readFile) {
+        const path = await resolvePath(`${pkgName}/package.json`)
+        const local = path ? await readFile(path).catch(() => null) : null
+        if (local) {
+          return local
+        }
+      }
+      if (!remote) {
+        return null
+      }
+      return ctx.fetch(`${cdn}/${pkgName}@${pkgVersion}/package.json`).then(res => res.text()).catch(() => null)
+    }
+
+    const contents = await read()
+    if (!contents) {
+      return null
+    }
+
+    try {
+      const parsed = JSON.parse(contents) as { style?: string }
+      if (typeof parsed.style === 'string' && parsed.style.endsWith('.css')) {
+        return parsed.style.replace(/^\.?\//, '')
+      }
+    }
+    catch {
+      // Not a usable package.json
+    }
+
+    return null
+  }
+
+  async function resolveCandidates(pkgName: string, pkgVersion: string, candidates: string[][], family: string, formats: ResolveFontOptions['formats'], allowAnyFamily: boolean): Promise<FontFaceData[] | null> {
+    for (const files of candidates) {
+      const localResult = await resolveFromLocal(pkgName, files, family, formats, allowAnyFamily)
+      if (localResult) {
+        return localResult
+      }
+    }
+
+    if (!remote) {
+      return null
+    }
+
+    for (const files of candidates) {
+      const cdnResult = await resolveFromCdn(pkgName, pkgVersion, files, family, formats, allowAnyFamily)
+      if (cdnResult) {
+        return cdnResult
+      }
+    }
+
+    return null
+  }
+
+  async function resolveFaces(pkgName: string, pkgVersion: string, cssFiles: string[], family: string, formats: ResolveFontOptions['formats'], explicitFile: boolean): Promise<FontFaceData[] | null> {
+    const candidates = cssFiles.includes(DEFAULT_CSS_FILE) || explicitFile ? [cssFiles] : [cssFiles, [DEFAULT_CSS_FILE]]
+
+    const resolved = await resolveCandidates(pkgName, pkgVersion, candidates, family, formats, explicitFile)
+    if (resolved || explicitFile) {
+      return resolved
+    }
+
+    const styleFile = await resolveStyleField(pkgName, pkgVersion)
+    if (!styleFile || candidates.some(files => files.includes(styleFile))) {
+      return null
+    }
+
+    return await resolveCandidates(pkgName, pkgVersion, [[styleFile]], family, formats, false)
   }
 
   return {
@@ -490,29 +677,7 @@ export default defineFontProvider('npm', (providerOptions: NpmProviderOptions, c
       const cssFiles = resolveCssFiles(pkgName, { weights: STANDARD_WEIGHTS, styles: ['normal', 'italic'] })
 
       const allFormats: ResolveFontOptions['formats'] = ['woff2', 'woff', 'otf', 'ttf', 'eot']
-      const fonts = await ctx.storage.getItem(`npm:${pkgName}/properties.json`, async () => {
-        const candidates = cssFiles.includes(DEFAULT_CSS_FILE) ? [cssFiles] : [cssFiles, [DEFAULT_CSS_FILE]]
-
-        for (const files of candidates) {
-          const localResult = await resolveFromLocal(pkgName, files, family, allFormats)
-          if (localResult) {
-            return localResult
-          }
-        }
-
-        if (!remote) {
-          return null
-        }
-
-        for (const files of candidates) {
-          const cdnResult = await resolveFromCdn(pkgName, 'latest', files, family, allFormats)
-          if (cdnResult) {
-            return cdnResult
-          }
-        }
-
-        return null
-      })
+      const fonts = await ctx.storage.getItem(`npm:${pkgName}/${familyToSlug(family)}-properties.json`, () => resolveFaces(pkgName, 'latest', cssFiles, family, allFormats, false))
 
       if (!fonts || fonts.length === 0) {
         return
@@ -557,31 +722,9 @@ export default defineFontProvider('npm', (providerOptions: NpmProviderOptions, c
       const pkgVersion = familyOptions.version || 'latest'
       const cssFiles = file ? [file] : resolveCssFiles(pkgName, options)
 
-      const key = `npm:${pkgName}/${cssFiles.join(',')}-${hash(options)}.json`
+      const key = `npm:${pkgName}/${familyToSlug(family)}-${cssFiles.join(',')}-${hash(options)}.json`
 
-      const fonts = await ctx.storage.getItem(key, async () => {
-        const candidates = cssFiles.includes(DEFAULT_CSS_FILE) ? [cssFiles] : [cssFiles, [DEFAULT_CSS_FILE]]
-
-        for (const files of candidates) {
-          const localResult = await resolveFromLocal(pkgName, files, family, options.formats)
-          if (localResult) {
-            return localResult
-          }
-        }
-
-        if (!remote) {
-          return null
-        }
-
-        for (const files of candidates) {
-          const cdnResult = await resolveFromCdn(pkgName, pkgVersion, files, family, options.formats)
-          if (cdnResult) {
-            return cdnResult
-          }
-        }
-
-        return null
-      })
+      const fonts = await ctx.storage.getItem(key, () => resolveFaces(pkgName, pkgVersion, cssFiles, family, options.formats, Boolean(file)))
 
       if (!fonts) {
         return

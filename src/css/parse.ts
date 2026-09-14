@@ -25,6 +25,12 @@ const formatMap: Record<string, string> = {
 
 const formatPriorityList = Object.values(formatMap)
 
+const WHITESPACE_RE = /\s+/g
+
+function normaliseFamily(family: string): string {
+  return family.trim().replace(WHITESPACE_RE, ' ').toLowerCase()
+}
+
 export function extractFontFaceData(css: string, family?: string): FontFaceData[] {
   const fontFaces: FontFaceData[] = []
 
@@ -41,11 +47,11 @@ export function extractFontFaceData(css: string, family?: string): FontFaceData[
         }
 
         const value = extractCSSValue(child) as string | string[]
-        const slug = family.toLowerCase()
-        if (typeof value === 'string' && value.toLowerCase() === slug) {
+        const slug = normaliseFamily(family)
+        if (typeof value === 'string' && normaliseFamily(value) === slug) {
           return true
         }
-        if (Array.isArray(value) && value.length > 0 && value.some(v => v.toLowerCase() === slug)) {
+        if (Array.isArray(value) && value.length > 0 && value.some(v => normaliseFamily(v) === slug)) {
           return true
         }
         return false
@@ -71,6 +77,51 @@ export function extractFontFaceData(css: string, family?: string): FontFaceData[
   }
 
   return mergeFontSources(fontFaces)
+}
+
+/** Distinct `font-family` names declared by the `@font-face` rules of a stylesheet. */
+export function extractFontFaceFamilies(css: string): string[] {
+  const families = new Set<string>()
+
+  for (const node of findAll(parse(css), node => node.type === 'Atrule' && node.name === 'font-face')) {
+    /* v8 ignore next 3 */
+    if (node.type !== 'Atrule' || node.name !== 'font-face') {
+      continue
+    }
+
+    for (const child of node.block?.children || []) {
+      if (child.type !== 'Declaration' || child.property !== 'font-family') {
+        continue
+      }
+      const value = extractCSSValue(child) as string | string[]
+      for (const name of Array.isArray(value) ? value : [value]) {
+        if (typeof name === 'string') {
+          families.add(name)
+        }
+      }
+    }
+  }
+
+  return [...families]
+}
+
+/** `@import` specifiers declared by a stylesheet. */
+export function extractImports(css: string): string[] {
+  const imports: string[] = []
+
+  for (const node of findAll(parse(css), node => node.type === 'Atrule' && node.name === 'import')) {
+    /* v8 ignore next 3 */
+    if (node.type !== 'Atrule') {
+      continue
+    }
+
+    const specifier = node.prelude?.type === 'AtrulePrelude' ? node.prelude.children.first : undefined
+    if (specifier?.type === 'String' || specifier?.type === 'Url') {
+      imports.push(specifier.value)
+    }
+  }
+
+  return imports
 }
 
 const RE = /^(?<quote>['"])(.*)\k<quote>$/
