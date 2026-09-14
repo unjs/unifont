@@ -1,7 +1,8 @@
 <script setup lang="ts">
-interface FamilyResult {
-  family: string
-  providers: string[]
+type FamilyResult = Awaited<ReturnType<typeof searchFamilies>>['families'][number]
+
+function searchFamilies(q: string) {
+  return $fetch('/api/v1/fonts', { query: { q, limit: 8 } })
 }
 
 const palette = useCommandPalette()
@@ -61,9 +62,7 @@ async function search(term: string) {
   }, 150)
 
   try {
-    const result = await $fetch<{ families: FamilyResult[] }>('/api/v1/fonts', {
-      query: { q: trimmed, limit: 8 },
-    })
+    const result = await searchFamilies(trimmed)
     if (ticket !== sequence) {
       return
     }

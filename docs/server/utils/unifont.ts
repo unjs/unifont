@@ -1,6 +1,6 @@
+import { createError } from 'nuxt/server'
 import type { ProviderMeta, ProviderName } from '#shared/types'
 import { PROVIDER_NAMES } from '#shared/types'
-import { HTTPError } from 'nitro/h3'
 import { useStorage } from 'nitro/storage'
 import { createUnifont, providers } from 'unifont'
 
@@ -86,9 +86,9 @@ export function parseProviderSelection(value: unknown): Exclude<ProviderName, 'a
   const unsupported = names.filter(name => !QUERYABLE_PROVIDERS.includes(name as ProviderName))
 
   if (unsupported.length) {
-    throw new HTTPError({
-      statusCode: 400,
-      statusMessage: `This site cannot query \`${unsupported.join('`, `')}\`. Available: ${QUERYABLE_PROVIDERS.join(', ')}.`,
+    throw createError({
+      status: 400,
+      statusText: `This site cannot query \`${unsupported.join('`, `')}\`. Available: ${QUERYABLE_PROVIDERS.join(', ')}.`,
     })
   }
 

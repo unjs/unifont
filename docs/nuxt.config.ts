@@ -123,11 +123,11 @@ export default defineNuxtConfig({
     // family page.
     storage: {
       // `defineCachedFunction` writes here, and the default base is not writable on a deployment.
-      cache: { driver: 'fs', base: join(cacheBase, 'unifont-cache') },
-      unifont: { driver: 'fs', base: join(cacheBase, 'unifont-site') },
+      cache: { driver: 'fs-lite', base: join(cacheBase, 'unifont-cache') },
+      unifont: { driver: 'fs-lite', base: join(cacheBase, 'unifont-site') },
       // Share cards are binary, so they are cached with the raw storage API: `defineCachedHandler`
       // stringifies bodies.
-      og: { driver: 'fs', base: join(cacheBase, 'unifont-og') },
+      og: { driver: 'fs-lite', base: join(cacheBase, 'unifont-og') },
     },
     vercel: {
       config: { version: 3, routes: vercelMarkdownRoutes },

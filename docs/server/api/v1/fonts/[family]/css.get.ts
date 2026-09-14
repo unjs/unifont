@@ -1,4 +1,5 @@
-import { HTTPError, defineEventHandler, getQuery, getRouterParam } from 'nitro/h3'
+import { createError, defineEventHandler, getQuery } from 'nuxt/server'
+import { getRouterParam } from 'nitro/h3'
 import { metricFallbackCss, toFontFaceCss } from '#server/utils/css'
 import { useProviderScope } from '#server/utils/unifont'
 import { specimenOptions } from '#server/utils/specimens'
@@ -31,7 +32,7 @@ function representativeWeights(published: string[]) {
 export default defineEventHandler(async (event) => {
   const family = decodeURIComponent(getRouterParam(event, 'family') || '')
   if (!family) {
-    throw new HTTPError({ statusCode: 400, statusMessage: 'A font family is required.' })
+    throw createError({ status: 400, statusText: 'A font family is required.' })
   }
 
   const query = getQuery(event)

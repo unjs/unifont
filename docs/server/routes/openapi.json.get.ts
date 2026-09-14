@@ -1,5 +1,4 @@
-import { defineEventHandler, getRequestURL } from 'nitro/h3'
-import { useRuntimeConfig } from 'nitro/runtime-config'
+import { defineEventHandler, getRequestURL, useRuntimeConfig } from 'nuxt/server'
 import { openApiDocument } from '../utils/openapi'
 
 /** The OpenAPI description of the public API. Mirrored at `/api/openapi.json`. */

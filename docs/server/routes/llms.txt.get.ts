@@ -1,5 +1,4 @@
-import { defineEventHandler, getRequestURL } from 'nitro/h3'
-import { useRuntimeConfig } from 'nitro/runtime-config'
+import { defineEventHandler, getRequestURL, useRuntimeConfig } from 'nuxt/server'
 import { listDocs, listPages } from '../utils/markdown'
 
 /**

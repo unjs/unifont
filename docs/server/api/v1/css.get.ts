@@ -1,4 +1,4 @@
-import { getQuery, getRequestURL, HTTPError } from 'nitro/h3'
+import { createError, getQuery, getRequestURL } from 'nuxt/server'
 import { defineCachedHandler } from 'nitro/cache'
 import { specimenCss } from '../../utils/specimens'
 
@@ -9,7 +9,7 @@ export default defineCachedHandler(async (event) => {
 
   const families = list(query.families).slice(0, 40)
   if (!families.length) {
-    throw new HTTPError({ statusCode: 400, statusMessage: 'Pass `?families=Newsreader,Switzer`.' })
+    throw createError({ status: 400, statusText: 'Pass `?families=Newsreader,Switzer`.' })
   }
 
   const weights = list(query.weights)

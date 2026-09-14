@@ -1,5 +1,17 @@
-import type { ContributorsResponse } from '#shared/types'
 import { defineCachedHandler } from 'nitro/cache'
+
+export interface Contributor {
+  login: string
+  avatar: string
+  url: string
+  contributions: number
+}
+
+export interface ContributorsResponse {
+  contributors: Contributor[]
+  /** `true` when GitHub did not answer, so the footer can stay quiet. */
+  unavailable: boolean
+}
 
 interface GitHubContributor {
   login: string

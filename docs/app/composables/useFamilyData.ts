@@ -1,7 +1,10 @@
 import type { NuxtApp } from '#app'
-import type { InternalApi } from 'nitro/types'
 
-type FamilyResponse = InternalApi['/api/v1/fonts/:family']['get']
+type FamilyResponse = Awaited<ReturnType<typeof fetchFamily>>
+
+function fetchFamily(family: string) {
+  return $fetch(`/api/v1/fonts/${encodeURIComponent(family)}`)
+}
 
 export type FamilySummary = Omit<FamilyResponse, 'fonts'> & { faces: number }
 
@@ -28,7 +31,7 @@ export function prefetchFamilyData(family: string) {
   asked.add(family)
 
   // Only a success is recorded, so a failure leaves the page free to ask and report it itself.
-  $fetch<FamilyResponse>(`/api/v1/fonts/${encodeURIComponent(family)}`)
+  fetchFamily(family)
     .then((response) => {
       prefetched.set(familyDataKey(family), toFamilySummary(response))
     })

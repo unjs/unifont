@@ -1,4 +1,4 @@
-import { defineEventHandler } from 'nitro/h3'
+import { defineEventHandler } from 'nuxt/server'
 import { specimenSheet } from '#server/utils/specimens'
 
 /** The front page's index, at a fixed URL with no query so that it can be prerendered. */

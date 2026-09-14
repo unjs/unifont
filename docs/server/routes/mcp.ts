@@ -1,5 +1,5 @@
-import type { H3Event } from 'nitro/h3'
-import { defineEventHandler, readBody } from 'nitro/h3'
+import type { RequestEvent } from 'nuxt/server'
+import { defineEventHandler, readBody } from 'nuxt/server'
 import { MCP_TOOLS } from '../utils/mcp-tools'
 
 /** Advertised in `initialize`. */
@@ -117,7 +117,7 @@ export default defineEventHandler(async (event) => {
 })
 
 /** Streamable HTTP wants `202 Accepted` with no body for notification-only posts. */
-function accepted(event: H3Event) {
+function accepted(event: RequestEvent) {
   event.res.status = 202
   return ''
 }
