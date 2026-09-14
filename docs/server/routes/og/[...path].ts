@@ -1,5 +1,6 @@
+import { defineEventHandler, getQuery } from 'nuxt/server'
 import { createHash } from 'node:crypto'
-import { defineEventHandler, getQuery, getRouterParam } from 'nitro/h3'
+import { getRouterParam } from 'nitro/h3'
 import { useStorage } from 'nitro/storage'
 import { renderOgCard } from '../../utils/og'
 

@@ -242,7 +242,7 @@ importers:
         version: 12.3.0
       changelogithub:
         specifier: 15.0.5
-        version: 15.0.5
+        version: 15.0.5(magicast@0.5.4)
       eslint:
         specifier: 10.9.1
         version: 10.9.1(jiti@2.7.0)(supports-color@10.2.2)
@@ -302,7 +302,7 @@ importers:
         version: 2.2.0
       nuxt:
         specifier: npm:nuxt-nightly@5x
-        version: nuxt-nightly@5.0.0-29819633.9319fd64(77ae8b623abbdf5306696e0fcdb5d796)
+        version: nuxt-nightly@5.0.0-29819633.9319fd64(0fd6cb77006466f1608bf5b33baa632a)
       subset-font:
         specifier: ^2.5.0
         version: 2.7.0
@@ -338,8 +338,8 @@ importers:
         specifier: 2.0.1-rc.31
         version: 2.0.1-rc.31(crossws@0.4.12(srvx@1.0.4))(ocache@0.3.0)
       nitro:
-        specifier: 3.0.260610-beta
-        version: 3.0.260610-beta(chokidar@5.0.0)(dotenv@17.4.2)(giget@3.3.1)(ioredis@5.11.1(supports-color@10.2.2))(jiti@2.7.0)(lru-cache@11.5.2)(rollup@4.62.5)(vite@8.2.2)
+        specifier: 3.0.260903-beta
+        version: 3.0.260903-beta
       playwright:
         specifier: 1.63.0
         version: 1.63.0
@@ -6964,22 +6964,22 @@ snapshots:
       - rolldown
       - unplugin
 
-  '@nuxt/devtools-kit@4.0.0-alpha.18(@nuxt/kit-nightly@5.0.0-29819633.9319fd64(@nuxt/schema-nightly@5.0.0-29819633.9319fd64)(confbox@0.3.1)(dotenv@17.4.2)(giget@3.3.1)(jiti@2.7.0)(magic-string@1.2.3)(mlly@1.8.2)(oxc-parser@0.143.0)(rolldown@1.2.8)(unplugin@3.3.0(esbuild@0.28.2)(rolldown@1.2.8)(rollup@4.62.5)(vite@8.2.2)))(nitro@3.0.260610-beta(chokidar@5.0.0)(dotenv@17.4.2)(giget@3.3.1)(ioredis@5.11.1(supports-color@10.2.2))(jiti@2.7.0)(lru-cache@11.5.2)(rollup@4.62.5)(vite@8.2.2))(nitropack@2.13.4(oxc-parser@0.143.0)(rolldown@1.2.8)(srvx@1.0.4)(supports-color@10.2.2)(vite@8.2.2))(vite@8.2.2)':
+  '@nuxt/devtools-kit@4.0.0-alpha.18(@nuxt/kit-nightly@5.0.0-29819633.9319fd64(@nuxt/schema-nightly@5.0.0-29819633.9319fd64)(confbox@0.3.1)(dotenv@17.4.2)(giget@3.3.1)(jiti@2.7.0)(magic-string@1.2.3)(mlly@1.8.2)(oxc-parser@0.143.0)(rolldown@1.2.8)(unplugin@3.3.0(esbuild@0.28.2)(rolldown@1.2.8)(rollup@4.62.5)(vite@8.2.2)))(nitro@3.0.260903-beta)(nitropack@2.13.4(oxc-parser@0.143.0)(rolldown@1.2.8)(srvx@1.0.4)(supports-color@10.2.2)(vite@8.2.2))(vite@8.2.2)':
     dependencies:
       '@nuxt/kit': '@nuxt/kit-nightly@5.0.0-29819633.9319fd64(@nuxt/schema-nightly@5.0.0-29819633.9319fd64)(confbox@0.3.1)(dotenv@17.4.2)(giget@3.3.1)(jiti@2.7.0)(magic-string@1.2.3)(mlly@1.8.2)(oxc-parser@0.143.0)(rolldown@1.2.8)(unplugin@3.3.0(esbuild@0.28.2)(rolldown@1.2.8)(rollup@4.62.5)(vite@8.2.2))'
       nostics: 1.2.0
       tinyexec: 1.3.1
       vite: 8.2.2(@types/node@24.13.4)(@vitejs/devtools@0.5.2)(esbuild@0.28.2)(jiti@2.7.0)(terser@5.50.0)(yaml@2.9.0)
     optionalDependencies:
-      nitro: 3.0.260610-beta(chokidar@5.0.0)(dotenv@17.4.2)(giget@3.3.1)(ioredis@5.11.1(supports-color@10.2.2))(jiti@2.7.0)(lru-cache@11.5.2)(rollup@4.62.5)(vite@8.2.2)
+      nitro: 3.0.260903-beta
       nitropack: 2.13.4(oxc-parser@0.143.0)(rolldown@1.2.8)(srvx@1.0.4)(supports-color@10.2.2)(vite@8.2.2)
 
-  '@nuxt/devtools@4.0.0-alpha.18(3dd06427aa2e8b7cd71ed23a48845af3)':
+  '@nuxt/devtools@4.0.0-alpha.18(8f34372a6b1a564e3c7c80726162a853)':
     dependencies:
       '@devframes/hub': 0.9.18(crossws@0.4.12(srvx@1.0.4))(devframe@0.9.18(cac@7.0.0)(ocache@0.3.0)(srvx@1.0.4))(ocache@0.3.0)
       '@devframes/plugin-code-server': 0.9.18(@devframes/hub-ui@0.9.18(@devframes/hub@0.9.18(crossws@0.4.12(srvx@1.0.4))(devframe@0.9.18(cac@7.0.0)(ocache@0.3.0)(srvx@1.0.4))(ocache@0.3.0))(@devframes/json-render@0.9.18(@devframes/hub@0.9.18(crossws@0.4.12(srvx@1.0.4))(devframe@0.9.18(cac@7.0.0)(ocache@0.3.0)(srvx@1.0.4))(ocache@0.3.0))(devframe@0.9.18(cac@7.0.0)(ocache@0.3.0)(srvx@1.0.4)))(devframe@0.9.18(cac@7.0.0)(ocache@0.3.0)(srvx@1.0.4)))(@devframes/hub@0.9.18(crossws@0.4.12(srvx@1.0.4))(devframe@0.9.18(cac@7.0.0)(ocache@0.3.0)(srvx@1.0.4))(ocache@0.3.0))(devframe@0.9.18(cac@7.0.0)(ocache@0.3.0)(srvx@1.0.4))(vite@8.2.2)
       '@devframes/plugin-data-inspector': 0.9.18(devframe@0.9.18(cac@7.0.0)(ocache@0.3.0)(srvx@1.0.4))(vite@8.2.2)
-      '@nuxt/devtools-kit': 4.0.0-alpha.18(@nuxt/kit-nightly@5.0.0-29819633.9319fd64(@nuxt/schema-nightly@5.0.0-29819633.9319fd64)(confbox@0.3.1)(dotenv@17.4.2)(giget@3.3.1)(jiti@2.7.0)(magic-string@1.2.3)(mlly@1.8.2)(oxc-parser@0.143.0)(rolldown@1.2.8)(unplugin@3.3.0(esbuild@0.28.2)(rolldown@1.2.8)(rollup@4.62.5)(vite@8.2.2)))(nitro@3.0.260610-beta(chokidar@5.0.0)(dotenv@17.4.2)(giget@3.3.1)(ioredis@5.11.1(supports-color@10.2.2))(jiti@2.7.0)(lru-cache@11.5.2)(rollup@4.62.5)(vite@8.2.2))(nitropack@2.13.4(oxc-parser@0.143.0)(rolldown@1.2.8)(srvx@1.0.4)(supports-color@10.2.2)(vite@8.2.2))(vite@8.2.2)
+      '@nuxt/devtools-kit': 4.0.0-alpha.18(@nuxt/kit-nightly@5.0.0-29819633.9319fd64(@nuxt/schema-nightly@5.0.0-29819633.9319fd64)(confbox@0.3.1)(dotenv@17.4.2)(giget@3.3.1)(jiti@2.7.0)(magic-string@1.2.3)(mlly@1.8.2)(oxc-parser@0.143.0)(rolldown@1.2.8)(unplugin@3.3.0(esbuild@0.28.2)(rolldown@1.2.8)(rollup@4.62.5)(vite@8.2.2)))(nitro@3.0.260903-beta)(nitropack@2.13.4(oxc-parser@0.143.0)(rolldown@1.2.8)(srvx@1.0.4)(supports-color@10.2.2)(vite@8.2.2))(vite@8.2.2)
       '@nuxt/kit': '@nuxt/kit-nightly@5.0.0-29819633.9319fd64(@nuxt/schema-nightly@5.0.0-29819633.9319fd64)(confbox@0.3.1)(dotenv@17.4.2)(giget@3.3.1)(jiti@2.7.0)(magic-string@1.2.3)(mlly@1.8.2)(oxc-parser@0.143.0)(rolldown@1.2.8)(unplugin@3.3.0(esbuild@0.28.2)(rolldown@1.2.8)(rollup@4.62.5)(vite@8.2.2))'
       '@vitejs/devtools': 0.7.3(@devframes/json-render@0.9.18(@devframes/hub@0.9.18(crossws@0.4.12(srvx@1.0.4))(devframe@0.9.18(cac@7.0.0)(ocache@0.3.0)(srvx@1.0.4))(ocache@0.3.0))(devframe@0.9.18(cac@7.0.0)(ocache@0.3.0)(srvx@1.0.4)))(crossws@0.4.12(srvx@1.0.4))(ocache@0.3.0)(srvx@1.0.4)(vite@8.2.2)
       '@vitejs/devtools-kit': 0.7.3(cac@7.0.0)(crossws@0.4.12(srvx@1.0.4))(ocache@0.3.0)(srvx@1.0.4)(vite@8.2.2)
@@ -7001,7 +7001,7 @@ snapshots:
       vite: 8.2.2(@types/node@24.13.4)(@vitejs/devtools@0.5.2)(esbuild@0.28.2)(jiti@2.7.0)(terser@5.50.0)(yaml@2.9.0)
       vite-plugin-vue-tracer: 1.5.0(vite@8.2.2)(vue@3.5.42(typescript@6.0.3))
     optionalDependencies:
-      nitro: 3.0.260610-beta(chokidar@5.0.0)(dotenv@17.4.2)(giget@3.3.1)(ioredis@5.11.1(supports-color@10.2.2))(jiti@2.7.0)(lru-cache@11.5.2)(rollup@4.62.5)(vite@8.2.2)
+      nitro: 3.0.260903-beta
       nitropack: 2.13.4(oxc-parser@0.143.0)(rolldown@1.2.8)(srvx@1.0.4)(supports-color@10.2.2)(vite@8.2.2)
     transitivePeerDependencies:
       - '@azure/app-configuration'
@@ -7229,7 +7229,7 @@ snapshots:
       mocked-exports: 0.1.1
       nitro: 3.0.260903-beta
       nostics: 1.2.0
-      nuxt: nuxt-nightly@5.0.0-29819633.9319fd64(77ae8b623abbdf5306696e0fcdb5d796)
+      nuxt: nuxt-nightly@5.0.0-29819633.9319fd64(0fd6cb77006466f1608bf5b33baa632a)
       ofetch: 2.0.0-alpha.3
       ohash: 2.0.12
       pathe: 2.0.3
@@ -7349,7 +7349,7 @@ snapshots:
       js-tokens: 10.0.0
       knitwork: 1.3.0
       mocked-exports: 0.1.1
-      nuxt: nuxt-nightly@5.0.0-29819633.9319fd64(77ae8b623abbdf5306696e0fcdb5d796)
+      nuxt: nuxt-nightly@5.0.0-29819633.9319fd64(0fd6cb77006466f1608bf5b33baa632a)
       pathe: 2.0.3
       pkg-types: 2.3.3
       rolldown-string: 0.3.1(rolldown@1.2.8)
@@ -7407,7 +7407,7 @@ snapshots:
       exsolve: 1.1.1
       hookable: 6.1.1
       mocked-exports: 0.1.1
-      nuxt: nuxt-nightly@5.0.0-29819633.9319fd64(77ae8b623abbdf5306696e0fcdb5d796)
+      nuxt: nuxt-nightly@5.0.0-29819633.9319fd64(0fd6cb77006466f1608bf5b33baa632a)
       pathe: 2.0.3
       rou3: 0.9.2
       srvx: 1.0.4
@@ -8764,7 +8764,7 @@ snapshots:
     transitivePeerDependencies:
       - magicast
 
-  changelogithub@15.0.5:
+  changelogithub@15.0.5(magicast@0.5.4):
     dependencies:
       ansis: 4.3.1
       c12: 3.3.4(magicast@0.5.4)
@@ -9957,12 +9957,12 @@ snapshots:
       ufo: 1.6.4
       uncrypto: 0.1.3
 
-  h3@2.0.1-rc.22(crossws@0.4.12(srvx@1.0.4)):
+  h3@2.0.1-rc.22(crossws@0.4.12(srvx@0.11.22)):
     dependencies:
       rou3: 0.8.1
       srvx: 0.11.22
     optionalDependencies:
-      crossws: 0.4.12(srvx@1.0.4)
+      crossws: 0.4.12(srvx@0.11.22)
 
   h3@2.0.1-rc.31(crossws@0.4.12(srvx@1.0.4))(ocache@0.3.0):
     dependencies:
@@ -10850,7 +10850,7 @@ snapshots:
       crossws: 0.4.12(srvx@0.11.22)
       db0: 0.3.4
       env-runner: 0.1.16
-      h3: 2.0.1-rc.22(crossws@0.4.12(srvx@1.0.4))
+      h3: 2.0.1-rc.22(crossws@0.4.12(srvx@0.11.22))
       hookable: 6.1.1
       nf3: 0.3.24
       ocache: 0.1.5
@@ -11066,11 +11066,11 @@ snapshots:
     dependencies:
       boolbase: 1.0.0
 
-  nuxt-nightly@5.0.0-29819633.9319fd64(77ae8b623abbdf5306696e0fcdb5d796):
+  nuxt-nightly@5.0.0-29819633.9319fd64(0fd6cb77006466f1608bf5b33baa632a):
     dependencies:
       '@dxup/nuxt': 0.5.10(esbuild@0.28.2)(magicast@0.5.4)(oxc-parser@0.143.0)(rolldown@1.2.8)(rollup@4.62.5)(vite@8.2.2)
       '@nuxt/cli': '@nuxt/cli-nightly@4.0.0-20260907-104727-9e18028(@nuxt/schema-nightly@5.0.0-29819633.9319fd64)(jiti@2.7.0)(oxc-parser@0.143.0)(rolldown@1.2.8)'
-      '@nuxt/devtools': 4.0.0-alpha.18(3dd06427aa2e8b7cd71ed23a48845af3)
+      '@nuxt/devtools': 4.0.0-alpha.18(8f34372a6b1a564e3c7c80726162a853)
       '@nuxt/kit': '@nuxt/kit-nightly@5.0.0-29819633.9319fd64(@nuxt/schema-nightly@5.0.0-29819633.9319fd64)(confbox@0.3.1)(dotenv@17.4.2)(giget@3.3.1)(jiti@2.7.0)(magic-string@1.2.3)(mlly@1.8.2)(oxc-parser@0.143.0)(rolldown@1.2.8)(unplugin@3.3.0(esbuild@0.28.2)(rolldown@1.2.8)(rollup@4.62.5)(vite@8.2.2))'
       '@nuxt/nitro-server': '@nuxt/nitro-server-nightly@5.0.0-29819633.9319fd64(@babel/plugin-syntax-typescript@7.29.7(@babel/core@7.29.7(supports-color@10.2.2)))(@nuxt/schema-nightly@5.0.0-29819633.9319fd64)(@oxc-project/types@0.149.0)(@vitejs/devtools-kit@0.6.2(cac@7.0.0)(crossws@0.4.12(srvx@1.0.4))(ocache@0.3.0)(srvx@1.0.4)(vite@8.2.2))(acorn@8.18.0)(confbox@0.3.1)(dotenv@17.4.2)(esbuild@0.28.2)(giget@3.3.1)(jiti@2.7.0)(lightningcss@1.33.0)(mlly@1.8.2)(nuxt-nightly@5.0.0-29819633.9319fd64)(oxc-parser@0.143.0)(rolldown@1.2.8)(rollup@4.62.5)(typescript@6.0.3)(vite@8.2.2)'
       '@nuxt/schema': '@nuxt/schema-nightly@5.0.0-29819633.9319fd64'

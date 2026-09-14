@@ -1,6 +1,5 @@
+import { defineEventHandler, getRequestURL, useRuntimeConfig } from 'nuxt/server'
 import { FEATURED_FAMILIES } from '#shared/featured'
-import { defineEventHandler, getRequestURL } from 'nitro/h3'
-import { useRuntimeConfig } from 'nitro/runtime-config'
 import { listDocs, listPages } from '../utils/markdown'
 
 interface Entry {

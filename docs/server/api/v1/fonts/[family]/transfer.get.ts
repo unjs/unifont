@@ -1,9 +1,18 @@
-import { HTTPError, getQuery, getRouterParam } from 'nitro/h3'
+import { createError, getQuery } from 'nuxt/server'
+import { getRouterParam } from 'nitro/h3'
 import { defineCachedHandler } from 'nitro/cache'
 import { faceUrls } from '#server/utils/css'
 import { useProviderScope } from '#server/utils/unifont'
 import { normaliseWeights } from '#server/utils/weights'
-import type { TransferResponse } from '#shared/types'
+
+export interface TransferResponse {
+  family: string
+  faces: number
+  files: number
+  /** How many files reported a `content-length`. */
+  measured: number
+  bytes: number
+}
 
 function list(value: unknown, fallback: string[]) {
   if (typeof value !== 'string' || !value.trim()) {
@@ -40,7 +49,7 @@ async function probeSizes(urls: string[]) {
 export default defineCachedHandler(async (event): Promise<TransferResponse> => {
   const family = decodeURIComponent(getRouterParam(event, 'family') || '')
   if (!family) {
-    throw new HTTPError({ statusCode: 400, statusMessage: 'A font family is required.' })
+    throw createError({ status: 400, statusText: 'A font family is required.' })
   }
 
   const query = getQuery(event)

@@ -1,7 +1,17 @@
-import type { ProvidersResponse } from '#shared/types'
+import type { ProviderMeta } from '#shared/types'
 import { defineCachedHandler } from 'nitro/cache'
 import { useCatalogue } from '../../utils/catalogue'
 import { PROVIDER_META, PROVIDER_NAMES } from '../../utils/unifont'
+
+export interface ProviderSummary extends ProviderMeta {
+  /** `null` when the provider cannot enumerate its library. */
+  families: number | null
+  unavailable: boolean
+}
+
+export interface ProvidersResponse {
+  providers: ProviderSummary[]
+}
 
 export default defineCachedHandler(async (): Promise<ProvidersResponse> => {
   const catalogue = await useCatalogue()

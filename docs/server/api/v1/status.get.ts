@@ -1,4 +1,4 @@
-import { defineEventHandler } from 'nitro/h3'
+import { defineEventHandler } from 'nuxt/server'
 import { useCatalogue } from '../../utils/catalogue'
 import { PROVIDER_META, QUERYABLE_PROVIDERS } from '../../utils/unifont'
 

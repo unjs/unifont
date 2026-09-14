@@ -1,8 +1,33 @@
+import { createError } from 'nuxt/server'
 import { defineCachedHandler } from 'nitro/cache'
-import { HTTPError, getRouterParam } from 'nitro/h3'
+import { getRouterParam } from 'nitro/h3'
 import { faceUrls } from '#server/utils/css'
 import { PROVIDER_META, QUERYABLE_PROVIDERS, useProvider } from '#server/utils/unifont'
 import { normaliseWeights } from '#server/utils/weights'
+
+export interface CompareRow {
+  provider: string
+  label: string
+  available: boolean
+  origin?: string
+  weights?: string[] | null
+  styles?: string[] | null
+  subsets?: string[] | null
+  formats?: string[] | null
+  faces?: number
+  files?: number
+  bytes?: number
+  measured?: number
+  host?: string | null
+  sample?: string | null
+  fallbacks?: string[]
+  error?: string
+}
+
+export interface CompareResponse {
+  family: string
+  results: CompareRow[]
+}
 
 /** Total transferred bytes for a set of files, via HEAD so nothing is downloaded. */
 async function measure(urls: string[]) {
@@ -30,10 +55,10 @@ async function measure(urls: string[]) {
 }
 
 /** The same family, asked of every provider that can answer without credentials. */
-export default defineCachedHandler(async (event) => {
+export default defineCachedHandler(async (event): Promise<CompareResponse> => {
   const family = decodeURIComponent(getRouterParam(event, 'family') || '')
   if (!family) {
-    throw new HTTPError({ statusCode: 400, statusMessage: 'A font family is required.' })
+    throw createError({ status: 400, statusText: 'A font family is required.' })
   }
 
   const candidates = QUERYABLE_PROVIDERS.filter(name => name !== 'adobe' && name !== 'npm')

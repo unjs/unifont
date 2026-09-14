@@ -1,4 +1,4 @@
-import { defineEventHandler, getRequestURL } from 'nitro/h3'
+import { defineEventHandler, getRequestURL } from 'nuxt/server'
 import { content } from '../../utils/content'
 
 /**
