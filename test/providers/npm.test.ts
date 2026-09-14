@@ -1048,6 +1048,29 @@ describe('npm', () => {
       ])
     })
 
+    it('accepts a `file` written with a leading `./`', async () => {
+      const readFile = vi.fn(async (path: string) => {
+        if (path === './node_modules/relative-file/package.json')
+          return JSON.stringify({ version: '3.0.0' })
+        if (path === './node_modules/relative-file/css/fonts.css') {
+          return `
+            @font-face {
+              font-family: "Relative";
+              src: url("../fonts/relative.woff2") format("woff2");
+            }
+          `
+        }
+        return null
+      })
+
+      const unifont = await createUnifont([providers.npm({ readFile })])
+      const { fonts } = await unifont.resolveFont('Relative', {
+        options: { npm: { package: 'relative-file', file: './css/fonts.css' } },
+      })
+
+      expect(fonts[0]!.src[0]).toMatchObject({ url: 'https://cdn.jsdelivr.net/npm/relative-file@3.0.0/fonts/relative.woff2' })
+    })
+
     it('anchors urls on the resolved path when the resolver does not preserve the specifier', async () => {
       const readFile = vi.fn(async (path: string) => {
         if (path === './package.json')

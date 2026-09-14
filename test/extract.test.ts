@@ -666,6 +666,19 @@ describe('css font-face extraction', () => {
       expect(extractFontFaceFamilies(css)).toEqual(['  Open   Sans ', 'Roboto Mono'])
     })
 
+    it('should list a family declared with different spellings once', () => {
+      expect(extractFontFaceFamilies(`
+        @font-face {
+          font-family: "Open Sans";
+          src: url(./open-sans.woff2) format('woff2');
+        }
+        @font-face {
+          font-family: ' open   sans ';
+          src: url(./open-sans-italic.woff2) format('woff2');
+        }
+      `)).toEqual(['Open Sans'])
+    })
+
     it('should list every family of a fallback list, and ignore unusable declarations', () => {
       expect(extractFontFaceFamilies(`
         @font-face;

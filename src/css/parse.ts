@@ -81,7 +81,7 @@ export function extractFontFaceData(css: string, family?: string): FontFaceData[
 
 /** Distinct `font-family` names declared by the `@font-face` rules of a stylesheet. */
 export function extractFontFaceFamilies(css: string): string[] {
-  const families = new Set<string>()
+  const families = new Map<string, string>()
 
   for (const node of findAll(parse(css), node => node.type === 'Atrule' && node.name === 'font-face')) {
     /* v8 ignore next 3 */
@@ -96,13 +96,16 @@ export function extractFontFaceFamilies(css: string): string[] {
       const value = extractCSSValue(child) as string | string[]
       for (const name of Array.isArray(value) ? value : [value]) {
         if (typeof name === 'string') {
-          families.add(name)
+          const key = normaliseFamily(name)
+          if (!families.has(key)) {
+            families.set(key, name)
+          }
         }
       }
     }
   }
 
-  return [...families]
+  return [...families.values()]
 }
 
 /** `@import` specifiers declared by a stylesheet. */

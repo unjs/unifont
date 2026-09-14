@@ -244,6 +244,12 @@ function resolveCssFiles(pkgName: string, options: Pick<ResolveFontOptions, 'wei
   return files.length > 0 ? files : [DEFAULT_CSS_FILE]
 }
 
+const LEADING_RELATIVE_RE = /^\.?\//
+
+function normaliseCssFile(file: string): string {
+  return file.replace(LEADING_RELATIVE_RE, '')
+}
+
 const URL_SUFFIX_RE = /[?#].*$/
 
 /**
@@ -614,7 +620,7 @@ export default defineFontProvider('npm', (providerOptions: NpmProviderOptions, c
     try {
       const parsed = JSON.parse(contents) as { style?: string }
       if (typeof parsed.style === 'string' && parsed.style.endsWith('.css')) {
-        return parsed.style.replace(/^\.?\//, '')
+        return normaliseCssFile(parsed.style)
       }
     }
     catch {
@@ -720,7 +726,7 @@ export default defineFontProvider('npm', (providerOptions: NpmProviderOptions, c
       }
 
       const pkgVersion = familyOptions.version || 'latest'
-      const cssFiles = file ? [file] : resolveCssFiles(pkgName, options)
+      const cssFiles = file ? [normaliseCssFile(file)] : resolveCssFiles(pkgName, options)
 
       const key = `npm:${pkgName}/${familyToSlug(family)}-${cssFiles.join(',')}-${hash(options)}.json`
 
