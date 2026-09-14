@@ -1,8 +1,10 @@
 import type { Storage } from './cache'
-import type { FontProperties, InitializedProvider, Provider, ProviderContext, ResolveFontOptions, ResolveFontResult } from './types'
+import type { InternalProviderContext } from './internal'
+import type { FontProperties, InitializedProvider, Provider, ResolveFontOptions, ResolveFontResult } from './types'
 import { createAPIFetch } from './api-base'
 import { createAsyncStorage, memoryStorage } from './cache'
 import { installProxyDispatcher } from './env-proxy'
+import { API_FETCH } from './internal'
 
 export interface UnifontOptions {
   storage?: Storage
@@ -61,7 +63,7 @@ export async function createUnifont<T extends [Provider, ...Provider[]]>(provide
   const stack: Record<string, InitializedProvider> = {}
 
   const storage = unifontOptions?.storage ?? memoryStorage()
-  const fetch = createAPIFetch(unifontOptions?.apiBase)
+  const apiFetch = createAPIFetch(unifontOptions?.apiBase)
 
   // preserve provider order
   for (const provider of providers) {
@@ -71,11 +73,11 @@ export async function createUnifont<T extends [Provider, ...Provider[]]>(provide
 
   // initialize all providers in parallel
   await Promise.all(providers.map(async (provider) => {
-    const context: ProviderContext = {
+    const context: InternalProviderContext = {
       storage: createAsyncStorage(storage, {
         cachedBy: [provider._name, provider._options],
       }),
-      fetch,
+      [API_FETCH]: apiFetch,
     }
     try {
       const initializedProvider = await provider(context)

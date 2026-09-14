@@ -2,6 +2,7 @@ import type { FontFaceData, ResolveFontOptions } from '../types'
 
 import { hash } from 'ohash'
 import { extractFontFaceData } from '../css/parse'
+import { fetchAPI } from '../internal'
 import { cleanFontFaces, defineFontProvider, filterKnownStyles, prepareWeights, splitCssIntoSubsets } from '../utils'
 
 const BASE_URL = 'https://fonts.bunny.net'
@@ -18,7 +19,7 @@ function getFallbacks(category: string): string[] | undefined {
 export default defineFontProvider('bunny', async (_options, ctx) => {
   const familyMap = new Map<string, string>()
 
-  const fonts = await ctx.storage.getItem('bunny:meta.json', () => ctx.fetch(`${BASE_URL}/list`).then(res => res.json() as Promise<BunnyFontMeta>))
+  const fonts = await ctx.storage.getItem('bunny:meta.json', () => fetchAPI(ctx, `${BASE_URL}/list`).then(res => res.json() as Promise<BunnyFontMeta>))
   for (const [id, family] of Object.entries(fonts)) {
     familyMap.set(family.familyName, id)
   }
@@ -40,7 +41,7 @@ export default defineFontProvider('bunny', async (_options, ctx) => {
 
     const resolvedVariants = weights.flatMap(w => Array.from(styles, s => `${w.weight}${s}`))
 
-    const css = await ctx.fetch(`${BASE_URL}/css?family=${id}:${resolvedVariants.join(',')}`).then(res => res.text())
+    const css = await fetchAPI(ctx, `${BASE_URL}/css?family=${id}:${resolvedVariants.join(',')}`).then(res => res.text())
 
     const resolvedFontFaceData: FontFaceData[] = []
 
