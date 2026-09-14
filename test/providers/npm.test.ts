@@ -476,10 +476,69 @@ describe('npm', () => {
       expect(fonts[0]!.src[0]).toMatchObject({ url: expect.stringContaining('local-style/dist/local-style.woff2') })
     })
 
-    it('resolves nothing when the package declares no `style` entry point', async () => {
-      const restoreFetch = mockFetchReturn(/styleless/, (url) => {
+    it('falls back to the package.json `main` entry point when it is a stylesheet', async () => {
+      const restoreFetch = mockFetchReturn(/main-css-package/, (url) => {
         if (String(url).endsWith('/package.json')) {
-          return new Response(JSON.stringify({ name: 'styleless', main: 'index.js' }))
+          return new Response(JSON.stringify({ name: 'main-css-package', main: 'main-font.css' }))
+        }
+        if (String(url).endsWith('/main-font.css')) {
+          return new Response(`
+            @font-face {
+              font-family: "Main Font";
+              font-weight: 400;
+              src: url("./files/main-font.woff2") format("woff2");
+            }
+          `)
+        }
+        return new Response('', { status: 404 })
+      })
+
+      const unifont = await createUnifont([providers.npm()])
+      const { fonts } = await unifont.resolveFont('Main Font', {
+        options: { npm: { package: 'main-css-package' } },
+      })
+
+      expect(fonts.length).toBe(1)
+      expect(fonts[0]!.src[0]).toMatchObject({ url: 'https://cdn.jsdelivr.net/npm/main-css-package@latest/files/main-font.woff2' })
+
+      restoreFetch()
+    })
+
+    it('prefers the `style` entry point over a stylesheet `main`', async () => {
+      const restoreFetch = mockFetchReturn(/both-fields-package/, (url) => {
+        if (String(url).endsWith('/package.json')) {
+          return new Response(JSON.stringify({ name: 'both-fields-package', style: 'style.css', main: 'main.css' }))
+        }
+        if (String(url).endsWith('/style.css') || String(url).endsWith('/main.css')) {
+          const file = String(url).endsWith('/style.css') ? 'style' : 'main'
+          return new Response(`
+            @font-face {
+              font-family: "Both Fields";
+              font-weight: 400;
+              src: url("./files/${file}.woff2") format("woff2");
+            }
+          `)
+        }
+        return new Response('', { status: 404 })
+      })
+
+      const unifont = await createUnifont([providers.npm()])
+      const { fonts } = await unifont.resolveFont('Both Fields', {
+        options: { npm: { package: 'both-fields-package' } },
+      })
+
+      expect(fonts.length).toBe(1)
+      expect(fonts[0]!.src[0]).toMatchObject({ url: 'https://cdn.jsdelivr.net/npm/both-fields-package@latest/files/style.woff2' })
+
+      restoreFetch()
+    })
+
+    it('resolves nothing when the package declares only a JavaScript entry point', async () => {
+      const requested: string[] = []
+      const restoreFetch = mockFetchReturn(/styleless/, (url) => {
+        requested.push(String(url))
+        if (String(url).endsWith('/package.json')) {
+          return new Response(JSON.stringify({ name: 'styleless', main: 'dist/index.js' }))
         }
         return new Response('', { status: 404 })
       })
@@ -490,6 +549,7 @@ describe('npm', () => {
       })
 
       expect(fonts).toStrictEqual([])
+      expect(requested.some(url => url.endsWith('/dist/index.js'))).toBe(false)
 
       restoreFetch()
     })
