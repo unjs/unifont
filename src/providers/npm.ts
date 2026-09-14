@@ -683,7 +683,7 @@ export default defineFontProvider('npm', (providerOptions: NpmProviderOptions, c
       const cssFiles = resolveCssFiles(pkgName, { weights: STANDARD_WEIGHTS, styles: ['normal', 'italic'] })
 
       const allFormats: ResolveFontOptions['formats'] = ['woff2', 'woff', 'otf', 'ttf', 'eot']
-      const fonts = await ctx.storage.getItem(`npm:${pkgName}/${familyToSlug(family)}-properties.json`, () => resolveFaces(pkgName, 'latest', cssFiles, family, allFormats, false))
+      const fonts = await ctx.storage.getItem(`npm:${pkgName}/${familyToSlug(family)}-${hash(family)}-properties.json`, () => resolveFaces(pkgName, 'latest', cssFiles, family, allFormats, false))
 
       if (!fonts || fonts.length === 0) {
         return
@@ -728,7 +728,7 @@ export default defineFontProvider('npm', (providerOptions: NpmProviderOptions, c
       const pkgVersion = familyOptions.version || 'latest'
       const cssFiles = file ? [normaliseCssFile(file)] : resolveCssFiles(pkgName, options)
 
-      const key = `npm:${pkgName}/${familyToSlug(family)}-${cssFiles.join(',')}-${hash(options)}.json`
+      const key = `npm:${pkgName}/${familyToSlug(family)}-${cssFiles.join(',')}-${hash({ family, options })}.json`
 
       const fonts = await ctx.storage.getItem(key, () => resolveFaces(pkgName, pkgVersion, cssFiles, family, options.formats, Boolean(file)))
 

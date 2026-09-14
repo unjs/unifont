@@ -587,6 +587,26 @@ describe('npm', () => {
       restoreFetch()
     })
 
+    it('caches families that share a slug separately', async () => {
+      const restoreFetch = mockFetchReturn(/roboto-mono/, () =>
+        new Response(`
+          @font-face {
+            font-family: 'Roboto Mono';
+            font-weight: 400;
+            src: url(./files/roboto-mono-400.woff2) format('woff2');
+          }
+        `))
+
+      const unifont = await createUnifont([providers.npm()])
+      const spaced = await unifont.resolveFont('Roboto Mono')
+      const hyphenated = await unifont.resolveFont('Roboto-Mono')
+
+      expect(spaced.fonts).toHaveLength(1)
+      expect(hyphenated.fonts).toHaveLength(0)
+
+      restoreFetch()
+    })
+
     it('caches per family rather than per package', async () => {
       const restoreFetch = mockFetchReturn(/two-families/, () =>
         new Response(MOCK_MULTI_FAMILY_CSS))
