@@ -3,6 +3,12 @@ import { globalFontFaces, preloads } from 'fontless/runtime'
 
 const DESCRIPTION = 'Look up a typeface across every font CDN in one place: metadata, specimens, coverage, and the CSS to ship it.'
 
+const route = useRoute()
+
+const specimenPreloads = route.path === '/'
+  ? [...new Set([...globalFontFaces.matchAll(/url\((\/[^)"']+\.woff2)\)/g)].map(([, href]) => href!))]
+  : []
+
 /*
  * The faces `fontless` has no usage site in CSS to inject at, and the preload hints for the ones
  * the interface is set in: it emits both through `transformIndexHtml`, which a server-rendered app
@@ -15,7 +21,10 @@ useHead({
   style: globalFontFaces ? [{ innerHTML: globalFontFaces, tagPriority: 'critical' as const }] : [],
   // A font is always fetched anonymously, and unhead's `Link` does not accept the empty string
   // `fontless` allows for it.
-  link: preloads.map(({ crossorigin, ...link }) => ({ ...link, crossorigin: crossorigin || 'anonymous' })),
+  link: [
+    ...preloads.map(({ crossorigin, ...link }) => ({ ...link, crossorigin: crossorigin || 'anonymous' })),
+    ...specimenPreloads.map(href => ({ rel: 'preload' as const, as: 'font' as const, type: 'font/woff2', href, crossorigin: 'anonymous' })),
+  ],
 })
 
 // The template has to survive into the client, where a navigation sets a title through it.
@@ -37,7 +46,6 @@ if (import.meta.server) {
  * Share cards mirror the route: `/fonts/Fraunces` is drawn by `/og/fonts/Fraunces.png`, which
  * sets the family in its own face. Set once here so every page gets one without repeating itself.
  */
-const route = useRoute()
 // Crawlers resolve `og:image` against nothing, so it has to be absolute. `NUXT_PUBLIC_SITE_URL`
 // covers deployments where the request origin is a proxy or a prerender host.
 const origin = useRuntimeConfig().public.siteUrl || useRequestURL().origin
