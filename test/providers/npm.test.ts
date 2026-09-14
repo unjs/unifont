@@ -537,9 +537,11 @@ describe('npm', () => {
         weights: ['100', '200', '300', '400', '500'],
       })
 
+      const urls = requested.map(url => new URL(url))
+
       expect(fonts).toHaveLength(4)
-      expect(requested.some(url => url.includes('fonts.example.com'))).toBe(false)
-      expect(requested.some(url => url.includes('level-4.css'))).toBe(false)
+      expect(new Set(urls.map(url => url.host))).toStrictEqual(new Set(['cdn.jsdelivr.net']))
+      expect(urls.some(url => url.pathname.endsWith('/level-4.css'))).toBe(false)
 
       restoreFetch()
     })
