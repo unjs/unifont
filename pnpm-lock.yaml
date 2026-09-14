@@ -242,7 +242,7 @@ importers:
         version: 12.3.0
       changelogithub:
         specifier: 15.0.5
-        version: 15.0.5(magicast@0.5.4)
+        version: 15.0.5
       eslint:
         specifier: 10.9.1
         version: 10.9.1(jiti@2.7.0)(supports-color@10.2.2)
@@ -290,19 +290,19 @@ importers:
         version: 2.13.7
       comark-content:
         specifier: ^0.4.0
-        version: 0.4.0(db0@0.3.4)(ioredis@5.11.1(supports-color@10.2.2))
+        version: 0.4.0(db0@0.4.1)(ioredis@5.11.1(supports-color@10.2.2))
       fontaine:
         specifier: 0.8.1
         version: 0.8.1(esbuild@0.28.2)(postcss@8.5.26)(rolldown@1.2.8)(rollup@4.62.5)(vite@8.2.2)
       fontless:
         specifier: ^0.4.2
-        version: 0.4.3(db0@0.3.4)(esbuild@0.28.2)(ioredis@5.11.1(supports-color@10.2.2))(postcss@8.5.26)(rolldown@1.2.8)(rollup@4.62.5)(subset-font@2.7.0)(vite@8.2.2)
+        version: 0.4.3(db0@0.4.1)(esbuild@0.28.2)(ioredis@5.11.1(supports-color@10.2.2))(postcss@8.5.26)(rolldown@1.2.8)(rollup@4.62.5)(subset-font@2.7.0)(vite@8.2.2)
       microlighter:
         specifier: ^2.1.0
         version: 2.2.0
       nuxt:
         specifier: npm:nuxt-nightly@5x
-        version: nuxt-nightly@5.0.0-29819633.9319fd64(0fd6cb77006466f1608bf5b33baa632a)
+        version: nuxt-nightly@5.0.0-29819633.9319fd64(36031a0da2047aa2431a14dd73c4b47e)
       subset-font:
         specifier: ^2.5.0
         version: 2.7.0
@@ -314,8 +314,8 @@ importers:
         version: 3.5.42(typescript@6.0.3)
     devDependencies:
       '@nuxt/test-utils':
-        specifier: 4.2.0
-        version: 4.2.0(@playwright/test@1.63.0)(esbuild@0.28.2)(magicast@0.5.4)(playwright-core@1.63.0)(rolldown@1.2.8)(rollup@4.62.5)(typescript@6.0.3)(vite@8.2.2)(vitest@4.1.11)
+        specifier: 4.3.2
+        version: 4.3.2(@playwright/test@1.63.0)(esbuild@0.28.2)(magicast@0.5.4)(playwright-core@1.63.0)(rolldown@1.2.8)(rollup@4.62.5)(typescript@6.0.3)(vite@8.2.2)(vitest@4.1.11)
       '@playwright/test':
         specifier: 1.63.0
         version: 1.63.0
@@ -1260,8 +1260,8 @@ packages:
     peerDependencies:
       '@nuxt/kit': '>=3.0.0'
 
-  '@nuxt/test-utils@4.2.0':
-    resolution: {integrity: sha512-QwmLxlOFoqHrHnOSSl3TJObJ+htx1UgoasP98zbcQbWjkXBef//pMMn7pKzEBHbrW4WfRCioDQw1L2nI3BqkfA==}
+  '@nuxt/test-utils@4.3.2':
+    resolution: {integrity: sha512-RgBgYN/CyJYWdHzGA8+bznK7bfqpdCUTkA6WGylYuSdt51l6w/jbz/2PyGuGqFkta4H7KQifWNIeFVjW5x66tg==}
     engines: {node: ^20.19.0 || ^22.12.0 || >=24.0.0}
     peerDependencies:
       '@cucumber/cucumber': '>=11.0.0'
@@ -1274,7 +1274,7 @@ packages:
       happy-dom: '>=20.0.11'
       jsdom: '>=27.4.0'
       playwright-core: ^1.43.1
-      vitest: ^4.0.2
+      vitest: ^4.0.2 || ^5.0.0
     peerDependenciesMeta:
       '@cucumber/cucumber':
         optional: true
@@ -6974,7 +6974,7 @@ snapshots:
       nitro: 3.0.260903-beta
       nitropack: 2.13.4(oxc-parser@0.143.0)(rolldown@1.2.8)(srvx@1.0.4)(supports-color@10.2.2)(vite@8.2.2)
 
-  '@nuxt/devtools@4.0.0-alpha.18(8f34372a6b1a564e3c7c80726162a853)':
+  '@nuxt/devtools@4.0.0-alpha.18(256cef04cf1ea98e11fcf4282590a331)':
     dependencies:
       '@devframes/hub': 0.9.18(crossws@0.4.12(srvx@1.0.4))(devframe@0.9.18(cac@7.0.0)(ocache@0.3.0)(srvx@1.0.4))(ocache@0.3.0)
       '@devframes/plugin-code-server': 0.9.18(@devframes/hub-ui@0.9.18(@devframes/hub@0.9.18(crossws@0.4.12(srvx@1.0.4))(devframe@0.9.18(cac@7.0.0)(ocache@0.3.0)(srvx@1.0.4))(ocache@0.3.0))(@devframes/json-render@0.9.18(@devframes/hub@0.9.18(crossws@0.4.12(srvx@1.0.4))(devframe@0.9.18(cac@7.0.0)(ocache@0.3.0)(srvx@1.0.4))(ocache@0.3.0))(devframe@0.9.18(cac@7.0.0)(ocache@0.3.0)(srvx@1.0.4)))(devframe@0.9.18(cac@7.0.0)(ocache@0.3.0)(srvx@1.0.4)))(@devframes/hub@0.9.18(crossws@0.4.12(srvx@1.0.4))(devframe@0.9.18(cac@7.0.0)(ocache@0.3.0)(srvx@1.0.4))(ocache@0.3.0))(devframe@0.9.18(cac@7.0.0)(ocache@0.3.0)(srvx@1.0.4))(vite@8.2.2)
@@ -6996,7 +6996,7 @@ snapshots:
       perfect-debounce: 2.1.0
       pkg-types: 2.3.3
       tinyglobby: 0.2.17
-      unstorage: 1.17.5(db0@0.3.4)(ioredis@5.11.1(supports-color@10.2.2))
+      unstorage: 1.17.5(db0@0.4.1)(ioredis@5.11.1(supports-color@10.2.2))
       verkit: 0.4.0
       vite: 8.2.2(@types/node@24.13.4)(@vitejs/devtools@0.5.2)(esbuild@0.28.2)(jiti@2.7.0)(terser@5.50.0)(yaml@2.9.0)
       vite-plugin-vue-tracer: 1.5.0(vite@8.2.2)(vue@3.5.42(typescript@6.0.3))
@@ -7229,7 +7229,7 @@ snapshots:
       mocked-exports: 0.1.1
       nitro: 3.0.260903-beta
       nostics: 1.2.0
-      nuxt: nuxt-nightly@5.0.0-29819633.9319fd64(0fd6cb77006466f1608bf5b33baa632a)
+      nuxt: nuxt-nightly@5.0.0-29819633.9319fd64(36031a0da2047aa2431a14dd73c4b47e)
       ofetch: 2.0.0-alpha.3
       ohash: 2.0.12
       pathe: 2.0.3
@@ -7288,7 +7288,7 @@ snapshots:
       rc9: 3.1.0
       std-env: 4.2.0
 
-  '@nuxt/test-utils@4.2.0(@playwright/test@1.63.0)(esbuild@0.28.2)(magicast@0.5.4)(playwright-core@1.63.0)(rolldown@1.2.8)(rollup@4.62.5)(typescript@6.0.3)(vite@8.2.2)(vitest@4.1.11)':
+  '@nuxt/test-utils@4.3.2(@playwright/test@1.63.0)(esbuild@0.28.2)(magicast@0.5.4)(playwright-core@1.63.0)(rolldown@1.2.8)(rollup@4.62.5)(typescript@6.0.3)(vite@8.2.2)(vitest@4.1.11)':
     dependencies:
       '@clack/prompts': 1.7.0
       '@nuxt/devtools-kit': 2.7.0(magicast@0.5.4)(vite@8.2.2)
@@ -7349,7 +7349,7 @@ snapshots:
       js-tokens: 10.0.0
       knitwork: 1.3.0
       mocked-exports: 0.1.1
-      nuxt: nuxt-nightly@5.0.0-29819633.9319fd64(0fd6cb77006466f1608bf5b33baa632a)
+      nuxt: nuxt-nightly@5.0.0-29819633.9319fd64(36031a0da2047aa2431a14dd73c4b47e)
       pathe: 2.0.3
       pkg-types: 2.3.3
       rolldown-string: 0.3.1(rolldown@1.2.8)
@@ -7407,7 +7407,7 @@ snapshots:
       exsolve: 1.1.1
       hookable: 6.1.1
       mocked-exports: 0.1.1
-      nuxt: nuxt-nightly@5.0.0-29819633.9319fd64(0fd6cb77006466f1608bf5b33baa632a)
+      nuxt: nuxt-nightly@5.0.0-29819633.9319fd64(36031a0da2047aa2431a14dd73c4b47e)
       pathe: 2.0.3
       rou3: 0.9.2
       srvx: 1.0.4
@@ -8764,7 +8764,7 @@ snapshots:
     transitivePeerDependencies:
       - magicast
 
-  changelogithub@15.0.5(magicast@0.5.4):
+  changelogithub@15.0.5:
     dependencies:
       ansis: 4.3.1
       c12: 3.3.4(magicast@0.5.4)
@@ -8831,7 +8831,7 @@ snapshots:
 
   colorette@2.0.20: {}
 
-  comark-content@0.4.0(db0@0.3.4)(ioredis@5.11.1(supports-color@10.2.2)):
+  comark-content@0.4.0(db0@0.4.1)(ioredis@5.11.1(supports-color@10.2.2)):
     dependencies:
       citty: 0.2.2
       comark: 0.6.2
@@ -8842,7 +8842,7 @@ snapshots:
       picomatch: 4.0.7
       slugify: 1.6.9
       ufo: 1.6.4
-      unstorage: 1.17.5(db0@0.3.4)(ioredis@5.11.1(supports-color@10.2.2))
+      unstorage: 1.17.5(db0@0.4.1)(ioredis@5.11.1(supports-color@10.2.2))
     transitivePeerDependencies:
       - '@azure/app-configuration'
       - '@azure/cosmos'
@@ -9776,7 +9776,7 @@ snapshots:
     dependencies:
       tiny-inflate: 1.0.3
 
-  fontless@0.4.3(db0@0.3.4)(esbuild@0.28.2)(ioredis@5.11.1(supports-color@10.2.2))(postcss@8.5.26)(rolldown@1.2.8)(rollup@4.62.5)(subset-font@2.7.0)(vite@8.2.2):
+  fontless@0.4.3(db0@0.4.1)(esbuild@0.28.2)(ioredis@5.11.1(supports-color@10.2.2))(postcss@8.5.26)(rolldown@1.2.8)(rollup@4.62.5)(subset-font@2.7.0)(vite@8.2.2):
     dependencies:
       consola: 3.4.2
       css-tree: 3.2.1
@@ -9790,7 +9790,7 @@ snapshots:
       pathe: 2.0.3
       ufo: 1.6.4
       unifont: 'link:'
-      unstorage: 1.17.5(db0@0.3.4)(ioredis@5.11.1(supports-color@10.2.2))
+      unstorage: 1.17.5(db0@0.4.1)(ioredis@5.11.1(supports-color@10.2.2))
     optionalDependencies:
       subset-font: 2.7.0
       vite: 8.2.2(@types/node@24.13.4)(@vitejs/devtools@0.5.2)(esbuild@0.28.2)(jiti@2.7.0)(terser@5.50.0)(yaml@2.9.0)
@@ -11066,11 +11066,11 @@ snapshots:
     dependencies:
       boolbase: 1.0.0
 
-  nuxt-nightly@5.0.0-29819633.9319fd64(0fd6cb77006466f1608bf5b33baa632a):
+  nuxt-nightly@5.0.0-29819633.9319fd64(36031a0da2047aa2431a14dd73c4b47e):
     dependencies:
       '@dxup/nuxt': 0.5.10(esbuild@0.28.2)(magicast@0.5.4)(oxc-parser@0.143.0)(rolldown@1.2.8)(rollup@4.62.5)(vite@8.2.2)
       '@nuxt/cli': '@nuxt/cli-nightly@4.0.0-20260907-104727-9e18028(@nuxt/schema-nightly@5.0.0-29819633.9319fd64)(jiti@2.7.0)(oxc-parser@0.143.0)(rolldown@1.2.8)'
-      '@nuxt/devtools': 4.0.0-alpha.18(8f34372a6b1a564e3c7c80726162a853)
+      '@nuxt/devtools': 4.0.0-alpha.18(256cef04cf1ea98e11fcf4282590a331)
       '@nuxt/kit': '@nuxt/kit-nightly@5.0.0-29819633.9319fd64(@nuxt/schema-nightly@5.0.0-29819633.9319fd64)(confbox@0.3.1)(dotenv@17.4.2)(giget@3.3.1)(jiti@2.7.0)(magic-string@1.2.3)(mlly@1.8.2)(oxc-parser@0.143.0)(rolldown@1.2.8)(unplugin@3.3.0(esbuild@0.28.2)(rolldown@1.2.8)(rollup@4.62.5)(vite@8.2.2))'
       '@nuxt/nitro-server': '@nuxt/nitro-server-nightly@5.0.0-29819633.9319fd64(@babel/plugin-syntax-typescript@7.29.7(@babel/core@7.29.7(supports-color@10.2.2)))(@nuxt/schema-nightly@5.0.0-29819633.9319fd64)(@oxc-project/types@0.149.0)(@vitejs/devtools-kit@0.6.2(cac@7.0.0)(crossws@0.4.12(srvx@1.0.4))(ocache@0.3.0)(srvx@1.0.4)(vite@8.2.2))(acorn@8.18.0)(confbox@0.3.1)(dotenv@17.4.2)(esbuild@0.28.2)(giget@3.3.1)(jiti@2.7.0)(lightningcss@1.33.0)(mlly@1.8.2)(nuxt-nightly@5.0.0-29819633.9319fd64)(oxc-parser@0.143.0)(rolldown@1.2.8)(rollup@4.62.5)(typescript@6.0.3)(vite@8.2.2)'
       '@nuxt/schema': '@nuxt/schema-nightly@5.0.0-29819633.9319fd64'
@@ -12451,6 +12451,7 @@ snapshots:
     optionalDependencies:
       db0: 0.3.4
       ioredis: 5.11.1(supports-color@10.2.2)
+    optional: true
 
   unstorage@1.17.5(db0@0.4.1)(ioredis@5.11.1(supports-color@10.2.2)):
     dependencies:
@@ -12580,7 +12581,7 @@ snapshots:
 
   vitest-environment-nuxt@2.0.0(@playwright/test@1.63.0)(esbuild@0.28.2)(magicast@0.5.4)(playwright-core@1.63.0)(rolldown@1.2.8)(rollup@4.62.5)(typescript@6.0.3)(vite@8.2.2)(vitest@4.1.11):
     dependencies:
-      '@nuxt/test-utils': 4.2.0(@playwright/test@1.63.0)(esbuild@0.28.2)(magicast@0.5.4)(playwright-core@1.63.0)(rolldown@1.2.8)(rollup@4.62.5)(typescript@6.0.3)(vite@8.2.2)(vitest@4.1.11)
+      '@nuxt/test-utils': 4.3.2(@playwright/test@1.63.0)(esbuild@0.28.2)(magicast@0.5.4)(playwright-core@1.63.0)(rolldown@1.2.8)(rollup@4.62.5)(typescript@6.0.3)(vite@8.2.2)(vitest@4.1.11)
     transitivePeerDependencies:
       - '@cucumber/cucumber'
       - '@farmfe/core'
