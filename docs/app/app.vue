@@ -23,7 +23,7 @@ useHead({
   // `fontless` allows for it.
   link: [
     ...preloads.map(({ crossorigin, ...link }) => ({ ...link, crossorigin: crossorigin || 'anonymous' })),
-    ...specimenPreloads.map(href => ({ rel: 'preload' as const, as: 'font' as const, type: 'font/woff2', href, crossorigin: 'anonymous' })),
+    ...specimenPreloads.map(href => ({ rel: 'preload' as const, as: 'font' as const, type: 'font/woff2', href, crossorigin: 'anonymous' as const })),
   ],
 })
 
