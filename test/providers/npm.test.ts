@@ -351,6 +351,277 @@ describe('npm', () => {
     })
   })
 
+  describe('non-fontsource packages', () => {
+    it('follows relative @import statements', async () => {
+      const restoreFetch = mockFetchReturn(/computer-modern/, (url) => {
+        if (String(url).endsWith('/index.css')) {
+          return new Response(`@import "./cmu-serif.css";\n@import url('./cmu-bright.css');`)
+        }
+        if (String(url).endsWith('/cmu-serif.css')) {
+          return new Response(`
+            @font-face {
+              font-family: "CMU Serif";
+              font-weight: 500;
+              src: url("./fonts/cmu-serif-500-roman.woff2") format("woff2");
+            }
+          `)
+        }
+        return new Response('', { status: 404 })
+      })
+
+      const unifont = await createUnifont([providers.npm()])
+      const { fonts } = await unifont.resolveFont('CMU Serif', {
+        options: { npm: { package: 'computer-modern' } },
+      })
+
+      expect(fonts.length).toBe(1)
+      expect(fonts[0]!.src[0]).toMatchObject({ url: 'https://cdn.jsdelivr.net/npm/computer-modern@latest/fonts/cmu-serif-500-roman.woff2' })
+
+      restoreFetch()
+    })
+
+    it('resolves urls relative to the stylesheet rather than the package root', async () => {
+      const restoreFetch = mockFetchReturn(/@ibm\/plex-sans/, (url) => {
+        if (String(url).endsWith('/css/ibm-plex-sans-all.css')) {
+          return new Response(`
+            @font-face {
+              font-family: "IBM Plex Sans";
+              font-weight: 700;
+              src: url("../fonts/complete/woff2/IBMPlexSans-Bold.woff2") format("woff2");
+            }
+          `)
+        }
+        return new Response('', { status: 404 })
+      })
+
+      const unifont = await createUnifont([providers.npm()])
+      const { fonts } = await unifont.resolveFont('IBM Plex Sans')
+
+      expect(fonts.length).toBe(1)
+      expect(fonts[0]!.src[0]).toMatchObject({ url: 'https://cdn.jsdelivr.net/npm/@ibm/plex-sans@latest/fonts/complete/woff2/IBMPlexSans-Bold.woff2' })
+
+      restoreFetch()
+    })
+
+    it('maps IBM Plex subset families onto their packages', async () => {
+      const requested: string[] = []
+      const restoreFetch = mockFetchReturn(/@ibm\/plex/, (url) => {
+        requested.push(String(url))
+        return new Response(`
+          @font-face {
+            font-family: "IBM Plex Sans JP";
+            font-weight: 400;
+            src: url("../fonts/complete/woff2/IBMPlexSansJP-Regular.woff2") format("woff2");
+          }
+        `)
+      })
+
+      const unifont = await createUnifont([providers.npm()])
+      const { fonts } = await unifont.resolveFont('IBM Plex Sans JP')
+
+      expect(fonts.length).toBe(1)
+      expect(requested[0]).toBe('https://cdn.jsdelivr.net/npm/@ibm/plex-sans-jp@latest/css/ibm-plex-sans-jp-all.css')
+
+      restoreFetch()
+    })
+
+    it('falls back to the package.json `style` entry point', async () => {
+      const restoreFetch = mockFetchReturn(/some-font-package/, (url) => {
+        if (String(url).endsWith('/package.json')) {
+          return new Response(JSON.stringify({ name: 'some-font-package', style: './dist/fonts.css' }))
+        }
+        if (String(url).endsWith('/dist/fonts.css')) {
+          return new Response(`
+            @font-face {
+              font-family: "Some Font";
+              font-weight: 400;
+              src: url("./files/some-font.woff2") format("woff2");
+            }
+          `)
+        }
+        return new Response('', { status: 404 })
+      })
+
+      const unifont = await createUnifont([providers.npm()])
+      const { fonts } = await unifont.resolveFont('Some Font', {
+        options: { npm: { package: 'some-font-package' } },
+      })
+
+      expect(fonts.length).toBe(1)
+      expect(fonts[0]!.src[0]).toMatchObject({ url: 'https://cdn.jsdelivr.net/npm/some-font-package@latest/dist/files/some-font.woff2' })
+
+      restoreFetch()
+    })
+
+    it('reads the `style` entry point from a locally installed package', async () => {
+      const readFile = vi.fn(async (path: string) => {
+        if (path === './node_modules/local-style/package.json')
+          return JSON.stringify({ version: '2.0.0', style: 'dist/fonts.css' })
+        if (path === './node_modules/local-style/dist/fonts.css') {
+          return `
+            @font-face {
+              font-family: "Local Style";
+              src: url("./local-style.woff2") format("woff2");
+            }
+          `
+        }
+        return null
+      })
+
+      const unifont = await createUnifont([providers.npm({ readFile, remote: false, exists: async () => true })])
+      const { fonts } = await unifont.resolveFont('Local Style', {
+        options: { npm: { package: 'local-style' } },
+      })
+
+      expect(fonts[0]!.src[0]).toMatchObject({ url: expect.stringContaining('local-style/dist/local-style.woff2') })
+    })
+
+    it('resolves nothing when the package declares no `style` entry point', async () => {
+      const restoreFetch = mockFetchReturn(/styleless/, (url) => {
+        if (String(url).endsWith('/package.json')) {
+          return new Response(JSON.stringify({ name: 'styleless', main: 'index.js' }))
+        }
+        return new Response('', { status: 404 })
+      })
+
+      const unifont = await createUnifont([providers.npm()])
+      const { fonts } = await unifont.resolveFont('Styleless', {
+        options: { npm: { package: 'styleless' } },
+      })
+
+      expect(fonts).toStrictEqual([])
+
+      restoreFetch()
+    })
+
+    it('accepts a single mismatched family when the file is given explicitly', async () => {
+      const restoreFetch = mockFetchReturn(/fontawesome-free/, () =>
+        new Response(`
+          @font-face {
+            font-family: "Font Awesome 7 Brands";
+            font-weight: 400;
+            src: url("../webfonts/fa-brands-400.woff2") format("woff2");
+          }
+        `))
+
+      const unifont = await createUnifont([providers.npm()])
+      const { fonts } = await unifont.resolveFont('Font Awesome', {
+        options: { npm: { package: '@fortawesome/fontawesome-free', file: 'css/brands.css' } },
+      })
+
+      expect(fonts.length).toBe(1)
+      expect(fonts[0]!.src[0]).toMatchObject({ url: 'https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@latest/webfonts/fa-brands-400.woff2' })
+
+      restoreFetch()
+    })
+
+    it('ignores external imports and stops following after a few levels', async () => {
+      const requested: string[] = []
+      const restoreFetch = mockFetchReturn(/deep-imports|fonts\.example\.com/, (url) => {
+        requested.push(String(url))
+        const depth = Number(String(url).match(/level-(\d)\.css/)?.[1] ?? 0)
+        return new Response(`
+          @import "https://fonts.example.com/external.css";
+          @import "./level-${depth + 1}.css";
+          @font-face {
+            font-family: "Deep";
+            font-weight: ${depth + 1}00;
+            src: url("./deep-${depth}.woff2") format("woff2");
+          }
+        `)
+      })
+
+      const unifont = await createUnifont([providers.npm()])
+      const { fonts } = await unifont.resolveFont('Deep', {
+        options: { npm: { package: 'deep-imports' } },
+        weights: ['100', '200', '300', '400', '500'],
+      })
+
+      const urls = requested.map(url => new URL(url))
+
+      expect(fonts).toHaveLength(4)
+      expect(new Set(urls.map(url => url.host))).toStrictEqual(new Set(['cdn.jsdelivr.net']))
+      expect(urls.some(url => url.pathname.endsWith('/level-4.css'))).toBe(false)
+
+      restoreFetch()
+    })
+
+    it('loads each imported stylesheet once', async () => {
+      const requested: string[] = []
+      const restoreFetch = mockFetchReturn(/cyclic-imports/, (url) => {
+        requested.push(String(url))
+        if (String(url).endsWith('/index.css')) {
+          return new Response('@import "./shared.css";@import "./shared.css";')
+        }
+        return new Response(`
+          @import "./index.css";
+          @font-face {
+            font-family: "Shared";
+            src: url("./shared.woff2") format("woff2");
+          }
+        `)
+      })
+
+      const unifont = await createUnifont([providers.npm()])
+      const { fonts } = await unifont.resolveFont('Shared', {
+        options: { npm: { package: 'cyclic-imports' } },
+      })
+
+      expect(fonts.length).toBe(1)
+      expect(requested).toHaveLength(2)
+
+      restoreFetch()
+    })
+
+    it('does not accept mismatched families when the stylesheet declares several', async () => {
+      const restoreFetch = mockFetchReturn(/multi-family/, () =>
+        new Response(MOCK_MULTI_FAMILY_CSS))
+
+      const unifont = await createUnifont([providers.npm()])
+      const { fonts } = await unifont.resolveFont('Nonexistent', {
+        options: { npm: { package: 'multi-family', file: 'all.css' } },
+      })
+
+      expect(fonts.length).toBe(0)
+
+      restoreFetch()
+    })
+
+    it('caches families that share a slug separately', async () => {
+      const restoreFetch = mockFetchReturn(/roboto-mono/, () =>
+        new Response(`
+          @font-face {
+            font-family: 'Roboto Mono';
+            font-weight: 400;
+            src: url(./files/roboto-mono-400.woff2) format('woff2');
+          }
+        `))
+
+      const unifont = await createUnifont([providers.npm()])
+      const spaced = await unifont.resolveFont('Roboto Mono')
+      const hyphenated = await unifont.resolveFont('Roboto-Mono')
+
+      expect(spaced.fonts).toHaveLength(1)
+      expect(hyphenated.fonts).toHaveLength(0)
+
+      restoreFetch()
+    })
+
+    it('caches per family rather than per package', async () => {
+      const restoreFetch = mockFetchReturn(/two-families/, () =>
+        new Response(MOCK_MULTI_FAMILY_CSS))
+
+      const unifont = await createUnifont([providers.npm()])
+      const roboto = await unifont.resolveFont('Roboto', { options: { npm: { package: 'two-families' } } })
+      const openSans = await unifont.resolveFont('Open Sans', { options: { npm: { package: 'two-families' } } })
+
+      expect(roboto.fonts[0]!.src[0]).toMatchObject({ url: 'https://cdn.jsdelivr.net/npm/two-families@latest/files/roboto-400.woff2' })
+      expect(openSans.fonts[0]!.src[0]).toMatchObject({ url: 'https://cdn.jsdelivr.net/npm/two-families@latest/files/open-sans-400.woff2' })
+
+      restoreFetch()
+    })
+  })
+
   describe('local resolution', () => {
     it('resolves fonts from local node_modules', async () => {
       const readFile = vi.fn(async (path: string) => {
@@ -767,6 +1038,78 @@ describe('npm', () => {
       ])
     })
 
+    it('follows @import statements and anchors file:// URLs on the importing stylesheet', async () => {
+      const readFile = vi.fn(async (path: string) => {
+        if (path === './package.json')
+          return MOCK_PACKAGE_JSON
+        if (path === '/local-imports/index.css')
+          return '@import "./css/serif.css";'
+        if (path === '/local-imports/css/serif.css') {
+          return `
+            @font-face {
+              font-family: "Local Serif";
+              font-weight: 400;
+              src: url("../fonts/local-serif.woff2") format("woff2");
+            }
+          `
+        }
+        if (path === '/local-imports/fonts/local-serif.woff2')
+          return 'binary'
+        return null
+      })
+      const exists = vi.fn(async (path: string) => path.endsWith('/local-imports/fonts/local-serif.woff2'))
+
+      const unifont = await createUnifont([providers.npm({ readFile, exists, remote: false, resolve: id => `/${id}` })])
+      const { fonts } = await unifont.resolveFont('Local Serif', {
+        options: { npm: { package: 'local-imports' } },
+        formats: ['woff2'],
+      })
+
+      expect(fonts[0]!.src).toStrictEqual([
+        { url: 'file:///local-imports/fonts/local-serif.woff2', format: 'woff2' },
+      ])
+    })
+
+    it('accepts a `file` written with a leading `./`', async () => {
+      const readFile = vi.fn(async (path: string) => {
+        if (path === './node_modules/relative-file/package.json')
+          return JSON.stringify({ version: '3.0.0' })
+        if (path === './node_modules/relative-file/css/fonts.css') {
+          return `
+            @font-face {
+              font-family: "Relative";
+              src: url("../fonts/relative.woff2") format("woff2");
+            }
+          `
+        }
+        return null
+      })
+
+      const unifont = await createUnifont([providers.npm({ readFile })])
+      const { fonts } = await unifont.resolveFont('Relative', {
+        options: { npm: { package: 'relative-file', file: './css/fonts.css' } },
+      })
+
+      expect(fonts[0]!.src[0]).toMatchObject({ url: 'https://cdn.jsdelivr.net/npm/relative-file@3.0.0/fonts/relative.woff2' })
+    })
+
+    it('anchors urls on the resolved path when the resolver does not preserve the specifier', async () => {
+      const readFile = vi.fn(async (path: string) => {
+        if (path === './package.json')
+          return MOCK_PACKAGE_JSON
+        if (path === '/aliased/cal-sans.css')
+          return MOCK_CAL_SANS_CSS
+        return null
+      })
+
+      const unifont = await createUnifont([providers.npm({ readFile, resolve: () => '/aliased/cal-sans.css' })])
+      const { fonts } = await unifont.resolveFont('Cal Sans', { weights: ['600'], formats: ['woff2'] })
+
+      expect(fonts[0]!.src).toStrictEqual([
+        { url: 'https://cdn.jsdelivr.net/npm/cal-sans@latest/fonts/webfonts/CalSans-SemiBold.woff2', format: 'woff2' },
+      ])
+    })
+
     it('falls back to the CDN when resolution fails', async () => {
       const resolve = vi.fn(() => {
         const error = new Error('Cannot find module') as Error & { code: string }
@@ -1114,6 +1457,18 @@ describe('npm', () => {
       expect(names).toContain('Cal Sans')
       expect(names).toContain('Inter Variable')
       expect(names).toContain('Geist Sans')
+    })
+
+    it('names IBM Plex packages, uppercasing subset suffixes', async () => {
+      const readFile = vi.fn(async (path: string) => {
+        if (path === './package.json')
+          return JSON.stringify({ dependencies: { '@ibm/plex-sans-condensed': '^1.0.0', '@ibm/plex-sans-jp': '^1.0.0' } })
+        return null
+      })
+
+      const unifont = await createUnifont([providers.npm({ readFile })])
+
+      expect(await unifont.listFonts()).toEqual(['IBM Plex Sans Condensed', 'IBM Plex Sans JP'])
     })
 
     it('returns undefined when package.json has no font dependencies', async () => {

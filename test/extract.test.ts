@@ -1,7 +1,7 @@
 import type { RemoteFontSource } from '../src'
 
 import { describe, expect, it } from 'vitest'
-import { extractFontFaceData } from '../src/css/parse'
+import { extractFontFaceData, extractFontFaceFamilies, extractImports } from '../src/css/parse'
 
 describe('css font-face extraction', () => {
   describe('basic font-face parsing', () => {
@@ -641,6 +641,71 @@ describe('css font-face extraction', () => {
       const sources = result[0]!.src as RemoteFontSource[]
       expect(sources).toHaveLength(1)
       expect(sources[0]).toEqual({ url: '/font.woff2' })
+    })
+  })
+
+  describe('family matching', () => {
+    const css = `
+      @font-face {
+        font-family: '  Open   Sans ';
+        src: url(./open-sans.woff2) format('woff2');
+      }
+      @font-face {
+        font-family: Roboto Mono;
+        src: url(./roboto-mono.woff2) format('woff2');
+      }
+    `
+
+    it('should match families irrespective of case and whitespace', () => {
+      expect(extractFontFaceData(css, 'open sans')).toHaveLength(1)
+      expect(extractFontFaceData(css, 'Roboto Mono')).toHaveLength(1)
+      expect(extractFontFaceData(css, 'Roboto')).toHaveLength(0)
+    })
+
+    it('should list declared families', () => {
+      expect(extractFontFaceFamilies(css)).toEqual(['  Open   Sans ', 'Roboto Mono'])
+    })
+
+    it('should list a family declared with different spellings once', () => {
+      expect(extractFontFaceFamilies(`
+        @font-face {
+          font-family: "Open Sans";
+          src: url(./open-sans.woff2) format('woff2');
+        }
+        @font-face {
+          font-family: ' open   sans ';
+          src: url(./open-sans-italic.woff2) format('woff2');
+        }
+      `)).toEqual(['Open Sans'])
+    })
+
+    it('should list every family of a fallback list, and ignore unusable declarations', () => {
+      expect(extractFontFaceFamilies(`
+        @font-face;
+        @font-face {
+          font-family: 'Alpha', Beta;
+          src: url(./alpha.woff2) format('woff2');
+        }
+        @font-face {
+          font-family: 400;
+          src: url(./numeric.woff2) format('woff2');
+        }
+      `)).toEqual(['Alpha', 'Beta'])
+    })
+  })
+
+  describe('import extraction', () => {
+    it('should extract string and url specifiers', () => {
+      expect(extractImports(`
+        @import "./a.css";
+        @import url('./b.css');
+        @import url(./c.css) screen;
+        @import "./d.css" layer(fonts);
+      `)).toEqual(['./a.css', './b.css', './c.css', './d.css'])
+    })
+
+    it('should ignore imports without a specifier', () => {
+      expect(extractImports(`@import;`)).toEqual([])
     })
   })
 })
