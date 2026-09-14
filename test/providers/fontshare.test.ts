@@ -84,6 +84,35 @@ describe('fontshare', () => {
     expect(names!.length > 0).toEqual(true)
   })
 
+  it('advances pagination by the page size', async () => {
+    const offsets: string[] = []
+    const page = (start: number, count: number, hasMore: boolean) => ({
+      has_more: hasMore,
+      fonts: Array.from({ length: count }, (_, index) => ({
+        slug: `family-${start + index}`,
+        name: `Family ${start + index}`,
+        category: 'Sans Serif',
+        axes: [],
+        styles: [],
+      })),
+    })
+
+    const restore = mockFetchReturn(/api\.fontshare\.com\/v2\/fonts\?/, (request) => {
+      const offset = new URL(String(request)).searchParams.get('offset')!
+      offsets.push(offset)
+      return new Response(JSON.stringify(offset === '0' ? page(0, 100, true) : page(100, 1, false)))
+    })
+
+    try {
+      const unifont = await createUnifont([providers.fontshare()])
+      expect(offsets).toStrictEqual(['0', '100'])
+      expect(await unifont.listFonts()).toHaveLength(101)
+    }
+    finally {
+      restore()
+    }
+  })
+
   it('handles getFontProperties correctly', async () => {
     const unifont = await createUnifont([providers.fontshare()])
     const result = await unifont.getFontProperties('Satoshi')

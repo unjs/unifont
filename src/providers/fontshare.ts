@@ -10,6 +10,9 @@ const BASE_URL = 'https://api.fontshare.com/v2'
 // font units without saying so
 const UNITS_PER_EM = 1000
 
+// `offset` counts families rather than pages, so a page advances it by the page size
+const PAGE_SIZE = 100
+
 function getMetrics(style: FontshareFontStyle): FontMetrics | undefined {
   const properties = style.properties
   if (!properties) {
@@ -46,9 +49,9 @@ export default defineFontProvider('fontshare', async (_options, ctx) => {
     let offset = 0
     let chunk
     do {
-      chunk = await ctx.fetch(`${BASE_URL}/fonts?offset=${offset}&limit=100`).then(res => res.json() as Promise<{ fonts: FontshareFontMeta[], has_more: boolean }>)
+      chunk = await ctx.fetch(`${BASE_URL}/fonts?offset=${offset}&limit=${PAGE_SIZE}`).then(res => res.json() as Promise<{ fonts: FontshareFontMeta[], has_more: boolean }>)
       fonts.push(...chunk.fonts)
-      offset++
+      offset += PAGE_SIZE
     } while (chunk.has_more)
     return fonts
   })
