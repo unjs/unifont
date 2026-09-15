@@ -56,8 +56,8 @@ export interface ResolveFontOptions<FamilyOptions extends Record<string, any> | 
   subsets: string[]
   formats: FontFormat[]
   /**
-   * **Experimental.** Values to request for variation axes other than weight and style, keyed by
-   * axis tag. `variableAxis` on the result reports what became of each one.
+   * Values to request for variation axes other than weight and style, keyed by axis tag.
+   * `variableAxis` on the result reports what became of each one.
    * @example { CASL: [1], slnt: [{ min: -15, max: 0 }] }
    */
   variableAxis?: Partial<Record<VariableAxis, VariableAxisValue[]>>
@@ -143,13 +143,13 @@ export interface FontFaceData {
 
 export interface ResolveFontResult {
   /**
-   * **Experimental.** What became of each axis requested through `variableAxis`, for a consumer
-   * that can instance the font file itself. `undefined` when no axes were requested.
+   * What became of each axis requested through `variableAxis`, for a consumer that can instance
+   * the font file itself. `undefined` when no axes were requested.
    */
   variableAxis?: Partial<Record<VariableAxis, ResolvedVariableAxis>>
   /**
-   * **Experimental.** Axes the returned font file is instanced or limited to, set by providers
-   * that instance. unifont derives `variableAxis` from it and does not pass it on.
+   * Axes the returned font file is instanced or limited to, set by providers that instance.
+   * unifont derives `variableAxis` from it and does not pass it on.
    */
   appliedVariableAxis?: VariableAxis[]
   /**
