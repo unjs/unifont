@@ -257,10 +257,7 @@ export default defineFontProvider('google', async (providerOptions: GoogleProvid
 
 function clampAxisValue(value: string | [string, string], axis: FontAxis): string | undefined {
   if (!Array.isArray(value)) {
-    const parsed = Number(value)
-    if (!Number.isFinite(parsed))
-      return undefined
-    return String(clamp(parsed, axis))
+    return String(clamp(Number(value), axis))
   }
 
   const min = Number(value[0])
