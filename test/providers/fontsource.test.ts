@@ -2,10 +2,11 @@ import { describe, expect, it, vi } from 'vitest'
 import { createUnifont, providers } from '../../src'
 import { mockFetchReturn } from '../utils'
 
-// Disable fetch retry logic
-await vi.hoisted(async () => {
-  const { disableFetchRetry } = await import('../utils')
-  await disableFetchRetry()
+vi.mock('../../src/fetch', async (importOriginal) => {
+  const mod = await importOriginal<typeof import('../../src/fetch')>()
+  return {
+    fetchWithRetries: (url: string, init?: RequestInit) => mod.fetchWithRetries(url, init, 0),
+  }
 })
 
 describe('fontsource', () => {
