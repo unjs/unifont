@@ -121,6 +121,9 @@ describe('fontshare', () => {
     expect(result?.styles).toEqual(expect.arrayContaining(['normal', 'italic']))
     expect(result?.subsets).toBeUndefined()
     expect(result?.weights).toEqual(expect.arrayContaining(['400', '300 900']))
+    expect(result?.axes).toEqual(expect.arrayContaining([
+      expect.objectContaining({ tag: 'wght', min: 300, max: 900 }),
+    ]))
 
     expect(await unifont.getFontProperties('XXX')).toEqual(undefined)
   })

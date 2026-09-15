@@ -173,6 +173,12 @@ export default defineFontProvider('fontshare', async (_options, ctx) => {
       const metrics = getMetrics(font.styles.find(style => style.default) ?? font.styles[0]!)
 
       return {
+        axes: font.axes.map(axis => ({
+          tag: axis.property,
+          min: axis.range_left,
+          max: axis.range_right,
+          defaultValue: axis.range_default,
+        })),
         formats: ['woff2', 'woff', 'ttf'],
         styles: [...styles],
         weights: [...weights],

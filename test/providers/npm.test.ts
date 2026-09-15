@@ -534,6 +534,36 @@ describe('npm', () => {
       restoreFetch()
     })
 
+    it('requests a stylesheet once when `style` and `main` name the same file', async () => {
+      const requested: string[] = []
+      const restoreFetch = mockFetchReturn(/same-field-package/, (url) => {
+        requested.push(String(url))
+        if (String(url).endsWith('/package.json')) {
+          return new Response(JSON.stringify({ name: 'same-field-package', style: 'dist/fonts.css', main: './dist/fonts.css' }))
+        }
+        if (String(url).endsWith('/dist/fonts.css')) {
+          return new Response(`
+            @font-face {
+              font-family: "Same Field";
+              font-weight: 400;
+              src: url("./files/index.woff2") format("woff2");
+            }
+          `)
+        }
+        return new Response('', { status: 404 })
+      })
+
+      const unifont = await createUnifont([providers.npm()])
+      const { fonts } = await unifont.resolveFont('Same Field', {
+        options: { npm: { package: 'same-field-package' } },
+      })
+
+      expect(fonts.length).toBe(1)
+      expect(requested.filter(url => url.endsWith('/dist/fonts.css'))).toHaveLength(1)
+
+      restoreFetch()
+    })
+
     it('resolves nothing when the package declares only a JavaScript entry point', async () => {
       const requested: string[] = []
       const restoreFetch = mockFetchReturn(/styleless/, (url) => {

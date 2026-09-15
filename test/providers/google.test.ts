@@ -169,6 +169,15 @@ describe('google', () => {
     expect(await unifont.getFontProperties('XXX')).toEqual(undefined)
   })
 
+  it('reports the axes a family publishes', async () => {
+    const unifont = await createUnifont([providers.google()])
+    const result = await unifont.getFontProperties('Recursive')
+    expect(result?.axes).toEqual(expect.arrayContaining([
+      { tag: 'wght', min: 300, max: 1000, defaultValue: 400 },
+      expect.objectContaining({ tag: 'CASL' }),
+    ]))
+  })
+
   it('omits a variable weight range when the family has no wght axis', async () => {
     const restore = mockFetchReturn(/fonts\.google\.com\/metadata\/fonts/, () => new Response(JSON.stringify({
       familyMetadataList: [{
@@ -433,6 +442,74 @@ describe('google', () => {
       restore()
     })
 
+    it('instances the font file from the shared `variableAxis` option', async () => {
+      const { requests, restore } = mockCss2()
+      const unifont = await createUnifont([providers.google()])
+      const { fonts } = await unifont.resolveFont('Noto Sans', {
+        formats: ['woff2'],
+        styles: ['normal'],
+        weights: ['400'],
+        variableAxis: { wdth: [['62', '100']] },
+      })
+
+      expect(requests).toHaveBeenCalledWith('https://fonts.googleapis.com/css2?family=Noto Sans:ital,wdth,wght@0,62.5..100,400')
+      expect(fonts.every(font => !font.variationSettings)).toBe(true)
+      restore()
+    })
+
+    it('reports axes the family does not publish as unapplied', async () => {
+      const { restore } = mockCss2()
+      const unifont = await createUnifont([providers.google()])
+      const { fonts, variableAxis } = await unifont.resolveFont('Recursive', {
+        formats: ['woff2'],
+        styles: ['normal'],
+        weights: ['400'],
+        variableAxis: { CASL: [1], wdth: [75] },
+      })
+
+      expect(variableAxis).toEqual({
+        CASL: { values: ['1'], appliedAs: 'font-file' },
+        wdth: { values: ['75'], appliedAs: 'none' },
+      })
+      expect(fonts.every(font => !font.variationSettings)).toBe(true)
+      restore()
+    })
+
+    it('accepts numbers and range objects', async () => {
+      const { requests, restore } = mockCss2()
+      const unifont = await createUnifont([providers.google()])
+      await unifont.resolveFont('Noto Sans', {
+        formats: ['woff2'],
+        styles: ['normal'],
+        weights: ['400'],
+        variableAxis: { wdth: [{ min: 62, max: 100 }] },
+      })
+
+      expect(requests).toHaveBeenCalledWith('https://fonts.googleapis.com/css2?family=Noto Sans:ital,wdth,wght@0,62.5..100,400')
+      restore()
+    })
+
+    it('prefers family options over the shared `variableAxis` option', async () => {
+      const { requests, restore } = mockCss2()
+      const unifont = await createUnifont([providers.google()])
+      await unifont.resolveFont('Noto Sans', {
+        formats: ['woff2'],
+        styles: ['normal'],
+        weights: ['400'],
+        variableAxis: { wdth: [['62', '100']] },
+        options: {
+          google: {
+            experimental: {
+              variableAxis: { wdth: ['75'] },
+            },
+          },
+        },
+      })
+
+      expect(requests).toHaveBeenCalledWith('https://fonts.googleapis.com/css2?family=Noto Sans:ital,wdth,wght@0,75,400')
+      restore()
+    })
+
     it('clamps a single axis value into range and drops non-numeric ones', async () => {
       const { requests, restore } = mockCss2()
       const unifont = await createUnifont([providers.google()])
@@ -450,6 +527,20 @@ describe('google', () => {
       })
 
       expect(requests).toHaveBeenCalledWith('https://fonts.googleapis.com/css2?family=Archivo:ital,wdth,wght@0,125,400')
+      restore()
+    })
+
+    it('drops a weight range that is not numeric', async () => {
+      const { requests, restore } = mockCss2()
+      const unifont = await createUnifont([providers.google()])
+      const { fonts } = await unifont.resolveFont('Archivo', {
+        formats: ['woff2'],
+        styles: ['normal'],
+        weights: ['abc def'],
+      })
+
+      expect(fonts).toStrictEqual([])
+      expect(requests).not.toHaveBeenCalled()
       restore()
     })
 
