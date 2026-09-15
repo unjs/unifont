@@ -79,6 +79,9 @@ export default defineFontProvider('google', async (providerOptions: GoogleProvid
     const instanced: Record<string, string[]> = {}
 
     for (const [tag, values] of Object.entries(variableAxis ?? {})) {
+      // `wght` and `ital` are requested from the `weights` and `styles` options
+      if (tag === 'wght' || tag === 'ital')
+        continue
       const axis = fontAxes.get(tag)
       if (!axis || !values)
         continue

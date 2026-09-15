@@ -457,6 +457,25 @@ describe('google', () => {
       restore()
     })
 
+    it('does not request an axis resolved from weights or styles twice', async () => {
+      const { requests, restore } = mockCss2()
+      const unifont = await createUnifont([providers.google()])
+      const { variableAxis } = await unifont.resolveFont('Recursive', {
+        formats: ['woff2'],
+        styles: ['normal'],
+        weights: ['400'],
+        variableAxis: { wght: [500], ital: [1], CASL: [1] },
+      })
+
+      expect(requests).toHaveBeenCalledWith('https://fonts.googleapis.com/css2?family=Recursive:ital,wght,CASL@0,400,1')
+      expect(variableAxis).toMatchObject({
+        wght: { appliedAs: 'none' },
+        ital: { appliedAs: 'none' },
+        CASL: { appliedAs: 'font-file' },
+      })
+      restore()
+    })
+
     it('reports axes the family does not publish as unapplied', async () => {
       const { restore } = mockCss2()
       const unifont = await createUnifont([providers.google()])
