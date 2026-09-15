@@ -1,4 +1,4 @@
-import type { FontAxis, FontFaceData, FontFormat, FontStyles, ResolveFontOptions, VariableAxis, VariableAxisValue } from '../types'
+import type { FontAxis, FontFaceData, FontFormat, FontStyles, NormalizedVariableAxis, ProviderResolveFontOptions, VariableAxis, VariableAxisValue } from '../types'
 
 import { hash } from 'ohash'
 import { extractFontFaceData } from '../css/parse'
@@ -73,7 +73,7 @@ export default defineFontProvider('google', async (providerOptions: GoogleProvid
   }
 
   /** Resolves the axis values `css2` can be asked for, dropping axes the family does not publish. */
-  function getInstancedAxes(font: FontIndexMeta, options: ResolveFontOptions<GoogleFamilyOptions>) {
+  function getInstancedAxes(font: FontIndexMeta, options: ProviderResolveFontOptions<GoogleFamilyOptions>) {
     const variableAxis = normalizeVariableAxis(options.options?.experimental?.variableAxis ?? providerOptions.experimental?.variableAxis?.[font.family] ?? options.variableAxis)
     const fontAxes = new Map(font.axes.map(axis => [axis.tag, axis]))
     const instanced: Record<string, string[]> = {}
@@ -94,7 +94,7 @@ export default defineFontProvider('google', async (providerOptions: GoogleProvid
     return { variableAxis, instanced }
   }
 
-  async function getFontDetails(font: FontIndexMeta, options: ResolveFontOptions<GoogleFamilyOptions>) {
+  async function getFontDetails(font: FontIndexMeta, options: ProviderResolveFontOptions<GoogleFamilyOptions>) {
     // A family that publishes no italic (or no upright) answers 400 for the axis value it
     // does not have, so requested styles are narrowed to the ones the metadata lists.
     const availableStyles = getAvailableStyles(font)
@@ -238,7 +238,7 @@ export default defineFontProvider('google', async (providerOptions: GoogleProvid
         weights: [...weights],
       }
     },
-    async resolveFont(fontFamily, options: ResolveFontOptions<GoogleFamilyOptions>) {
+    async resolveFont(fontFamily, options: ProviderResolveFontOptions<GoogleFamilyOptions>) {
       const font = googleFonts.find(font => font.family === fontFamily)
       if (!font) {
         return
@@ -250,13 +250,25 @@ export default defineFontProvider('google', async (providerOptions: GoogleProvid
       return {
         fonts: await ctx.storage.getItem(`google:${fontFamily}-${hash(options)}-data.json`, () => getFontDetails(font, options)),
         fallbacks: getFallbacks(font.category),
-        ...(variableAxis ? { appliedVariableAxis: Object.keys(instanced) } : {}),
+        ...(variableAxis ? { appliedVariableAxis: toNormalizedValues(instanced) } : {}),
       }
     },
   }
 })
 
 /** internal */
+
+/** Expresses the values requested from `css2` (`62.5..100`) in the shape unifont reports. */
+function toNormalizedValues(instanced: Record<string, string[]>): NormalizedVariableAxis {
+  const normalized: NormalizedVariableAxis = {}
+  for (const [tag, values] of Object.entries(instanced)) {
+    normalized[tag] = values.map((value) => {
+      const [min, max] = value.split('..')
+      return max === undefined ? min! : [min!, max]
+    })
+  }
+  return normalized
+}
 
 function clampAxisValue(value: string | [string, string], axis: FontAxis): string | undefined {
   if (!Array.isArray(value)) {

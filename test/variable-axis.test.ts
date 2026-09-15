@@ -22,7 +22,7 @@ const instancingProvider = defineFontProvider('instancing', async () => {
     async resolveFont(family, options) {
       return {
         fonts: [{ src: [{ url: `https://example.com/${encodeURIComponent(family)}.woff2` }] }],
-        appliedVariableAxis: Object.keys(options.variableAxis ?? {}),
+        appliedVariableAxis: options.variableAxis,
       }
     },
   }
@@ -33,7 +33,7 @@ const partiallyInstancingProvider = defineFontProvider('partially-instancing', a
     async resolveFont(family, options) {
       return {
         fonts: [{ src: [{ url: `https://example.com/${encodeURIComponent(family)}.woff2` }] }],
-        appliedVariableAxis: Object.keys(options.variableAxis ?? {}).filter(tag => tag === 'CASL'),
+        appliedVariableAxis: options.variableAxis?.CASL ? { CASL: options.variableAxis.CASL } : {},
       }
     },
   }
@@ -148,6 +148,23 @@ describe('variableAxis resolve option', () => {
       CASL: { values: ['1'], appliedAs: 'font-file' },
       MONO: { values: ['1'], appliedAs: 'none' },
     })
+  })
+
+  it('should report the values a provider instanced, not the values requested', async () => {
+    const provider = defineFontProvider('clamping', async () => ({
+      async resolveFont(family: string) {
+        return {
+          fonts: [{ src: [{ url: `https://example.com/${encodeURIComponent(family)}.woff2` }] }],
+          appliedVariableAxis: { wdth: ['75'] },
+        }
+      },
+    }))
+    const unifont = await createUnifont([provider()])
+    const { variableAxis } = await unifont.resolveFont('Recursive', {
+      variableAxis: { wdth: [{ min: 62, max: 100 }] },
+    })
+
+    expect(variableAxis).toEqual({ wdth: { values: ['75'], appliedAs: 'font-file' } })
   })
 
   it('should not expose the instanced axes a provider reports', async () => {

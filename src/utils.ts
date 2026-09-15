@@ -1,4 +1,4 @@
-import type { FontFaceData, FontFormat, FontStyles, LocalFontSource, NormalizedVariableAxis, ProviderDefinition, ProviderFactory, RemoteFontSource, ResolvedVariableAxis, ResolveFontOptions, ResolveFontResult, VariableAxis, VariableAxisBound } from './types'
+import type { FontFaceData, FontFormat, FontStyles, LocalFontSource, NormalizedVariableAxis, ProviderDefinition, ProviderFactory, RemoteFontSource, ResolvedVariableAxis, ResolveFontOptions, ResolveFontResult, VariableAxisBound } from './types'
 import { findAll, generate, parse } from 'css-tree'
 import { hash } from 'ohash'
 
@@ -137,20 +137,20 @@ export function normalizeVariableAxis(variableAxis: ResolveFontOptions['variable
 
 /**
  * Expresses single requested axis values as `font-variation-settings` (`"<tag>" <value>`, comma
- * separated) and reports what became of every requested axis. A provider that lists the axes its
- * font file carries in `applied` is taken at its word, and no descriptor is written.
+ * separated) and reports what became of every requested axis. A provider that lists what its font
+ * file carries in `applied` is taken at its word, and no descriptor is written.
  */
-export function applyVariableAxis(fonts: FontFaceData[], variableAxis: NormalizedVariableAxis | undefined, applied?: VariableAxis[]): { fonts: FontFaceData[], variableAxis: ResolveFontResult['variableAxis'] } {
+export function applyVariableAxis(fonts: FontFaceData[], variableAxis: NormalizedVariableAxis | undefined, applied?: NormalizedVariableAxis): { fonts: FontFaceData[], variableAxis: ResolveFontResult['variableAxis'] } {
   if (!variableAxis)
     return { fonts, variableAxis: undefined }
 
   const settings: string[] = []
   const resolved: Partial<Record<string, ResolvedVariableAxis>> = {}
-  const appliedTags = new Set(applied)
 
   for (const [tag, values] of Object.entries(variableAxis)) {
-    if (appliedTags.has(tag)) {
-      resolved[tag] = { values: values!, appliedAs: 'font-file' }
+    const appliedValues = applied?.[tag]
+    if (appliedValues) {
+      resolved[tag] = { values: appliedValues, appliedAs: 'font-file' }
       continue
     }
     if (applied) {

@@ -1,5 +1,5 @@
 import type { Storage } from './cache'
-import type { FontProperties, InitializedProvider, Provider, ProviderContext, ResolveFontOptions, ResolveFontResult } from './types'
+import type { FontProperties, InitializedProvider, Provider, ProviderContext, ProviderResolveFontOptions, ResolveFontOptions, ResolveFontResult } from './types'
 import { createAPIFetch } from './api-base'
 import { createAsyncStorage, memoryStorage } from './cache'
 import { installProxyDispatcher } from './env-proxy'
@@ -41,7 +41,7 @@ export interface Unifont<T extends Provider[]> {
   listFonts: (providers?: T[number]['_name'][]) => Promise<string[] | undefined>
 }
 
-export const defaultResolveOptions: ResolveFontOptions = {
+export const defaultResolveOptions: ProviderResolveFontOptions = {
   weights: ['400'],
   styles: ['normal', 'italic'] as const,
   subsets: [
@@ -108,8 +108,9 @@ export async function createUnifont<T extends [Provider, ...Provider[]]>(provide
       provider?: T[number]['_name']
     }
   > {
-    const variableAxis = normalizeVariableAxis(options.variableAxis)
-    const mergedOptions = { ...defaultResolveOptions, ...options, ...(variableAxis ? { variableAxis } : {}) }
+    const { variableAxis: requestedVariableAxis, ...resolveOptions } = options
+    const variableAxis = normalizeVariableAxis(requestedVariableAxis)
+    const mergedOptions = { ...defaultResolveOptions, ...resolveOptions, ...(variableAxis ? { variableAxis } : {}) }
     for (const id of providers) {
       const provider = stack[id]
 

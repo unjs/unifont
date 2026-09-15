@@ -64,6 +64,11 @@ export interface ResolveFontOptions<FamilyOptions extends Record<string, any> | 
   options?: [FamilyOptions] extends [never] ? undefined : FamilyOptions
 }
 
+/** The options a provider receives, with every `variableAxis` value normalised. */
+export interface ProviderResolveFontOptions<FamilyOptions extends Record<string, any> | never = never> extends Omit<ResolveFontOptions<FamilyOptions>, 'variableAxis'> {
+  variableAxis?: NormalizedVariableAxis
+}
+
 export interface RemoteFontSource {
   url: string
   originalURL?: string
@@ -148,10 +153,10 @@ export interface ResolveFontResult {
    */
   variableAxis?: Partial<Record<VariableAxis, ResolvedVariableAxis>>
   /**
-   * Axes the returned font file is instanced or limited to, set by providers that instance.
-   * unifont derives `variableAxis` from it and does not pass it on.
+   * Values the returned font file is instanced or limited to, keyed by axis tag, set by providers
+   * that instance. unifont derives `variableAxis` from it and does not pass it on.
    */
-  appliedVariableAxis?: VariableAxis[]
+  appliedVariableAxis?: NormalizedVariableAxis
   /**
    * Return data used to generate @font-face declarations.
    * @see https://developer.mozilla.org/en-US/docs/Web/CSS/@font-face
@@ -196,7 +201,7 @@ export interface InitializedProvider<
 > {
   resolveFont: (
     family: string,
-    options: ResolveFontOptions<FamilyOptions>,
+    options: ProviderResolveFontOptions<FamilyOptions>,
   ) => Awaitable<ResolveFontResult | undefined>
   /**
    * Returns the properties available for a font family, or `undefined` when the
