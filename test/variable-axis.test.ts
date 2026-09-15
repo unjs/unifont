@@ -12,7 +12,7 @@ const variableFileProvider = defineFontProvider('variable-file', async () => {
 const pinnedProvider = defineFontProvider('pinned', async () => {
   return {
     async resolveFont(family) {
-      return { fonts: [{ src: [{ url: `https://example.com/${encodeURIComponent(family)}.woff2` }], variationSettings: '"CASL" 0.5' }] }
+      return { fonts: [{ src: [{ url: `https://example.com/${encodeURIComponent(family)}.woff2` }], variationSettings: '"CASL" 0.5, "MONO" 1' }] }
     },
   }
 })
@@ -127,13 +127,26 @@ describe('variableAxis resolve option', () => {
     expect(variableAxis).toBeUndefined()
   })
 
-  it('should not override variation settings set by the provider', async () => {
+  it('should set a requested axis in variation settings the provider wrote', async () => {
     const unifont = await createUnifont([pinnedProvider()])
-    const { fonts } = await unifont.resolveFont('Recursive', {
+    const { fonts, variableAxis } = await unifont.resolveFont('Recursive', {
       variableAxis: { CASL: ['1'] },
     })
 
-    expect(fonts[0]!.variationSettings).toBe('"CASL" 0.5')
+    expect(fonts[0]!.variationSettings).toBe('"CASL" 1, "MONO" 1')
+    expect(variableAxis).toEqual({ CASL: { values: ['1'], appliedAs: 'variation-settings' } })
+  })
+
+  it('should keep variation settings it cannot parse', async () => {
+    const provider = defineFontProvider('unparsed', async () => ({
+      async resolveFont(family: string) {
+        return { fonts: [{ src: [{ url: `https://example.com/${encodeURIComponent(family)}.woff2` }], variationSettings: 'inherit' }] }
+      },
+    }))
+    const unifont = await createUnifont([provider()])
+    const { fonts } = await unifont.resolveFont('Recursive', { variableAxis: { CASL: [1] } })
+
+    expect(fonts[0]!.variationSettings).toBe('inherit, "CASL" 1')
   })
 
   it('should leave providers that instance the font file alone', async () => {

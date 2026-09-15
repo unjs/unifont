@@ -144,7 +144,7 @@ export function applyVariableAxis(fonts: FontFaceData[], variableAxis: Normalize
   if (!variableAxis)
     return { fonts, variableAxis: undefined }
 
-  const settings: string[] = []
+  const settings = new Map<string, string>()
   const resolved: Partial<Record<string, ResolvedVariableAxis>> = {}
 
   for (const [tag, values] of Object.entries(variableAxis)) {
@@ -163,17 +163,37 @@ export function applyVariableAxis(fonts: FontFaceData[], variableAxis: Normalize
       continue
     }
     resolved[tag] = { values: values!, appliedAs: 'variation-settings' }
-    settings.push(`"${tag}" ${value}`)
+    settings.set(tag, value)
   }
 
-  if (settings.length === 0)
+  if (settings.size === 0)
     return { fonts, variableAxis: resolved }
 
-  const variationSettings = settings.join(', ')
   return {
-    fonts: fonts.map(font => font.variationSettings ? font : { ...font, variationSettings }),
+    fonts: fonts.map(font => ({ ...font, variationSettings: mergeVariationSettings(font.variationSettings, settings) })),
     variableAxis: resolved,
   }
+}
+
+const VARIATION_SETTING_RE = /^["']([^"']+)["']\s+(\S.*)$/
+
+/** Sets a value per axis tag in a `font-variation-settings` descriptor, leaving other tags as they are. */
+function mergeVariationSettings(variationSettings: string | undefined, settings: Map<string, string>): string {
+  const merged = new Map(settings)
+  const unparsed: string[] = []
+
+  for (const entry of variationSettings?.split(',') ?? []) {
+    const [, tag, value] = entry.trim().match(VARIATION_SETTING_RE) ?? []
+    if (!tag) {
+      unparsed.push(entry.trim())
+      continue
+    }
+    if (!merged.has(tag)) {
+      merged.set(tag, value!)
+    }
+  }
+
+  return [...unparsed, ...Array.from(merged, ([tag, value]) => `"${tag}" ${value}`)].join(', ')
 }
 
 export function splitCssIntoSubsets(input: string): { subset: string | null, css: string }[] {
