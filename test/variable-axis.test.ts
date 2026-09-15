@@ -108,6 +108,18 @@ describe('variableAxis resolve option', () => {
     expect(variableAxis).toEqual({ CRSV: { values: ['1'], appliedAs: 'variation-settings' } })
   })
 
+  it('should report nothing when no axis survives normalisation', async () => {
+    const resolveFont = vi.fn(() => ({ fonts: [] }))
+    const provider = defineFontProvider('recording', async () => ({ resolveFont }))
+    const unifont = await createUnifont([provider()])
+    const { variableAxis } = await unifont.resolveFont('Recursive', {
+      variableAxis: { CASL: ['not-a-number'], MONO: [] },
+    })
+
+    expect(variableAxis).toBeUndefined()
+    expect(resolveFont).toHaveBeenCalledWith('Recursive', expect.not.objectContaining({ variableAxis: expect.anything() }))
+  })
+
   it('should report nothing when no axes are requested', async () => {
     const unifont = await createUnifont([variableFileProvider()])
     const { variableAxis } = await unifont.resolveFont('Recursive')

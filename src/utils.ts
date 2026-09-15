@@ -132,7 +132,7 @@ export function normalizeVariableAxis(variableAxis: ResolveFontOptions['variable
       normalized[tag] = normalizedValues
   }
 
-  return normalized
+  return Object.keys(normalized).length > 0 ? normalized : undefined
 }
 
 /**
