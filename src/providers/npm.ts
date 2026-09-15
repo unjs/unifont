@@ -107,7 +107,8 @@ export interface NpmFamilyOptions {
    * When not specified, per-weight and per-style entry points
    * (`<weight>.css`, `<weight>-italic.css`) are resolved for the requested
    * weights and styles, falling back to `index.css` and then to the
-   * stylesheet declared in the package's `package.json` `style` field.
+   * stylesheet declared in the package's `package.json` `style` or `main`
+   * field.
    *
    * When set, and the file declares exactly one family, that family is used
    * whatever its name. This is how icon fonts that name their face something
@@ -596,8 +597,8 @@ export default defineFontProvider('npm', (providerOptions: NpmProviderOptions, c
     return cleanFontFaces(fontFaces, formats)
   }
 
-  /** Stylesheet declared by the package's `package.json` `style` field. */
-  async function resolveStyleField(pkgName: string, pkgVersion: string): Promise<string | null> {
+  /** Stylesheets declared by the package's `package.json`, `style` before `main`. */
+  async function resolvePackageJsonStylesheets(pkgName: string, pkgVersion: string): Promise<string[]> {
     const read = async () => {
       if (readFile) {
         const path = await resolvePath(`${pkgName}/package.json`)
@@ -614,20 +615,26 @@ export default defineFontProvider('npm', (providerOptions: NpmProviderOptions, c
 
     const contents = await read()
     if (!contents) {
-      return null
+      return []
     }
 
+    const files: string[] = []
     try {
-      const parsed = JSON.parse(contents) as { style?: string }
-      if (typeof parsed.style === 'string' && parsed.style.endsWith('.css')) {
-        return normaliseCssFile(parsed.style)
+      const parsed = JSON.parse(contents) as { style?: string, main?: string }
+      for (const field of [parsed.style, parsed.main]) {
+        if (typeof field === 'string' && field.endsWith('.css')) {
+          const file = normaliseCssFile(field)
+          if (!files.includes(file)) {
+            files.push(file)
+          }
+        }
       }
     }
     catch {
       // Not a usable package.json
     }
 
-    return null
+    return files
   }
 
   async function resolveCandidates(pkgName: string, pkgVersion: string, candidates: string[][], family: string, formats: ResolveFontOptions['formats'], allowAnyFamily: boolean): Promise<FontFaceData[] | null> {
@@ -660,12 +667,13 @@ export default defineFontProvider('npm', (providerOptions: NpmProviderOptions, c
       return resolved
     }
 
-    const styleFile = await resolveStyleField(pkgName, pkgVersion)
-    if (!styleFile || candidates.some(files => files.includes(styleFile))) {
+    const declared = await resolvePackageJsonStylesheets(pkgName, pkgVersion)
+    const fallbacks = declared.filter(file => !candidates.some(files => files.includes(file))).map(file => [file])
+    if (fallbacks.length === 0) {
       return null
     }
 
-    return await resolveCandidates(pkgName, pkgVersion, [[styleFile]], family, formats, false)
+    return await resolveCandidates(pkgName, pkgVersion, fallbacks, family, formats, false)
   }
 
   return {
