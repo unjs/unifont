@@ -1,0 +1,152 @@
+import { describe, expect, it, vi } from 'vitest'
+import { createUnifont, defineFontProvider } from '../src'
+
+const variableFileProvider = defineFontProvider('variable-file', async () => {
+  return {
+    async resolveFont(family) {
+      return { fonts: [{ src: [{ url: `https://example.com/${encodeURIComponent(family)}.woff2` }] }] }
+    },
+  }
+})
+
+const pinnedProvider = defineFontProvider('pinned', async () => {
+  return {
+    async resolveFont(family) {
+      return { fonts: [{ src: [{ url: `https://example.com/${encodeURIComponent(family)}.woff2` }], variationSettings: '"CASL" 0.5' }] }
+    },
+  }
+})
+
+const instancingProvider = defineFontProvider('instancing', async () => {
+  return {
+    async resolveFont(family, options) {
+      return {
+        fonts: [{ src: [{ url: `https://example.com/${encodeURIComponent(family)}.woff2` }] }],
+        appliedVariableAxis: Object.keys(options.variableAxis ?? {}),
+      }
+    },
+  }
+})
+
+const partiallyInstancingProvider = defineFontProvider('partially-instancing', async () => {
+  return {
+    async resolveFont(family, options) {
+      return {
+        fonts: [{ src: [{ url: `https://example.com/${encodeURIComponent(family)}.woff2` }] }],
+        appliedVariableAxis: Object.keys(options.variableAxis ?? {}).filter(tag => tag === 'CASL'),
+      }
+    },
+  }
+})
+
+describe('variableAxis resolve option', () => {
+  it('should set font-variation-settings for providers that serve a whole variable font', async () => {
+    const unifont = await createUnifont([variableFileProvider()])
+    const { fonts } = await unifont.resolveFont('Recursive', {
+      variableAxis: { CASL: ['1'], MONO: ['0'] },
+    })
+
+    expect(fonts[0]!.variationSettings).toBe('"CASL" 1, "MONO" 0')
+  })
+
+  it('should skip axes a single font face cannot represent and report them back', async () => {
+    const unifont = await createUnifont([variableFileProvider()])
+    const { fonts, variableAxis } = await unifont.resolveFont('Recursive', {
+      variableAxis: {
+        CASL: [['0', '1']],
+        CRSV: ['0', '1'],
+        MONO: ['not-a-number'],
+        wght: ['700'],
+        ital: [1],
+      },
+    })
+
+    expect(fonts[0]!.variationSettings).toBeUndefined()
+    expect(variableAxis).toEqual({
+      CASL: { values: [['0', '1']], appliedAs: 'none' },
+      CRSV: { values: ['0', '1'], appliedAs: 'none' },
+      wght: { values: ['700'], appliedAs: 'none' },
+      ital: { values: ['1'], appliedAs: 'none' },
+    })
+  })
+
+  it('should accept numbers and range objects', async () => {
+    const unifont = await createUnifont([variableFileProvider()])
+    const { fonts, variableAxis } = await unifont.resolveFont('Recursive', {
+      variableAxis: {
+        CASL: [1],
+        slnt: [{ min: -15, max: 0 }],
+        MONO: [{ min: 1, max: 1 }],
+      },
+    })
+
+    expect(fonts[0]!.variationSettings).toBe('"CASL" 1, "MONO" 1')
+    expect(variableAxis).toEqual({
+      CASL: { values: ['1'], appliedAs: 'variation-settings' },
+      MONO: { values: ['1'], appliedAs: 'variation-settings' },
+      slnt: { values: [['-15', '0']], appliedAs: 'none' },
+    })
+  })
+
+  it('should report nothing when no axes are requested', async () => {
+    const unifont = await createUnifont([variableFileProvider()])
+    const { variableAxis } = await unifont.resolveFont('Recursive')
+
+    expect(variableAxis).toBeUndefined()
+  })
+
+  it('should not override variation settings set by the provider', async () => {
+    const unifont = await createUnifont([pinnedProvider()])
+    const { fonts } = await unifont.resolveFont('Recursive', {
+      variableAxis: { CASL: ['1'] },
+    })
+
+    expect(fonts[0]!.variationSettings).toBe('"CASL" 0.5')
+  })
+
+  it('should leave providers that instance the font file alone', async () => {
+    const unifont = await createUnifont([instancingProvider()])
+    const { fonts, variableAxis } = await unifont.resolveFont('Recursive', {
+      variableAxis: { CASL: ['1'], slnt: [['-15', '0']] },
+    })
+
+    expect(fonts[0]!.variationSettings).toBeUndefined()
+    expect(variableAxis).toEqual({
+      CASL: { values: ['1'], appliedAs: 'font-file' },
+      slnt: { values: [['-15', '0']], appliedAs: 'font-file' },
+    })
+  })
+
+  it('should respect a provider reporting an axis it could not instance', async () => {
+    const unifont = await createUnifont([partiallyInstancingProvider()])
+    const { fonts, variableAxis } = await unifont.resolveFont('Recursive', {
+      variableAxis: { CASL: [1], MONO: [1] },
+    })
+
+    expect(fonts[0]!.variationSettings).toBeUndefined()
+    expect(variableAxis).toEqual({
+      CASL: { values: ['1'], appliedAs: 'font-file' },
+      MONO: { values: ['1'], appliedAs: 'none' },
+    })
+  })
+
+  it('should not expose the instanced axes a provider reports', async () => {
+    const unifont = await createUnifont([instancingProvider()])
+    const result = await unifont.resolveFont('Recursive', { variableAxis: { CASL: [1] } })
+
+    expect(result).not.toHaveProperty('appliedVariableAxis')
+  })
+
+  it('should normalise values before passing them to a provider', async () => {
+    const resolveFont = vi.fn(() => ({ fonts: [] }))
+    const provider = defineFontProvider('recording', async () => ({ resolveFont }))
+    const unifont = await createUnifont([provider()])
+    await unifont.resolveFont('Recursive', {
+      variableAxis: { CASL: [1], slnt: [{ min: -15, max: 0 }] },
+    })
+
+    expect(resolveFont).toHaveBeenCalledWith('Recursive', expect.objectContaining({
+      variableAxis: { CASL: ['1'], slnt: [['-15', '0']] },
+    }))
+  })
+})

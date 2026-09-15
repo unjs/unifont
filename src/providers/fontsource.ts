@@ -1,4 +1,4 @@
-import type { FontFaceData, ProviderContext, ResolveFontOptions } from '../types'
+import type { FontAxis, FontFaceData, ProviderContext, ResolveFontOptions } from '../types'
 
 import { hash } from 'ohash'
 import { cleanFontFaces, defineFontProvider, filterKnownStyles, prepareWeights } from '../utils'
@@ -104,12 +104,22 @@ export default defineFontProvider('fontsource', async (_options, ctx) => {
       if (!font)
         return
       const weights = [...font.weights.map(String)]
+      let axes: FontAxis[] | undefined
       if (font.variable) {
         const variableAxes = await getVariableAxes(ctx, font).catch(() => undefined)
         if (variableAxes?.axes.wght)
           weights.push(`${variableAxes.axes.wght.min} ${variableAxes.axes.wght.max}`)
+        if (variableAxes) {
+          axes = Object.entries(variableAxes.axes).map(([tag, axis]) => ({
+            tag,
+            min: Number(axis.min),
+            max: Number(axis.max),
+            defaultValue: Number(axis.default),
+          }))
+        }
       }
       return {
+        ...(axes ? { axes } : {}),
         formats: ['woff2', 'woff', 'ttf'],
         styles: filterKnownStyles(font.styles),
         subsets: font.subsets,

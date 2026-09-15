@@ -1,4 +1,4 @@
-import type { FontFaceData, FontFormat, FontStyles, LocalFontSource, ProviderDefinition, ProviderFactory, RemoteFontSource } from './types'
+import type { FontFaceData, FontFormat, FontStyles, LocalFontSource, NormalizedVariableAxis, ProviderDefinition, ProviderFactory, RemoteFontSource, ResolvedVariableAxis, ResolveFontOptions, ResolveFontResult, VariableAxis, VariableAxisBound } from './types'
 import { findAll, generate, parse } from 'css-tree'
 import { hash } from 'ohash'
 
@@ -92,6 +92,88 @@ function closestTo(sortedValues: number[], target: number): number {
     }
   }
   return closest
+}
+
+// Resolved from the `weights` and `styles` options, which select between font faces.
+const AXES_RESOLVED_AS_FONT_FACES = new Set(['wght', 'ital'])
+
+function normalizeBound(value: VariableAxisBound): string | undefined {
+  const parsed = Number(value)
+  return Number.isFinite(parsed) ? String(parsed) : undefined
+}
+
+/**
+ * Normalises a `variableAxis` request to one shape: a single value as a string, an inclusive range
+ * as a `[min, max]` pair. Values that are not finite numbers are dropped.
+ */
+export function normalizeVariableAxis(variableAxis: ResolveFontOptions['variableAxis']): NormalizedVariableAxis | undefined {
+  if (!variableAxis)
+    return undefined
+
+  const normalized: NormalizedVariableAxis = {}
+
+  for (const [tag, values] of Object.entries(variableAxis)) {
+    const normalizedValues: (string | [string, string])[] = []
+    for (const value of values ?? []) {
+      if (typeof value === 'number' || typeof value === 'string') {
+        const normalizedValue = normalizeBound(value)
+        if (normalizedValue !== undefined)
+          normalizedValues.push(normalizedValue)
+        continue
+      }
+      const [min, max] = Array.isArray(value) ? value : [value.min, value.max]
+      const normalizedMin = normalizeBound(min)
+      const normalizedMax = normalizeBound(max)
+      if (normalizedMin === undefined || normalizedMax === undefined)
+        continue
+      normalizedValues.push(normalizedMin === normalizedMax ? normalizedMin : [normalizedMin, normalizedMax])
+    }
+    if (normalizedValues.length > 0)
+      normalized[tag] = normalizedValues
+  }
+
+  return normalized
+}
+
+/**
+ * Expresses single requested axis values as `font-variation-settings` (`"<tag>" <value>`, comma
+ * separated) and reports what became of every requested axis. A provider that lists the axes its
+ * font file carries in `applied` is taken at its word, and no descriptor is written.
+ */
+export function applyVariableAxis(fonts: FontFaceData[], variableAxis: NormalizedVariableAxis | undefined, applied?: VariableAxis[]): { fonts: FontFaceData[], variableAxis: ResolveFontResult['variableAxis'] } {
+  if (!variableAxis)
+    return { fonts, variableAxis: undefined }
+
+  const settings: string[] = []
+  const resolved: Partial<Record<string, ResolvedVariableAxis>> = {}
+  const appliedTags = new Set(applied)
+
+  for (const [tag, values] of Object.entries(variableAxis)) {
+    if (appliedTags.has(tag)) {
+      resolved[tag] = { values: values!, appliedAs: 'font-file' }
+      continue
+    }
+    if (applied) {
+      resolved[tag] = { values: values!, appliedAs: 'none' }
+      continue
+    }
+    const value = values?.length === 1 ? values[0] : undefined
+    if (typeof value !== 'string' || AXES_RESOLVED_AS_FONT_FACES.has(tag)) {
+      resolved[tag] = { values: values!, appliedAs: 'none' }
+      continue
+    }
+    resolved[tag] = { values: values!, appliedAs: 'variation-settings' }
+    settings.push(`"${tag}" ${value}`)
+  }
+
+  if (settings.length === 0)
+    return { fonts, variableAxis: resolved }
+
+  const variationSettings = settings.join(', ')
+  return {
+    fonts: fonts.map(font => font.variationSettings ? font : { ...font, variationSettings }),
+    variableAxis: resolved,
+  }
 }
 
 export function splitCssIntoSubsets(input: string): { subset: string | null, css: string }[] {

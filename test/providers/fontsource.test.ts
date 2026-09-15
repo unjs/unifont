@@ -467,6 +467,9 @@ describe('fontsource', () => {
     expect(result?.styles).toEqual(expect.arrayContaining(['normal', 'italic']))
     expect(result?.subsets).toEqual(expect.arrayContaining(['latin', 'latin-ext']))
     expect(result?.weights).toEqual(expect.arrayContaining(['400', '100 900']))
+    expect(result?.axes).toEqual(expect.arrayContaining([
+      expect.objectContaining({ tag: 'wght' }),
+    ]))
 
     expect(await unifont.getFontProperties('XXX')).toEqual(undefined)
   })

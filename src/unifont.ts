@@ -3,6 +3,7 @@ import type { FontProperties, InitializedProvider, Provider, ProviderContext, Re
 import { createAPIFetch } from './api-base'
 import { createAsyncStorage, memoryStorage } from './cache'
 import { installProxyDispatcher } from './env-proxy'
+import { applyVariableAxis, normalizeVariableAxis } from './utils'
 
 export interface UnifontOptions {
   storage?: Storage
@@ -107,7 +108,8 @@ export async function createUnifont<T extends [Provider, ...Provider[]]>(provide
       provider?: T[number]['_name']
     }
   > {
-    const mergedOptions = { ...defaultResolveOptions, ...options }
+    const variableAxis = normalizeVariableAxis(options.variableAxis)
+    const mergedOptions = { ...defaultResolveOptions, ...options, ...(variableAxis ? { variableAxis } : {}) }
     for (const id of providers) {
       const provider = stack[id]
 
@@ -117,9 +119,13 @@ export async function createUnifont<T extends [Provider, ...Provider[]]>(provide
           options: mergedOptions.options?.[id] as any,
         })
         if (result) {
+          const { appliedVariableAxis, ...providerResult } = result
+          const { fonts, variableAxis: resolvedVariableAxis } = applyVariableAxis(result.fonts, variableAxis, appliedVariableAxis)
           return {
             provider: id,
-            ...result,
+            ...providerResult,
+            ...(resolvedVariableAxis ? { variableAxis: resolvedVariableAxis } : {}),
+            fonts,
           }
         }
       }
