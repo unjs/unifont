@@ -15,7 +15,7 @@ It's deliberately small. It reads metadata and hands it to you. It doesn't downl
 
 `unifont` is maintained by [Daniel Roe](https://roe.dev), with [qwerzl](https://github.com/qwerzl) and [florian-lefebvre](https://florian-lefebvre.dev), at [github.com/unjs/unifont](https://github.com/unjs/unifont). It's published to npm as [`unifont`](https://www.npmjs.com/package/unifont) under the MIT licence, and there's no company behind it and nothing to sign up for.
 
-It's used by [`@nuxt/fonts`](https://fonts.nuxt.com) and [`fontless`](https://github.com/unjs/fontaine/tree/main/packages/fontless), which wrap it to download, self-host and metric-match fonts automatically in Nuxt and Vite apps. If you want fonts to work on a site rather than to query font metadata yourself, those are the better starting point.
+It's used by [`@nuxt/fonts`](https://fonts.nuxt.com) and [`fontless`](https://github.com/unjs/fontaine/tree/main/packages/fontless), which wrap it to download, self-host and metric-match fonts automatically in Nuxt and Vite apps. If you want fonts to work on a site rather than to query font metadata yourself, those are the better starting point: [Reducing layout shift](/docs/layout-shift) shows how to set one up.
 
 ## What this site is
 

@@ -182,7 +182,7 @@ await unifont.getFontProperties('Switzer')
         <p>
           Use
           <a href="https://github.com/unjs/fontaine/tree/main/packages/fontless">fontless</a> in any Vite app, or
-          <a href="https://fonts.nuxt.com">@nuxt/fonts</a> in Nuxt. They wrap unifont, download and host your fonts, and inject metric fallbacks to reduce layout shift.
+          <a href="https://fonts.nuxt.com">@nuxt/fonts</a> in Nuxt. They wrap unifont, download and host your fonts, and inject metric fallbacks to reduce layout shift. Or <NuxtLink to="/docs/layout-shift">find out how to build the same thing yourself with fontaine</NuxtLink>.
         </p>
       </div>
       <figure class="prose__figure">
