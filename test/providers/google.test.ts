@@ -530,6 +530,20 @@ describe('google', () => {
       restore()
     })
 
+    it('drops a weight range that is not numeric', async () => {
+      const { requests, restore } = mockCss2()
+      const unifont = await createUnifont([providers.google()])
+      const { fonts } = await unifont.resolveFont('Archivo', {
+        formats: ['woff2'],
+        styles: ['normal'],
+        weights: ['abc def'],
+      })
+
+      expect(fonts).toStrictEqual([])
+      expect(requests).not.toHaveBeenCalled()
+      restore()
+    })
+
     it('dedupes weight ranges that clamp onto the same value', async () => {
       const { requests, restore } = mockCss2()
       const unifont = await createUnifont([providers.google()])

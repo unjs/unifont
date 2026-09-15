@@ -88,6 +88,26 @@ describe('variableAxis resolve option', () => {
     })
   })
 
+  it('should drop a range with a value that is not numeric', async () => {
+    const unifont = await createUnifont([variableFileProvider()])
+    const { fonts, variableAxis } = await unifont.resolveFont('Recursive', {
+      variableAxis: { slnt: [['not-a-number', '0']], CASL: [[0, 1]] },
+    })
+
+    expect(fonts[0]!.variationSettings).toBeUndefined()
+    expect(variableAxis).toEqual({ CASL: { values: [['0', '1']], appliedAs: 'none' } })
+  })
+
+  it('should ignore an axis with no values', async () => {
+    const unifont = await createUnifont([variableFileProvider()])
+    const { fonts, variableAxis } = await unifont.resolveFont('Recursive', {
+      variableAxis: { CASL: undefined, MONO: [], CRSV: [1] },
+    })
+
+    expect(fonts[0]!.variationSettings).toBe('"CRSV" 1')
+    expect(variableAxis).toEqual({ CRSV: { values: ['1'], appliedAs: 'variation-settings' } })
+  })
+
   it('should report nothing when no axes are requested', async () => {
     const unifont = await createUnifont([variableFileProvider()])
     const { variableAxis } = await unifont.resolveFont('Recursive')
