@@ -8,9 +8,10 @@ function fetchFamily(family: string) {
 
 export type FamilySummary = Omit<FamilyResponse, 'fonts'> & { faces: number }
 
-/** Keyed on the family alone, so narrowing a facet refetches against the same entry. */
-export function familyDataKey(family: string) {
-  return `font-${family}`
+/** Keyed on the family, so narrowing a facet refetches against the same entry. An explicit provider gets its own entry. */
+export function familyDataKey(family: string, provider?: string) {
+  const scope = provider ? `?provider=${encodeURIComponent(provider)}` : ''
+  return `font-${encodeURIComponent(family)}${scope}`
 }
 
 /** The face list is the largest thing the endpoint returns, and the page only counts it. */

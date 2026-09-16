@@ -2,7 +2,7 @@
 import type { TransferResponse } from '#shared/types'
 import { specimenAlias } from '#shared/featured'
 
-const route = useRoute()
+const route = useRoute('fonts-family')
 const router = useRouter()
 
 const family = computed(() => String(route.params.family ?? ''))
@@ -18,7 +18,7 @@ const provider = computed(() => String(route.query.provider ?? ''))
 // than blanking the page.
 const { data, status, error, refresh } = await useFetch(() => `/api/v1/fonts/${encodeURIComponent(family.value)}`, {
   query: { weights, subsets, styles, provider },
-  key: () => familyDataKey(family.value),
+  key: () => familyDataKey(family.value, provider.value),
   transform: toFamilySummary,
   getCachedData: (key, nuxtApp, ctx) => cachedFamilyData(key, nuxtApp, ctx.cause),
 })
