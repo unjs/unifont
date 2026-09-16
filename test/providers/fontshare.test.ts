@@ -2,8 +2,120 @@ import { afterEach, describe, expect, it } from 'vitest'
 import { createUnifont, providers } from '../../src'
 import { mockFetchReturn, sanitizeFontSource } from '../utils'
 
+interface FixtureStyle {
+  default?: boolean
+  is_italic?: boolean
+  is_variable?: boolean
+  weight: { number: number, weight: number }
+  properties: { ascending_leading: number, cap_height: number, x_height: number }
+}
+
+interface FixtureFamily {
+  slug: string
+  name: string
+  category: string
+  axes: Array<{ name: string, property: string, range_default: number, range_left: number, range_right: number }>
+  styles: FixtureStyle[]
+}
+
+function family(slug: string, name: string, axis: [number, number], ascent: number, styles: Array<[weight: number, number: number, capHeight: number, xHeight: number, flags?: Partial<FixtureStyle>]>): FixtureFamily {
+  return {
+    slug,
+    name,
+    category: 'Sans',
+    axes: [{ name: 'wght', property: 'wght', range_default: axis[0], range_left: axis[0], range_right: axis[1] }],
+    styles: styles.map(([weight, number, capHeight, xHeight, flags]) => ({
+      default: false,
+      is_italic: false,
+      is_variable: false,
+      ...flags,
+      weight: { number, weight },
+      properties: { ascending_leading: ascent, cap_height: capHeight, x_height: xHeight },
+    })),
+  }
+}
+
+const fixtures: FixtureFamily[] = [
+  family('satoshi', 'Satoshi', [300, 900], 1010, [
+    [300, 300, 710, 480],
+    [300, 301, 710, 480, { is_italic: true }],
+    [400, 400, 716, 484],
+    [400, 401, 716, 484, { is_italic: true }],
+    [500, 500, 723, 489],
+    [500, 501, 723, 489, { is_italic: true }],
+    [700, 700, 731, 494],
+    [700, 701, 731, 494, { is_italic: true }],
+    [900, 900, 740, 500],
+    [900, 901, 740, 500, { is_italic: true }],
+    [0, 1, 740, 500, { is_variable: true, default: true }],
+    [0, 2, 740, 500, { is_variable: true, is_italic: true }],
+  ]),
+  family('panchang', 'Panchang', [200, 800], 970, [
+    [200, 200, 682, 491],
+    [300, 300, 682, 494],
+    [400, 400, 682, 498],
+    [500, 500, 682, 501],
+    [600, 600, 682, 505],
+    [700, 700, 682, 510],
+    [800, 800, 682, 517],
+    [0, 1, 682, 517, { is_variable: true, default: true }],
+  ]),
+  family('ranade', 'Ranade', [100, 700], 1000, [
+    [100, 100, 727, 521],
+    [100, 101, 727, 521, { is_italic: true }],
+    [300, 300, 727, 523],
+    [300, 301, 727, 523, { is_italic: true }],
+    [400, 400, 727, 525],
+    [400, 401, 727, 525, { is_italic: true }],
+    [500, 500, 727, 528],
+    [500, 501, 727, 528, { is_italic: true }],
+    [700, 700, 727, 531],
+    [700, 701, 727, 531, { is_italic: true }],
+    [0, 1, 727, 531, { is_variable: true, default: true }],
+    [0, 2, 727, 531, { is_variable: true, is_italic: true }],
+  ]),
+]
+
+function stylesheet(slug: string, numbers: string[]) {
+  const font = fixtures.find(f => f.slug === slug)!
+  const axis = font.axes[0]!
+  return numbers.map((number) => {
+    const style = font.styles.find(s => String(s.weight.number) === number)!
+    const weight = style.is_variable ? `${axis.range_left} ${axis.range_right}` : style.weight.weight
+    const file = `//cdn.fontshare.com/wf/${slug}-${number}`
+    return `@font-face {
+  font-family: '${font.name}';
+  src: url('${file}.woff2') format('woff2'),
+       url('${file}.woff') format('woff'),
+       url('${file}.ttf') format('truetype');
+  font-weight: ${weight};
+  font-display: swap;
+  font-style: ${style.is_italic ? 'italic' : 'normal'};
+}`
+  }).join('\n')
+}
+
+let restoreFetch: (() => void) | undefined
+
+function mockFontshare() {
+  restoreFetch = mockFetchReturn(/api\.fontshare\.com/, (request) => {
+    const url = String(request)
+    if (url.includes('/fonts?')) {
+      return new Response(JSON.stringify({ has_more: false, fonts: fixtures }))
+    }
+    const [slug, numbers] = url.split('f[]=')[1]!.split('@') as [string, string]
+    return new Response(stylesheet(slug, numbers.split(',')))
+  })
+}
+
 describe('fontshare', () => {
+  afterEach(() => {
+    restoreFetch?.()
+    restoreFetch = undefined
+  })
+
   it('works', async () => {
+    mockFontshare()
     const unifont = await createUnifont([providers.fontshare()])
     expect(await unifont.resolveFont('NonExistent Font').then(r => r.fonts)).toMatchInlineSnapshot(`[]`)
     expect(await unifont.resolveFont('Satoshi', { weights: ['1100'] }).then(r => r.fonts)).toMatchInlineSnapshot(`[]`)
@@ -36,6 +148,7 @@ describe('fontshare', () => {
   })
 
   it('handles italic styles', async () => {
+    mockFontshare()
     const unifont = await createUnifont([providers.fontshare()])
     const { fonts } = await unifont.resolveFont('Ranade', {
       styles: ['italic'],
@@ -114,6 +227,7 @@ describe('fontshare', () => {
   })
 
   it('handles getFontProperties correctly', async () => {
+    mockFontshare()
     const unifont = await createUnifont([providers.fontshare()])
     const result = await unifont.getFontProperties('Satoshi')
     expect(result?.provider).toBe('fontshare')
@@ -130,6 +244,7 @@ describe('fontshare', () => {
 
   describe('metrics', () => {
     it('reports metrics per font face', async () => {
+      mockFontshare()
       const unifont = await createUnifont([providers.fontshare()])
       const { fonts } = await unifont.resolveFont('Satoshi', { weights: ['300', '900'], styles: ['normal'] })
       expect(fonts.map(font => font.metrics)).toMatchInlineSnapshot(`
@@ -151,6 +266,7 @@ describe('fontshare', () => {
     })
 
     it('reports metrics for variable font faces', async () => {
+      mockFontshare()
       const unifont = await createUnifont([providers.fontshare()])
       const { fonts } = await unifont.resolveFont('Satoshi', { weights: ['300 900'], styles: ['normal'] })
       const variable = fonts.find(font => Array.isArray(font.weight))
@@ -159,6 +275,7 @@ describe('fontshare', () => {
     })
 
     it('reports metrics for the default style from getFontProperties', async () => {
+      mockFontshare()
       const unifont = await createUnifont([providers.fontshare()])
       const properties = await unifont.getFontProperties('Satoshi')
       expect(properties?.metrics).toMatchInlineSnapshot(`
@@ -175,7 +292,7 @@ describe('fontshare', () => {
       ['no properties', undefined, undefined],
       ['empty properties', {}, { unitsPerEm: 1000 }],
     ])('handles a style with %s', async (_name, properties, expected) => {
-      const restore = mockFetchReturn(/api\.fontshare\.com/, (request) => {
+      const restoreFixture = mockFetchReturn(/api\.fontshare\.com/, (request) => {
         const url = String(request)
         if (url.includes('/fonts?')) {
           return Promise.resolve({ ok: true, status: 200, json: () => Promise.resolve({
@@ -205,7 +322,7 @@ describe('fontshare', () => {
         expect((await unifont.getFontProperties('No Metrics'))?.metrics).toEqual(expected)
       }
       finally {
-        restore()
+        restoreFixture()
       }
     })
   })
