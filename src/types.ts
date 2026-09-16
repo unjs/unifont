@@ -21,13 +21,52 @@ export type FontStyles = 'normal' | 'italic' | 'oblique'
 
 export type FontFormat = keyof typeof formatMap
 
+/** A registered OpenType variation axis tag, such as `opsz`, `slnt` or `wdth`. */
+export type VariableAxis = 'opsz' | 'slnt' | 'wdth' | (string & {})
+
+export type VariableAxisBound = number | string
+
+/** A single axis value (`1`) or an inclusive range of values (`{ min: 0, max: 1 }`). */
+export type VariableAxisValue = VariableAxisBound | [VariableAxisBound, VariableAxisBound] | { min: VariableAxisBound, max: VariableAxisBound }
+
+/** A `variableAxis` request with every value normalised to a single value or a `[min, max]` pair. */
+export type NormalizedVariableAxis = Partial<Record<VariableAxis, (string | [string, string])[]>>
+
+export interface ResolvedVariableAxis {
+  values: (string | [string, string])[]
+  /**
+   * `font-file` when the file is instanced or limited to these values, `variation-settings` when
+   * they are in the descriptor, and `none` when they are left for you to apply.
+   */
+  appliedAs: 'font-file' | 'variation-settings' | 'none'
+}
+
+/** The range of values a family publishes for a variation axis. */
+export interface FontAxis {
+  tag: VariableAxis
+  min: number
+  max: number
+  defaultValue: number
+}
+
 export interface ResolveFontOptions<FamilyOptions extends Record<string, any> | never = never> {
   weights: string[]
   styles: FontStyles[]
   // TODO: improve support and support unicode range
   subsets: string[]
   formats: FontFormat[]
+  /**
+   * Values to request for variation axes other than weight and style, keyed by axis tag.
+   * `variableAxis` on the result reports what became of each one.
+   * @example { CASL: [1], slnt: [{ min: -15, max: 0 }] }
+   */
+  variableAxis?: Partial<Record<VariableAxis, VariableAxisValue[]>>
   options?: [FamilyOptions] extends [never] ? undefined : FamilyOptions
+}
+
+/** The options a provider receives, with every `variableAxis` value normalised. */
+export interface ProviderResolveFontOptions<FamilyOptions extends Record<string, any> | never = never> extends Omit<ResolveFontOptions<FamilyOptions>, 'variableAxis'> {
+  variableAxis?: NormalizedVariableAxis
 }
 
 export interface RemoteFontSource {
@@ -109,6 +148,16 @@ export interface FontFaceData {
 
 export interface ResolveFontResult {
   /**
+   * What became of each axis requested through `variableAxis`, for a consumer that can instance
+   * the font file itself. `undefined` when no axes were requested.
+   */
+  variableAxis?: Partial<Record<VariableAxis, ResolvedVariableAxis>>
+  /**
+   * Values the returned font file is instanced or limited to, keyed by axis tag, set by providers
+   * that instance. unifont derives `variableAxis` from it and does not pass it on.
+   */
+  appliedVariableAxis?: NormalizedVariableAxis
+  /**
    * Return data used to generate @font-face declarations.
    * @see https://developer.mozilla.org/en-US/docs/Web/CSS/@font-face
    */
@@ -135,6 +184,12 @@ export interface FontProperties {
    */
   formats?: FontFormat[]
   /**
+   * Variation axes the family publishes, for use with the `variableAxis` resolve option.
+   * `undefined` means the provider does not expose axis information, not that the family
+   * has no axes.
+   */
+  axes?: FontAxis[]
+  /**
    * Metrics for the family's default font face, if the provider knows them. Individual
    * faces may report different metrics from `resolveFont`.
    */
@@ -146,7 +201,7 @@ export interface InitializedProvider<
 > {
   resolveFont: (
     family: string,
-    options: ResolveFontOptions<FamilyOptions>,
+    options: ProviderResolveFontOptions<FamilyOptions>,
   ) => Awaitable<ResolveFontResult | undefined>
   /**
    * Returns the properties available for a font family, or `undefined` when the

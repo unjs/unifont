@@ -1,10 +1,8 @@
-import type { FontFaceData, FontFormat, FontStyles, ResolveFontOptions } from '../types'
+import type { FontAxis, FontFaceData, FontFormat, FontStyles, NormalizedVariableAxis, ProviderResolveFontOptions, VariableAxis, VariableAxisValue } from '../types'
 
 import { hash } from 'ohash'
 import { extractFontFaceData } from '../css/parse'
-import { cleanFontFaces, defineFontProvider, prepareWeights, splitCssIntoSubsets } from '../utils'
-
-type VariableAxis = 'opsz' | 'slnt' | 'wdth' | (string & {})
+import { cleanFontFaces, defineFontProvider, normalizeVariableAxis, prepareWeights, splitCssIntoSubsets } from '../utils'
 
 export interface GoogleProviderOptions {
   experimental?: {
@@ -12,7 +10,7 @@ export interface GoogleProviderOptions {
      * Experimental: Setting variable axis configuration on a per-font basis.
      */
     variableAxis?: {
-      [fontFamily: string]: Partial<Record<VariableAxis, ([string, string] | string)[]>>
+      [fontFamily: string]: Partial<Record<VariableAxis, VariableAxisValue[]>>
     }
     /**
      * Experimental: Specifying a list of glyphs to be included in the font for each font family.
@@ -29,7 +27,7 @@ export interface GoogleFamilyOptions {
     /**
      * Experimental: Setting variable axis configuration on a per-font basis.
      */
-    variableAxis?: Partial<Record<VariableAxis, ([string, string] | string)[]>>
+    variableAxis?: Partial<Record<VariableAxis, VariableAxisValue[]>>
     /**
      * Experimental: Specifying a list of glyphs to be included in the font for each font family.
      * This can reduce the size of the font file.
@@ -74,7 +72,29 @@ export default defineFontProvider('google', async (providerOptions: GoogleProvid
     normal: '0',
   }
 
-  async function getFontDetails(font: FontIndexMeta, options: ResolveFontOptions<GoogleFamilyOptions>) {
+  /** Resolves the axis values `css2` can be asked for, dropping axes the family does not publish. */
+  function getInstancedAxes(font: FontIndexMeta, options: ProviderResolveFontOptions<GoogleFamilyOptions>) {
+    const variableAxis = normalizeVariableAxis(options.options?.experimental?.variableAxis ?? providerOptions.experimental?.variableAxis?.[font.family] ?? options.variableAxis)
+    const fontAxes = new Map(font.axes.map(axis => [axis.tag, axis]))
+    const instanced: Record<string, string[]> = {}
+
+    for (const [tag, values] of Object.entries(variableAxis ?? {})) {
+      // `wght` and `ital` are requested from the `weights` and `styles` options
+      if (tag === 'wght' || tag === 'ital')
+        continue
+      const axis = fontAxes.get(tag)
+      if (!axis || !values)
+        continue
+      const resolved = [...new Set(values.flatMap(value => clampAxisValue(value, axis) ?? []))]
+      if (resolved.length > 0) {
+        instanced[tag] = resolved
+      }
+    }
+
+    return { variableAxis, instanced }
+  }
+
+  async function getFontDetails(font: FontIndexMeta, options: ProviderResolveFontOptions<GoogleFamilyOptions>) {
     // A family that publishes no italic (or no upright) answers 400 for the axis value it
     // does not have, so requested styles are narrowed to the ones the metadata lists.
     const availableStyles = getAvailableStyles(font)
@@ -112,17 +132,7 @@ export default defineFontProvider('google', async (providerOptions: GoogleProvid
     if (weights.length === 0 || styles.length === 0 || !hasRequestedSubset)
       return []
 
-    const variableAxis = options.options?.experimental?.variableAxis ?? providerOptions.experimental?.variableAxis?.[font.family]
-    const resolvedVariableAxes: Record<string, string[]> = {}
-    for (const [tag, values] of Object.entries(variableAxis ?? {})) {
-      const axis = fontAxes.get(tag)
-      if (!axis || !values)
-        continue
-      const resolved = [...new Set(values.flatMap(value => clampAxisValue(value, axis) ?? []))]
-      if (resolved.length > 0) {
-        resolvedVariableAxes[tag] = resolved
-      }
-    }
+    const { instanced: resolvedVariableAxes } = getInstancedAxes(font, options)
 
     const candidateAxes = [
       'wght',
@@ -221,21 +231,26 @@ export default defineFontProvider('google', async (providerOptions: GoogleProvid
         weights.add(`${axis.min} ${axis.max}`)
       }
       return {
+        axes: font.axes.map(axis => ({ tag: axis.tag, min: axis.min, max: axis.max, defaultValue: axis.defaultValue })),
         formats: ['woff2', 'woff', 'ttf', 'eot'],
         styles: [...styles],
         subsets: font.subsets,
         weights: [...weights],
       }
     },
-    async resolveFont(fontFamily, options: ResolveFontOptions<GoogleFamilyOptions>) {
+    async resolveFont(fontFamily, options: ProviderResolveFontOptions<GoogleFamilyOptions>) {
       const font = googleFonts.find(font => font.family === fontFamily)
       if (!font) {
         return
       }
 
+      // Derived outside the cached call, which stores font face data only.
+      const { variableAxis, instanced } = getInstancedAxes(font, options)
+
       return {
         fonts: await ctx.storage.getItem(`google:${fontFamily}-${hash(options)}-data.json`, () => getFontDetails(font, options)),
         fallbacks: getFallbacks(font.category),
+        ...(variableAxis ? { appliedVariableAxis: toNormalizedValues(instanced) } : {}),
       }
     },
   }
@@ -243,19 +258,21 @@ export default defineFontProvider('google', async (providerOptions: GoogleProvid
 
 /** internal */
 
-interface FontAxis {
-  tag: 'wght' | 'opsz' | 'slnt' | 'wdth' | (string & {})
-  min: number
-  max: number
-  defaultValue: number
+/** Expresses the values requested from `css2` (`62.5..100`) in the shape unifont reports. */
+function toNormalizedValues(instanced: Record<string, string[]>): NormalizedVariableAxis {
+  const normalized: NormalizedVariableAxis = {}
+  for (const [tag, values] of Object.entries(instanced)) {
+    normalized[tag] = values.map((value) => {
+      const [min, max] = value.split('..')
+      return max === undefined ? min! : [min!, max]
+    })
+  }
+  return normalized
 }
 
 function clampAxisValue(value: string | [string, string], axis: FontAxis): string | undefined {
   if (!Array.isArray(value)) {
-    const parsed = Number(value)
-    if (!Number.isFinite(parsed))
-      return undefined
-    return String(clamp(parsed, axis))
+    return String(clamp(Number(value), axis))
   }
 
   const min = Number(value[0])
