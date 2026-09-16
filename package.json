@@ -1,7 +1,7 @@
 {
   "name": "unifont",
   "type": "module",
-  "version": "0.8.3",
+  "version": "0.8.4-beta.0",
   "devEngines": {
     "runtime": {
       "name": "node",
