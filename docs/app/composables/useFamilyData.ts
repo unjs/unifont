@@ -2,8 +2,10 @@ import type { NuxtApp } from '#app'
 
 type FamilyResponse = Awaited<ReturnType<typeof fetchFamily>>
 
-function fetchFamily(family: string) {
-  return $fetch(`/api/v1/fonts/${encodeURIComponent(family)}`)
+function fetchFamily(family: string, provider?: string) {
+  return $fetch(`/api/v1/fonts/${encodeURIComponent(family)}`, {
+    query: provider ? { provider } : undefined,
+  })
 }
 
 export type FamilySummary = Omit<FamilyResponse, 'fonts'> & { faces: number }
@@ -24,20 +26,21 @@ const prefetched = new Map<string, FamilySummary>()
 const asked = new Set<string>()
 
 /** Fetches a family ahead of navigation, so opening it from a grid costs no request. */
-export function prefetchFamilyData(family: string) {
-  if (import.meta.server || asked.has(family)) {
+export function prefetchFamilyData(family: string, provider?: string) {
+  const key = familyDataKey(family, provider)
+  if (import.meta.server || asked.has(key)) {
     return
   }
   // Claimed before the request settles, so tracking the pointer across a card asks once.
-  asked.add(family)
+  asked.add(key)
 
   // Only a success is recorded, so a failure leaves the page free to ask and report it itself.
-  fetchFamily(family)
+  fetchFamily(family, provider)
     .then((response) => {
-      prefetched.set(familyDataKey(family), toFamilySummary(response))
+      prefetched.set(key, toFamilySummary(response))
     })
     .catch(() => {
-      asked.delete(family)
+      asked.delete(key)
     })
 }
 
