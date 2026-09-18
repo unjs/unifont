@@ -1,7 +1,7 @@
 import { createError, defineEventHandler, getQuery } from 'nuxt/server'
-import { getRouterParam } from 'nitro/h3'
 import { coverageForText } from '#server/utils/coverage'
 import { useProviderScope } from '#server/utils/unifont'
+import { familyParam } from '#server/utils/family'
 
 /** Sample strings covering the gaps people actually hit. */
 export const SAMPLES: Record<string, string> = {
@@ -23,10 +23,7 @@ function list(value: unknown) {
 }
 
 export default defineEventHandler(async (event) => {
-  const family = decodeURIComponent(getRouterParam(event, 'family') || '')
-  if (!family) {
-    throw createError({ status: 400, statusText: 'A font family is required.' })
-  }
+  const family = await familyParam(event)
 
   const query = getQuery(event)
   const { unifont, allowed } = await useProviderScope(query.provider)

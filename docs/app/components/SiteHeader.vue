@@ -5,6 +5,7 @@ const route = useRoute()
 
 const links = [
   { to: '/fonts', label: 'Fonts' },
+  { to: '/stacks', label: 'Stacks' },
   { to: '/compare', label: 'Compare' },
   { to: '/docs', label: 'Docs' },
   { to: '/api', label: 'API' },

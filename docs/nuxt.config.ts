@@ -12,6 +12,7 @@ const INTERFACE_FAMILIES = ['Newsreader', 'Switzer', 'JetBrains Mono']
 const staticRoutes = [
   '/',
   '/fonts',
+  '/stack',
   '/compare',
   '/api',
   '/about',
@@ -143,6 +144,10 @@ export default defineNuxtConfig({
       '/api/v1/**': { headers: { link: '</openapi.json>; rel="service-desc"; type="application/json"' } },
       '/api/v1/catalogue.css': { headers: { 'cache-control': 'public, max-age=3600, stale-while-revalidate=86400' } },
       '/fonts/**': { headers: { 'cache-control': `public, s-maxage=${DAY}, stale-while-revalidate=${DAY}` } },
+      '/api/v1/stacks': { headers: { 'cache-control': 'public, max-age=120, stale-while-revalidate=600' } },
+      '/api/v1/stacks/**': { headers: { 'cache-control': 'public, max-age=120, stale-while-revalidate=600' } },
+      '/api/v1/fonts/*/stacks': { headers: { 'cache-control': 'public, max-age=300, stale-while-revalidate=3600' } },
+      '/stacks/**': { headers: { 'cache-control': 'public, s-maxage=120, stale-while-revalidate=600' } },
     },
     prerender: {
       routes: staticRoutes,

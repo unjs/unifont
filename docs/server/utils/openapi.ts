@@ -181,6 +181,59 @@ const schemas = {
     },
     required: ['family', 'faces', 'files', 'measured', 'bytes'],
   },
+  StacksResponse: {
+    type: 'object',
+    description: 'Stacks published as `dev.unifont.stack` records in their authors’ own accounts.',
+    properties: {
+      stacks: {
+        type: 'array',
+        items: {
+          type: 'object',
+          properties: {
+            rkey: { type: 'string' },
+            author: {
+              type: 'object',
+              properties: {
+                did: { type: 'string' },
+                handle: { type: 'string' },
+                displayName: { type: 'string' },
+                avatar: { type: 'string' },
+              },
+              required: ['did', 'handle'],
+            },
+            stack: {
+              type: 'object',
+              properties: {
+                title: { type: 'string' },
+                note: { type: 'string' },
+                app: { type: 'string' },
+                createdAt: { type: 'string' },
+                roles: {
+                  type: 'array',
+                  items: {
+                    type: 'object',
+                    properties: {
+                      role: { type: 'string', enum: ['heading', 'body', 'mono'] },
+                      family: { type: 'string' },
+                      provider: { type: 'string' },
+                      uri: { type: 'string' },
+                      weights: { type: 'array', items: { type: 'string' } },
+                    },
+                    required: ['role', 'family', 'uri'],
+                  },
+                },
+              },
+              required: ['title', 'roles', 'app', 'createdAt'],
+            },
+          },
+          required: ['rkey', 'author', 'stack'],
+        },
+      },
+      total: { type: 'integer', description: 'How many the backlink index knows about.' },
+      unavailable: { type: 'boolean', description: '`true` when the index could not be reached.' },
+    },
+    required: ['stacks'],
+  },
   CompareResponse: {
     type: 'object',
     properties: {
@@ -335,6 +388,7 @@ export function openApiDocument(origin = 'https://unifont.dev') {
       { name: 'css', description: 'Ready-to-serve `@font-face` stylesheets.' },
       { name: 'meta', description: 'Providers, service status and credits.' },
       { name: 'agents', description: 'Endpoints built for models and agents.' },
+      { name: 'stacks', description: 'Stacks people publish from their own atproto accounts.' },
     ],
     paths: {
       '/api/v1/providers': {
@@ -554,6 +608,70 @@ export function openApiDocument(origin = 'https://unifont.dev') {
             200: jsonResponse('Measured transfer size.', 'TransferResponse'),
             400: errorResponse('No family was given.'),
             404: errorResponse('No provider publishes the family.'),
+          },
+        },
+      },
+      '/api/v1/fonts/{family}/stacks': {
+        get: {
+          operationId: 'listStacksUsingFamily',
+          tags: ['stacks'],
+          summary: 'Stacks that use one family',
+          description: 'Every published stack with this family in any role, found by asking a backlink index which records point at the family’s canonical page.',
+          parameters: [familyParameter],
+          responses: {
+            200: jsonResponse('Stacks using the family.', 'StacksResponse'),
+            400: errorResponse('No family was given.'),
+          },
+        },
+      },
+      '/api/v1/stacks': {
+        get: {
+          operationId: 'listStacks',
+          tags: ['stacks'],
+          summary: 'Stacks published on the network',
+          description: 'Stacks anyone has published as `dev.unifont.stack` records, newest first. Found through the constellation backlink index, then read from the account that owns each one. Nothing is stored here.',
+          parameters: [
+            {
+              name: 'limit',
+              in: 'query',
+              required: false,
+              description: 'Up to 100. Default 24.',
+              schema: { type: 'integer', minimum: 1, maximum: 100 },
+            },
+          ],
+          responses: {
+            200: jsonResponse('Recently published stacks.', 'StacksResponse'),
+          },
+        },
+      },
+      '/api/v1/stacks/{handle}': {
+        get: {
+          operationId: 'listStacksByAuthor',
+          tags: ['stacks'],
+          summary: 'Stacks one person has published',
+          description: 'Read straight from that account, so it is complete whether or not any index knows about them.',
+          parameters: [
+            { name: 'handle', in: 'path', required: true, description: 'A handle or a DID.', schema: { type: 'string' }, example: 'danielroe.dev' },
+          ],
+          responses: {
+            200: jsonResponse('Their stacks.', 'StacksResponse'),
+            404: errorResponse('No account answers to that handle.'),
+          },
+        },
+      },
+      '/api/v1/stacks/{handle}/{rkey}': {
+        get: {
+          operationId: 'getStack',
+          tags: ['stacks'],
+          summary: 'One stack',
+          description: 'One published stack, read from the account that owns it rather than from any index.',
+          parameters: [
+            { name: 'handle', in: 'path', required: true, description: 'A handle or a DID.', schema: { type: 'string' } },
+            { name: 'rkey', in: 'path', required: true, description: 'The record key.', schema: { type: 'string' } },
+          ],
+          responses: {
+            200: jsonResponse('The stack, with its author.', 'StacksResponse'),
+            404: errorResponse('No such record.'),
           },
         },
       },

@@ -54,6 +54,8 @@ export default defineEventHandler(async (event) => {
     `- [HTTP API reference](${url('/api.md')}): the endpoints behind every page on the site.`,
     `- [Catalogue](${url('/fonts.md')}): every family the providers will list.`,
     `- [Compare providers](${url('/compare.md')}): the same family, asked of every provider.`,
+    `- [Stack](${url('/stack')}): heading, body and mono side by side, shareable as a URL.`,
+    `- [Stacks](${url('/stacks')}): stacks people have published from their own atproto accounts.`,
     ...pages.map(page => `- [${page.title}](${url(`${page.path}.md`)})${page.description ? `: ${page.description}` : ''}`),
     '',
     '## Optional',

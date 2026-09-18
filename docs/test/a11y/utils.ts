@@ -20,6 +20,8 @@ export const ROUTES = [
   '/',
   '/fonts',
   '/fonts/:family',
+  '/stack?heading=Fraunces&body=Inter',
+  '/stacks',
   '/compare?family=:family',
   '/docs',
   '/docs/providers',

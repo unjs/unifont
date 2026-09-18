@@ -1,6 +1,7 @@
 import { CATALOGUE_PAGE, FEATURED_FAMILIES, specimenGlyphs } from '#shared/featured'
 import { defineCachedFunction } from 'nitro/cache'
 import { searchCatalogue } from './catalogue'
+import { canonicalFamily } from './family'
 import { cssComment, toFontFaceCss } from './css'
 import { useUnifont } from './unifont'
 import { specimenSubsets, specimenWeights } from './weights'
@@ -29,7 +30,8 @@ export async function specimenCss(
   const unifont = await useUnifont()
   const needsProperties = !overrides.weights || !overrides.subsets
 
-  const blocks = await Promise.all(families.map(async (family) => {
+  const blocks = await Promise.all(families.map(async (requested) => {
+    const family = await canonicalFamily(requested)
     try {
       const properties = needsProperties ? await unifont.getFontProperties(family) : undefined
       const resolved = await unifont.resolveFont(family, {

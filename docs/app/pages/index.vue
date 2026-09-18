@@ -160,6 +160,10 @@ await unifont.getFontProperties('Switzer')
       <p class="index__more">
         <NuxtLink to="/fonts">Browse the whole catalogue →</NuxtLink>
       </p>
+      <p class="index__more">
+        Or build a <NuxtLink to="/stack">stack</NuxtLink> and see what
+        <NuxtLink to="/stacks">other people have published</NuxtLink>.
+      </p>
     </section>
 
     <section
