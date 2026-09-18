@@ -2,15 +2,18 @@ import type { NuxtApp } from '#app'
 
 type FamilyResponse = Awaited<ReturnType<typeof fetchFamily>>
 
-function fetchFamily(family: string) {
-  return $fetch(`/api/v1/fonts/${encodeURIComponent(family)}`)
+function fetchFamily(family: string, provider?: string) {
+  return $fetch(`/api/v1/fonts/${encodeURIComponent(family)}`, {
+    query: provider ? { provider } : undefined,
+  })
 }
 
 export type FamilySummary = Omit<FamilyResponse, 'fonts'> & { faces: number }
 
-/** Keyed on the family alone, so narrowing a facet refetches against the same entry. */
-export function familyDataKey(family: string) {
-  return `font-${family}`
+/** Keyed on the family, so narrowing a facet refetches against the same entry. An explicit provider gets its own entry. */
+export function familyDataKey(family: string, provider?: string) {
+  const scope = provider ? `?provider=${encodeURIComponent(provider)}` : ''
+  return `font-${encodeURIComponent(family)}${scope}`
 }
 
 /** The face list is the largest thing the endpoint returns, and the page only counts it. */
@@ -23,20 +26,21 @@ const prefetched = new Map<string, FamilySummary>()
 const asked = new Set<string>()
 
 /** Fetches a family ahead of navigation, so opening it from a grid costs no request. */
-export function prefetchFamilyData(family: string) {
-  if (import.meta.server || asked.has(family)) {
+export function prefetchFamilyData(family: string, provider?: string) {
+  const key = familyDataKey(family, provider)
+  if (import.meta.server || asked.has(key)) {
     return
   }
   // Claimed before the request settles, so tracking the pointer across a card asks once.
-  asked.add(family)
+  asked.add(key)
 
   // Only a success is recorded, so a failure leaves the page free to ask and report it itself.
-  fetchFamily(family)
+  fetchFamily(family, provider)
     .then((response) => {
-      prefetched.set(familyDataKey(family), toFamilySummary(response))
+      prefetched.set(key, toFamilySummary(response))
     })
     .catch(() => {
-      asked.delete(family)
+      asked.delete(key)
     })
 }
 
