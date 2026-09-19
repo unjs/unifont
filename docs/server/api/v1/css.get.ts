@@ -2,7 +2,7 @@ import { createError, getQuery } from 'nuxt/server'
 import { defineCachedHandler } from 'nitro/cache'
 import { specimenCss } from '../../utils/specimens'
 
-/** One stylesheet for many families, so a specimen grid costs a single request. */
+/** One stylesheet for many families. `preset=specimen` cuts each face to the glyphs a grid sets. */
 export default defineCachedHandler(async (event) => {
   const query = getQuery(event)
   const list = (value: unknown) => String(value ?? '').split(',').map(part => part.trim()).filter(Boolean)
@@ -19,10 +19,11 @@ export default defineCachedHandler(async (event) => {
   return specimenCss(families, {
     weights: weights.length ? weights : undefined,
     subsets: subsets.length ? subsets : undefined,
+    glyphs: query.preset === 'specimen',
   })
 }, {
   maxAge: 60 * 60 * 24,
   name: 'batch-css',
   // Undeclared parameters are stripped, so a stray one cannot multiply cache entries.
-  allowQuery: ['families', 'weights', 'subsets'],
+  allowQuery: ['families', 'weights', 'subsets', 'preset'],
 })

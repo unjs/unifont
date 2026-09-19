@@ -54,7 +54,7 @@ const stylesheet = computed(() => {
   if (!families.length || covered.value) {
     return undefined
   }
-  return `/api/v1/css?families=${families.map(encodeURIComponent).join(',')}`
+  return `/api/v1/css?families=${families.map(encodeURIComponent).join(',')}&preset=specimen`
 })
 
 useHead(() => ({

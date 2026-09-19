@@ -11,9 +11,12 @@ export function specimenOptions(family: string) {
 }
 
 /**
- * `@font-face` rules for a grid of specimens. The weight and subset match `preset=warm`, so
+ * `@font-face` rules for several families at once. The weight and subset match `preset=warm`, so
  * hovering a card and opening its page reuses the file already downloaded. A family no provider
  * knows becomes a comment rather than failing the whole sheet.
+ *
+ * `glyphs` cuts each face to the characters a grid sets, which only Google honours; pass it only
+ * for text known in advance.
  *
  * No metric-matched fallback: `fontaine` sources those from `local("sans-serif")`, which matches
  * no installed family, so the face never loads and reading the metrics for it costs a download
@@ -21,7 +24,7 @@ export function specimenOptions(family: string) {
  */
 export async function specimenCss(
   families: string[],
-  overrides: { weights?: string[], subsets?: string[] } = {},
+  overrides: { weights?: string[], subsets?: string[], glyphs?: boolean } = {},
 ) {
   const unifont = await useUnifont()
   const needsProperties = !overrides.weights || !overrides.subsets
@@ -34,7 +37,7 @@ export async function specimenCss(
         styles: ['normal'],
         subsets: overrides.subsets ?? specimenSubsets(properties?.subsets),
         formats: ['woff2'],
-        options: specimenOptions(family),
+        options: overrides.glyphs ? specimenOptions(family) : undefined,
       })
       if (!resolved.fonts.length) {
         return `/* ${cssComment(family)}: no provider could resolve this family */`
@@ -58,8 +61,8 @@ export async function specimenCss(
  */
 export const specimenSheet = defineCachedFunction(async (grid: 'featured' | 'catalogue') => {
   if (grid === 'featured') {
-    return specimenCss([...FEATURED_FAMILIES])
+    return specimenCss([...FEATURED_FAMILIES], { glyphs: true })
   }
   const { families } = await searchCatalogue({ query: '', limit: CATALOGUE_PAGE, offset: 0 })
-  return specimenCss(families.map(entry => entry.family))
+  return specimenCss(families.map(entry => entry.family), { glyphs: true })
 }, { name: 'specimen-sheet', maxAge: 60 * 60 * 24, getKey: grid => grid })

@@ -491,6 +491,13 @@ export function openApiDocument(origin = 'https://unifont.dev') {
               description: 'Subsets to resolve (comma-separated). Defaults to `latin` where the family publishes it.',
               schema: commaList('Comma-separated subsets.'),
             },
+            {
+              name: 'preset',
+              in: 'query',
+              required: false,
+              description: '`specimen` cuts each face to the characters this site’s grids set, which only Google honours. Omit it to receive faces that can set any text.',
+              schema: { type: 'string', enum: ['specimen'] },
+            },
           ],
           responses: {
             200: cssResponse('The stylesheet.'),
