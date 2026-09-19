@@ -4,7 +4,7 @@ import { CATALOGUE_PAGE } from '#shared/featured'
 const { warm } = useFontWarmup()
 
 function prefetch(family: string, provider: string) {
-  warm(family)
+  warm(family, provider)
   prefetchFamilyData(family, provider)
 }
 

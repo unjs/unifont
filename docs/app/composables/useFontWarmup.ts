@@ -29,12 +29,13 @@ export function useFontWarmup() {
    * resolve the same file, so the second declaration costs nothing to fetch, and it is declared
    * under the specimen alias so that adding it does not restyle a grid card set in the family.
    */
-  function warm(family: string) {
+  function warm(family: string, provider?: string) {
     if (import.meta.server) {
       return
     }
+    const scope = provider ?? ''
     const existing = links()
-    if (existing.some(link => link.dataset.warmFamily === family)) {
+    if (existing.some(link => link.dataset.warmFamily === family && link.dataset.warmProvider === scope)) {
       return
     }
     // Document order is insertion order, so the front of the list is the least recently warmed.
@@ -48,7 +49,8 @@ export function useFontWarmup() {
     const link = document.createElement('link')
     link.rel = 'stylesheet'
     link.dataset.warmFamily = family
-    link.href = warmStylesheetUrl(family)
+    link.dataset.warmProvider = scope
+    link.href = warmStylesheetUrl(family, provider)
     document.head.append(link)
   }
 
