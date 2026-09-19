@@ -79,7 +79,8 @@ export default defineCachedHandler(async (event): Promise<TransferResponse> => {
 }, {
   maxAge: 60 * 60 * 24,
   name: 'transfer',
-  // Only the parameters the handler reads, so an unrelated query string cannot multiply entries.
+  // Undeclared parameters are stripped, so a stray one cannot multiply cache entries.
+  allowQuery: ['provider', 'weights', 'styles', 'subsets'],
   getKey: (event) => {
     const query = getQuery(event)
     const facets = ['provider', 'weights', 'styles', 'subsets']

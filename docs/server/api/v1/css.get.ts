@@ -1,4 +1,4 @@
-import { createError, getQuery, getRequestURL } from 'nuxt/server'
+import { createError, getQuery } from 'nuxt/server'
 import { defineCachedHandler } from 'nitro/cache'
 import { specimenCss } from '../../utils/specimens'
 
@@ -23,5 +23,6 @@ export default defineCachedHandler(async (event) => {
 }, {
   maxAge: 60 * 60 * 24,
   name: 'batch-css',
-  getKey: event => new URL(getRequestURL(event)).search,
+  // Undeclared parameters are stripped, so a stray one cannot multiply cache entries.
+  allowQuery: ['families', 'weights', 'subsets'],
 })

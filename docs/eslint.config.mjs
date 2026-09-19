@@ -1,5 +1,6 @@
 import a11y from 'eslint-plugin-vuejs-accessibility'
 import withNuxt from './.nuxt/eslint.config.mjs'
+import unifont from './eslint/rules.mjs'
 
 export default withNuxt(...a11y.configs['flat/recommended'], {
   rules: {
@@ -11,5 +12,12 @@ export default withNuxt(...a11y.configs['flat/recommended'], {
     // Splitting a link's text onto its own line puts whitespace inside the anchor, which
     // `text-decoration` then underlines past the last character.
     'vue/singleline-html-element-content-newline': 'off',
+  },
+}, {
+  name: 'unifont/server',
+  files: ['server/**/*.ts'],
+  plugins: { unifont },
+  rules: {
+    'unifont/cached-handler-allow-query': 'error',
   },
 })
