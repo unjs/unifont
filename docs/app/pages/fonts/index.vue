@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import type { BaselineTransferResponse, FacetsResponse } from '#shared/types'
 import { CATALOGUE_PAGE, PREVIEW_MAX, previewText } from '#shared/featured'
 
 const { warm } = useFontWarmup()
@@ -19,6 +20,20 @@ const offset = computed(() => {
 })
 
 const text = computed(() => previewText(route.query.text))
+const variable = computed(() => route.query.variable === '1')
+const italic = computed(() => route.query.italic === '1')
+const subset = computed(() => String(route.query.subset ?? ''))
+
+const { data: facets } = await useFetch<FacetsResponse>('/api/v1/facets', { key: 'facets' })
+
+function toggleFacet(name: 'variable' | 'italic') {
+  const on = name === 'variable' ? variable.value : italic.value
+  router.replace({ query: { ...route.query, [name]: on ? undefined : '1', offset: undefined } })
+}
+
+function setSubset(value: string) {
+  router.replace({ query: { ...route.query, subset: value || undefined, offset: undefined } })
+}
 
 const term = ref(q.value)
 const preview = ref(text.value ?? '')
@@ -54,9 +69,19 @@ watch(text, (value) => {
 })
 
 const { data, status } = await useFetch('/api/v1/fonts', {
-  query: { q, provider, limit: CATALOGUE_PAGE, offset },
-  key: () => `catalogue-${q.value}-${provider.value}-${offset.value}`,
+  query: {
+    q,
+    provider,
+    variable: () => (variable.value ? '1' : undefined),
+    italic: () => (italic.value ? '1' : undefined),
+    subset,
+    limit: CATALOGUE_PAGE,
+    offset,
+  },
+  key: () => `catalogue-${q.value}-${provider.value}-${variable.value}-${italic.value}-${subset.value}-${offset.value}`,
 })
+
+const filtered = computed(() => variable.value || italic.value || Boolean(subset.value))
 
 const { data: catalogue } = await useProviders()
 
@@ -67,7 +92,7 @@ const enumerable = computed(() => catalogue.value?.providers.filter(item => item
  * page as served is inlined into the head instead; searching or paging past it moves to a link.
  */
 const { covered, release } = useInlinedSpecimens('/api/v1/catalogue.css')
-watch([q, provider, offset, text], () => release())
+watch([q, provider, offset, text, variable, italic, subset], () => release())
 
 const stylesheet = computed(() => {
   const families = data.value?.families.map(item => item.family) ?? []
@@ -89,6 +114,29 @@ usePageSeo({
   description: 'Search every font family unifont can list, across Google Fonts, Bunny, Fontshare and Fontsource.',
 })
 
+// Never awaited into the page: a page of HEAD probes is slower than the catalogue itself.
+const families = computed(() => data.value?.families.map(item => item.family) ?? [])
+const { data: transfer } = useFetch<BaselineTransferResponse>('/api/v1/transfer', {
+  query: { families: () => families.value.join(',') },
+  key: () => `transfer-${families.value.join(',')}`,
+  server: false,
+  lazy: true,
+})
+
+const basis = computed(() => {
+  const value = transfer.value?.basis
+  return value ? `${value.weights.join(' + ')}, ${value.subsets.join(', ')}, ${value.formats.join(', ')}` : null
+})
+
+function size(family: string) {
+  const bytes = transfer.value?.families[family]?.bytes
+  if (!bytes) {
+    return null
+  }
+  const kb = bytes / 1024
+  return kb >= 1024 ? `${(kb / 1024).toFixed(1)} MB` : `${Math.round(kb).toLocaleString('en')} kB`
+}
+
 const linkQuery = computed(() => {
   const query: Record<string, string> = {}
   if (provider.value) {
@@ -99,6 +147,7 @@ const linkQuery = computed(() => {
   }
   return Object.keys(query).length ? query : undefined
 })
+
 function setProvider(name: string) {
   router.replace({
     query: { ...route.query, provider: provider.value === name ? undefined : name, offset: undefined },
@@ -210,6 +259,49 @@ function turn(delta: number) {
             {{ item.name }} <span class="filter__count">{{ item.families!.toLocaleString('en') }}</span>
           </button>
         </li>
+        <li v-if="facets?.variable">
+          <button
+            class="filter"
+            type="button"
+            :aria-pressed="variable"
+            @click="toggleFacet('variable')"
+          >
+            variable <span class="filter__count">{{ facets.variable.toLocaleString('en') }}</span>
+          </button>
+        </li>
+        <li v-if="facets?.italic">
+          <button
+            class="filter"
+            type="button"
+            :aria-pressed="italic"
+            @click="toggleFacet('italic')"
+          >
+            italic <span class="filter__count">{{ facets.italic.toLocaleString('en') }}</span>
+          </button>
+        </li>
+        <li v-if="facets?.subsets.length">
+          <label
+            class="visually-hidden"
+            for="catalogue-subset"
+          >Script</label>
+          <select
+            id="catalogue-subset"
+            class="filter filter--select"
+            :value="subset"
+            @change="setSubset(($event.target as HTMLSelectElement).value)"
+          >
+            <option value="">
+              any script
+            </option>
+            <option
+              v-for="item in facets.subsets"
+              :key="item.name"
+              :value="item.name"
+            >
+              {{ item.name }} ({{ item.families.toLocaleString('en') }})
+            </option>
+          </select>
+        </li>
       </ul>
 
       <!-- Typing filters the grid with no navigation, so this is the only report that the results
@@ -219,6 +311,22 @@ function turn(delta: number) {
         role="status"
       >
         {{ count }}
+      </p>
+
+      <p
+        v-if="filtered && facets?.unknown"
+        class="head__basis"
+      >
+        {{ facets.unknown.toLocaleString('en') }} families publish no properties through their
+        provider’s index, so a filter cannot keep them.
+      </p>
+
+      <p
+        v-if="basis"
+        class="head__basis"
+      >
+        Sizes are bytes on the wire for {{ basis }}. A family split by <code>unicode-range</code>
+        totals every chunk, of which a browser fetches only the ones a page sets.
       </p>
     </header>
 
@@ -248,7 +356,13 @@ function turn(delta: number) {
             class="cell__name"
           >{{ entry.family }}</span>
           {{ ' ' }}
-          <span class="cell__providers">{{ entry.providers.join(' · ') }}</span>
+          <span class="cell__providers">
+            {{ entry.providers.join(' · ') }}
+            <span
+              v-if="size(entry.family)"
+              class="cell__size"
+            >{{ size(entry.family) }}</span>
+          </span>
         </NuxtLink>
       </li>
     </ul>
@@ -369,6 +483,17 @@ function turn(delta: number) {
   color: var(--color-ink);
 }
 
+.filter--select {
+  appearance: none;
+  padding-right: var(--space-md);
+  background-image:
+    linear-gradient(45deg, transparent 50%, currentcolor 50%),
+    linear-gradient(135deg, currentcolor 50%, transparent 50%);
+  background-position: right 0.75rem center, right 0.55rem center;
+  background-size: 0.3rem 0.3rem;
+  background-repeat: no-repeat;
+}
+
 .filter[aria-pressed='true'] {
   border-color: var(--color-ink);
   color: var(--color-ink-strong);
@@ -378,6 +503,13 @@ function turn(delta: number) {
 .filter__count {
   color: var(--color-neutral);
   font-variant-numeric: tabular-nums;
+}
+
+.head__basis {
+  margin-top: var(--space-2xs);
+  color: var(--color-neutral);
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
 }
 
 .head__count {
@@ -427,6 +559,10 @@ function turn(delta: number) {
   font-size: clamp(1.1rem, 11cqi, 1.75rem);
   line-height: 1.15;
   overflow-wrap: anywhere;
+}
+
+.cell__size {
+  color: var(--color-ink);
 }
 
 .cell__name {

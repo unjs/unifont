@@ -102,8 +102,36 @@ const schemas = {
     properties: {
       family: { type: 'string', description: 'Family name as the provider spells it.' },
       providers: { type: 'array', items: provider, description: 'Providers that publish this family.' },
+      facets: {
+        type: 'object',
+        description: 'Absent for a family whose only provider publishes no properties in its index.',
+        properties: {
+          variable: { type: 'boolean', description: 'The family publishes a weight range, not only discrete weights.' },
+          italic: { type: 'boolean' },
+          subsets: { type: 'array', items: { type: 'string' } },
+        },
+        required: ['variable', 'italic', 'subsets'],
+      },
     },
     required: ['family', 'providers'],
+  },
+  FacetsResponse: {
+    type: 'object',
+    properties: {
+      variable: { type: 'integer', description: 'Families publishing a weight range.' },
+      italic: { type: 'integer', description: 'Families publishing an italic.' },
+      subsets: {
+        type: 'array',
+        description: 'Scripts the index knows about, most families first.',
+        items: {
+          type: 'object',
+          properties: { name: { type: 'string' }, families: { type: 'integer' } },
+          required: ['name', 'families'],
+        },
+      },
+      unknown: { type: 'integer', description: 'Families whose only provider publishes no properties, so no filter can keep them.' },
+    },
+    required: ['variable', 'italic', 'subsets', 'unknown'],
   },
   FontsResponse: {
     type: 'object',
@@ -524,6 +552,28 @@ export function openApiDocument(origin = 'https://unifont.dev') {
               schema: provider,
             },
             {
+              name: 'variable',
+              in: 'query',
+              required: false,
+              description: 'Keep only families publishing a weight range. A family whose provider publishes no properties is dropped by any filter.',
+              schema: { type: 'boolean' },
+            },
+            {
+              name: 'italic',
+              in: 'query',
+              required: false,
+              description: 'Keep only families publishing an italic.',
+              schema: { type: 'boolean' },
+            },
+            {
+              name: 'subset',
+              in: 'query',
+              required: false,
+              description: 'Keep only families covering this script, as `/api/v1/facets` names them.',
+              schema: { type: 'string' },
+              example: 'cyrillic',
+            },
+            {
               name: 'limit',
               in: 'query',
               required: false,
@@ -633,6 +683,17 @@ export function openApiDocument(origin = 'https://unifont.dev') {
           responses: {
             200: cssResponse('The stylesheet.'),
             400: errorResponse('`families` was missing or empty.'),
+          },
+        },
+      },
+      '/api/v1/facets': {
+        get: {
+          operationId: 'listFacets',
+          tags: ['catalogue'],
+          summary: 'What the catalogue can be filtered by',
+          description: 'Counts for each filter the catalogue offers, so a caller knows what a filter would keep before applying it.',
+          responses: {
+            200: jsonResponse('Filter counts.', 'FacetsResponse'),
           },
         },
       },

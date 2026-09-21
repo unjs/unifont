@@ -3,6 +3,7 @@ import type { Infer } from 'airspace/lexicon'
 import type lexicons from './lexicons'
 
 export type { ContributorsResponse } from '#server/api/v1/contributors.get'
+export type { FacetsResponse } from '#server/api/v1/facets.get'
 export type { CompareResponse, CompareRow } from '#server/api/v1/fonts/[family]/compare.get'
 export type { TransferResponse } from '#server/api/v1/fonts/[family]/transfer.get'
 export type { BaselineTransferResponse } from '#server/api/v1/transfer.get'

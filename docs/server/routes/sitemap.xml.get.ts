@@ -1,5 +1,5 @@
 import { defineEventHandler, getRequestURL, useRuntimeConfig } from 'nuxt/server'
-import { FEATURED_FAMILIES } from '#shared/featured'
+import { useCatalogue } from '../utils/catalogue'
 import { listDocs, listPages } from '../utils/markdown'
 
 interface Entry {
@@ -11,7 +11,7 @@ interface Entry {
 const escape = (value: string) =>
   value.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&apos;')
 
-/** Every indexable URL. A family page costs a provider lookup, so only the featured ones are listed. */
+/** Every indexable URL, including a page per family: the names are one cached lookup. */
 export default defineEventHandler(async (event) => {
   const config = useRuntimeConfig()
   const origin = (config.public.siteUrl || getRequestURL(event).origin).replace(/\/+$/, '')
@@ -26,8 +26,8 @@ export default defineEventHandler(async (event) => {
     ...(await listPages()).map(page => ({ path: page.path, priority: '0.4', changefreq: 'yearly' })),
     { path: '/stacks', priority: '0.6', changefreq: 'daily' },
     { path: '/stack', priority: '0.5', changefreq: 'monthly' },
-    ...FEATURED_FAMILIES.map(family => ({
-      path: `/fonts/${encodeURIComponent(family)}`,
+    ...(await useCatalogue()).entries.map(entry => ({
+      path: `/fonts/${encodeURIComponent(entry.family)}`,
       priority: '0.6',
       changefreq: 'monthly',
     })),

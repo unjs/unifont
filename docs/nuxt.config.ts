@@ -22,6 +22,8 @@ const staticRoutes = [
   '/api/v1/catalogue.css',
   '/api/v1/specimens.css',
   '/hotlink.css',
+  // The families the homepage links to. The rest are server-rendered, and in the sitemap.
+  ...FEATURED_FAMILIES.map(family => `/fonts/${encodeURIComponent(family)}`),
   '/api/content/navigation',
   // Machine-readable descriptions of the site: their answers depend on the content, not the request.
   '/openapi.json',

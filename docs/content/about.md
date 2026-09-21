@@ -27,6 +27,10 @@ Every page here is also an HTTP endpoint. The [catalogue](/fonts), the [provider
 
 Font metadata and font files belong to the foundries that made them and are licensed by them, not by us. This site never proxies or re-hosts font binaries: every file URL in a response points at the provider's own CDN. Check a family's licence with its foundry before shipping it.
 
+## Where the catalogue comes from
+
+The catalogue is a cache of what each provider's own API answers, not a copy of it. Family indexes are read from the providers, held for an hour and refreshed in the background; measured transfer sizes are held for a week; nothing is kept beyond what makes the site answer quickly. A build primes the same cache so a cold deployment doesn't call five providers on its first request. Providers are asked in their documented ways, and no result is attributed to a provider that didn't answer it.
+
 The font CSS this site serves is for reading, copying and scripting, and for its own pages. It isn't a font CDN: a `<link rel="stylesheet">` pointing here from another site is refused, because that would put someone else's traffic through our origin and through the providers' terms. Resolve the family with `unifont` and serve the CSS from your own origin.
 
 The public API is best-effort infrastructure for scripts, editor plugins and CI checks. It may be rate-limited or withdrawn, so if a deployment of yours depends on font resolution, install `unifont` and run it yourself, or [self-host the CORS proxy](/docs/proxy).

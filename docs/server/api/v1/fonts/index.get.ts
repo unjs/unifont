@@ -4,7 +4,9 @@ import { searchCatalogue } from '../../../utils/catalogue'
 import { PROVIDER_NAMES } from '../../../utils/unifont'
 
 export default defineEventHandler(async (event) => {
-  const { q, provider, limit, offset } = getQuery(event)
+  const { q, provider, variable, italic, subset, limit, offset } = getQuery(event)
+
+  const flag = (value: unknown) => (value === undefined ? undefined : value !== '0' && value !== 'false')
 
   if (provider && !PROVIDER_NAMES.includes(provider as ProviderName)) {
     throw createError({ status: 400, statusText: `Unknown provider \`${provider}\`.` })
@@ -21,6 +23,9 @@ export default defineEventHandler(async (event) => {
   const result = await searchCatalogue({
     query: typeof q === 'string' ? q : '',
     provider: provider as ProviderName | undefined,
+    variable: flag(variable),
+    italic: flag(italic),
+    subset: typeof subset === 'string' && subset ? subset : undefined,
     limit: Math.min(Number(limit) || 60, 200),
     offset: Math.max(Number(offset) || 0, 0),
   })
