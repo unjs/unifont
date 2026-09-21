@@ -7,6 +7,11 @@ const resolveFont = vi.fn((_family: string, _options: ResolveOptions) => Promise
   fonts: [{ src: [{ url: 'https://cdn.example.com/a.woff2', format: 'woff2' }], weight: 400, style: 'normal' }],
 }))
 
+vi.mock('../../server/utils/catalogue', () => ({
+  lookupFamily: (family: string) => Promise.resolve({ family, providers: ['google'] }),
+  searchCatalogue: () => Promise.resolve({ families: [], total: 0, unavailable: [] }),
+}))
+
 vi.mock('../../server/utils/unifont', () => ({
   useUnifont: () => Promise.resolve({
     resolveFont,

@@ -7,6 +7,9 @@ const props = defineProps<{
   /** Shown when there is nothing to copy yet, e.g. an unresolved family. */
   empty?: string
   pending?: boolean
+  /** Sets the block, chrome included, in a given stack, for a block that is also a specimen. */
+  family?: string
+  weight?: string
 }>()
 
 const { $highlightCode } = useNuxtApp()
@@ -77,7 +80,10 @@ onBeforeUnmount(() => clearTimeout(timer))
 <template>
   <!-- A header, not a `figcaption`, which would fold the copy button's label into the block's
        accessible name. -->
-  <div class="block">
+  <div
+    class="block"
+    :style="{ fontFamily: family, fontWeight: weight }"
+  >
     <div class="block__bar">
       <span class="block__label">
         {{ label }}
@@ -124,6 +130,7 @@ onBeforeUnmount(() => clearTimeout(timer))
 .block {
   overflow: hidden;
   border: var(--rule-hair) solid var(--color-rule);
+  font-family: var(--font-mono);
 }
 
 .block__bar {
@@ -141,7 +148,6 @@ onBeforeUnmount(() => clearTimeout(timer))
   gap: var(--space-2xs);
   align-items: center;
   color: var(--color-muted);
-  font-family: var(--font-mono);
   font-size: var(--text-xs);
 }
 
@@ -151,7 +157,7 @@ onBeforeUnmount(() => clearTimeout(timer))
   background: none;
   border: var(--rule-hair) solid transparent;
   color: var(--color-muted);
-  font-family: var(--font-mono);
+  font-family: inherit;
   font-size: var(--text-xs);
   cursor: pointer;
   white-space: nowrap;
@@ -187,8 +193,14 @@ onBeforeUnmount(() => clearTimeout(timer))
 .block__placeholder {
   padding: var(--space-md);
   color: var(--color-neutral);
-  font-family: var(--font-mono);
   font-size: var(--text-xs);
+}
+
+/* `pre` and `code` each declare `--font-mono`, so the face set on the block would stop above them. */
+.block__pre,
+.block__pre code {
+  font-family: inherit;
+  font-weight: inherit;
 }
 
 .block__pre {

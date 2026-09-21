@@ -1,9 +1,9 @@
-import { createError, defineEventHandler, getQuery } from 'nuxt/server'
-import { getRouterParam } from 'nitro/h3'
+import { defineEventHandler, getQuery } from 'nuxt/server'
 import { metricFallbackCss, toFontFaceCss } from '#server/utils/css'
 import { useProviderScope } from '#server/utils/unifont'
 import { specimenOptions } from '#server/utils/specimens'
 import { normaliseWeights, specimenSubsets, specimenWeights } from '#server/utils/weights'
+import { familyParam } from '#server/utils/family'
 
 function list(value: unknown, fallback: string[]) {
   if (typeof value !== 'string' || !value.trim()) {
@@ -30,10 +30,7 @@ function representativeWeights(published: string[]) {
 
 /** Servable `@font-face` CSS for a family, meant to be read and copied as much as linked. */
 export default defineEventHandler(async (event) => {
-  const family = decodeURIComponent(getRouterParam(event, 'family') || '')
-  if (!family) {
-    throw createError({ status: 400, statusText: 'A font family is required.' })
-  }
+  const family = await familyParam(event)
 
   const query = getQuery(event)
   const { unifont, allowed } = await useProviderScope(query.provider)

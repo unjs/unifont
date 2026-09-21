@@ -1,9 +1,10 @@
-import { createError, getQuery } from 'nuxt/server'
+import { getQuery } from 'nuxt/server'
 import { getRouterParam } from 'nitro/h3'
 import { defineCachedHandler } from 'nitro/cache'
 import { faceUrls } from '#server/utils/css'
 import { useProviderScope } from '#server/utils/unifont'
 import { normaliseWeights } from '#server/utils/weights'
+import { familyParam } from '#server/utils/family'
 
 export interface TransferResponse {
   family: string
@@ -47,10 +48,7 @@ async function probeSizes(urls: string[]) {
  * hard: the UI asks on every toggle, and the answer changes only when the provider reissues.
  */
 export default defineCachedHandler(async (event): Promise<TransferResponse> => {
-  const family = decodeURIComponent(getRouterParam(event, 'family') || '')
-  if (!family) {
-    throw createError({ status: 400, statusText: 'A font family is required.' })
-  }
+  const family = await familyParam(event)
 
   const query = getQuery(event)
   const { unifont, allowed } = await useProviderScope(query.provider)
@@ -86,6 +84,6 @@ export default defineCachedHandler(async (event): Promise<TransferResponse> => {
     const facets = ['provider', 'weights', 'styles', 'subsets']
       .map(name => `${name}=${list(query[name], []).join('+')}`)
       .join('&')
-    return `${getRouterParam(event, 'family')}:${facets}`
+    return `${decodeURIComponent(getRouterParam(event, 'family') || '').toLowerCase()}:${facets}`
   },
 })

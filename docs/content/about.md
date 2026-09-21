@@ -28,3 +28,9 @@ Every page here is also an HTTP endpoint. The [catalogue](/fonts), the [provider
 Font metadata and font files belong to the foundries that made them and are licensed by them, not by us. This site never proxies or re-hosts font binaries: every file URL in a response points at the provider's own CDN. Check a family's licence with its foundry before shipping it.
 
 The public API is best-effort infrastructure for scripts, editor plugins and CI checks. It may be rate-limited or withdrawn, so if a deployment of yours depends on font resolution, install `unifont` and run it yourself, or [self-host the CORS proxy](/docs/proxy).
+
+## Stacks live in your account
+
+A stack you publish is a `dev.unifont.stack` record written to your own atproto account, through OAuth against your own server. This site never holds it: it reads records back from the accounts that own them, and finds them through [constellation](https://constellation.microcosm.blue), a public index of links between records. Delete the record anywhere that speaks atproto and it is gone from here too, because there was never a second copy.
+
+The write happens in your browser, against your own server, so there is no session here to keep: the only thing this site publishes about it is the [client metadata document](/oauth-client-metadata.json) your server reads to identify the app.

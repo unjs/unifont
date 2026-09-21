@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import type { TransferResponse } from '#shared/types'
+import type { StacksResponse, TransferResponse } from '#shared/types'
 import { specimenAlias } from '#shared/featured'
 
 const route = useRoute()
@@ -286,6 +286,25 @@ watch(transferQuery, (value) => {
 }, { immediate: true })
 
 const kb = (bytes: number) => `${(bytes / 1024).toFixed(1)} kB`
+
+/* ── Stacks ────────────────────────────────────────────── */
+const { data: stacks, status: stacksStatus } = await useFetch<StacksResponse>(
+  () => `/api/v1/fonts/${encodeURIComponent(family.value)}/stacks`,
+  { key: () => `stacks-for-${family.value}`, lazy: true, server: false },
+)
+
+/** `idle` on the server, where the fetch has not started. */
+const stacksPending = computed(() => stacksStatus.value === 'idle' || stacksStatus.value === 'pending')
+
+const stackFamilies = computed(() => [...new Set(
+  (stacks.value?.stacks ?? []).flatMap(entry => entry.stack.roles.map(role => role.family)),
+)].filter(name => name !== family.value).slice(0, 20))
+
+useHead(() => ({
+  link: stackFamilies.value.length
+    ? [{ rel: 'stylesheet', href: `/api/v1/css?families=${stackFamilies.value.map(encodeURIComponent).join(',')}` }]
+    : [],
+}))
 
 /* ── Coverage ───────────────────────────────────────────── */
 interface CoverageCheck { text: string, unrestricted: boolean, covered: string[], missing: string[], subsets: string[] }
@@ -944,6 +963,45 @@ export default defineNuxtConfig({
           </CodeBlock>
         </div>
       </section>
+
+      <section
+        id="stacks"
+        class="stacks"
+        aria-labelledby="stacks-heading"
+      >
+        <h2
+          id="stacks-heading"
+          class="section-title"
+        >
+          Used in
+        </h2>
+        <p class="stacks__lede">
+          Stacks people have published from their own accounts that include {{ family }}. Found
+          through a <a href="https://constellation.microcosm.blue">backlink index</a>, read from
+          those accounts themselves.
+        </p>
+        <template v-if="stacksPending">
+          <p
+            class="visually-hidden"
+            role="status"
+          >
+            Reading the index…
+          </p>
+          <StackCard />
+        </template>
+        <StackCard
+          v-for="entry in stacksPending ? [] : stacks?.stacks ?? []"
+          :key="`${entry.author.did}-${entry.rkey}`"
+          :entry="entry"
+        />
+        <p
+          v-if="!stacksPending && !stacks?.stacks.length"
+          class="stacks__empty"
+        >
+          Nothing published with {{ family }} yet.
+          <NuxtLink to="/stack">Build a stack</NuxtLink> and it could be the first.
+        </p>
+      </section>
     </template>
   </article>
 </template>
@@ -1105,6 +1163,23 @@ export default defineNuxtConfig({
   color: var(--color-neutral);
   font-family: var(--font-mono);
   font-size: var(--text-xs);
+}
+
+.stacks {
+  padding-block: var(--space-xl);
+  border-top: var(--rule-hair) solid var(--color-rule);
+}
+
+.stacks__lede,
+.stacks__empty {
+  max-width: var(--measure);
+  margin-top: var(--space-xs);
+  color: var(--color-muted);
+  font-size: var(--text-sm);
+}
+
+.stacks__empty {
+  padding-block: var(--space-lg);
 }
 
 /* ── Metadata ─────────────────────────────────────────────── */

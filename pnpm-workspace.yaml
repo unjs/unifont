@@ -1,6 +1,7 @@
 minimumReleaseAgeExclude:
   - '@nuxt/cli-nightly@4.0.0-20260824-125839-d3213ce'
   - fontless@0.4.2
+  - airspace@0.1.6
 
 packages:
   - docs
@@ -14,6 +15,7 @@ overrides:
 
 allowBuilds:
   '@parcel/watcher': false
+  core-js: false
   esbuild: false
   sharp: true
   simple-git-hooks: true

@@ -20,4 +20,24 @@ export default withNuxt(...a11y.configs['flat/recommended'], {
   rules: {
     'unifont/cached-handler-allow-query': 'error',
   },
+}, {
+  name: 'unifont/client-bundle',
+  files: ['app/**/*.{ts,vue}'],
+  rules: {
+    '@typescript-eslint/no-restricted-imports': ['error', {
+      patterns: [{
+        group: ['airspace', 'airspace/*', '#shared/collections', '#shared/lexicons'],
+        allowTypeImports: true,
+        message: 'Reach airspace through a dynamic import, so the lexicon builder stays out of the client bundle.',
+      }],
+    }],
+  },
+}, {
+  name: 'unifont/shared-constants',
+  files: ['shared/atproto.ts'],
+  rules: {
+    'no-restricted-imports': ['error', {
+      patterns: [{ group: ['*'], message: 'Keep this module import-free: a page rendering a stack must not pull in the lexicon builder.' }],
+    }],
+  },
 })

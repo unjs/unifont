@@ -1,3 +1,7 @@
+import { nearestWeight } from '#shared/weights'
+
+export { nearestWeight } from '#shared/weights'
+
 export interface NormalisedWeights {
   weights: string[]
   /** Notes about any adjustment made, surfaced in the API response. */
@@ -5,14 +9,6 @@ export interface NormalisedWeights {
 }
 
 const isRange = (weight: string) => weight.includes(' ')
-
-export function nearestWeight(published: string[], target: number) {
-  const numeric = published.map(Number).filter(Number.isFinite)
-  if (!numeric.length) {
-    return published[0] ?? '400'
-  }
-  return String(numeric.reduce((best, weight) => (Math.abs(weight - target) < Math.abs(best - target) ? weight : best), numeric[0]!))
-}
 
 /** A static cut in preference to the variable range, which is several times the size. */
 export function specimenWeights(published: string[]) {

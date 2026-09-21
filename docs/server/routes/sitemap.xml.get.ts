@@ -24,6 +24,8 @@ export default defineEventHandler(async (event) => {
     { path: '/api', priority: '0.8', changefreq: 'weekly' },
     ...(await listDocs()).map(doc => ({ path: doc.path, priority: '0.7', changefreq: 'weekly' })),
     ...(await listPages()).map(page => ({ path: page.path, priority: '0.4', changefreq: 'yearly' })),
+    { path: '/stacks', priority: '0.6', changefreq: 'daily' },
+    { path: '/stack', priority: '0.5', changefreq: 'monthly' },
     ...FEATURED_FAMILIES.map(family => ({
       path: `/fonts/${encodeURIComponent(family)}`,
       priority: '0.6',

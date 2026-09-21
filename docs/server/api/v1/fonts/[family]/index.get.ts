@@ -1,10 +1,10 @@
 import { createError, defineEventHandler, getQuery } from 'nuxt/server'
 import type { ProviderName } from '#server/utils/unifont'
-import { getRouterParam } from 'nitro/h3'
 import { lookupFamily } from '#server/utils/catalogue'
 import { metricFallbackCss, toFontFaceCss } from '#server/utils/css'
 import { PROVIDER_META, useProviderScope } from '#server/utils/unifont'
 import { normaliseWeights } from '#server/utils/weights'
+import { familyParam } from '#server/utils/family'
 
 function list(value: unknown, fallback: string[]) {
   if (typeof value !== 'string' || !value.trim()) {
@@ -14,10 +14,7 @@ function list(value: unknown, fallback: string[]) {
 }
 
 export default defineEventHandler(async (event) => {
-  const family = decodeURIComponent(getRouterParam(event, 'family') || '')
-  if (!family) {
-    throw createError({ status: 400, statusText: 'A font family is required.' })
-  }
+  const family = await familyParam(event)
 
   const query = getQuery(event)
   const { unifont, allowed } = await useProviderScope(query.provider)

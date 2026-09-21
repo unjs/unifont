@@ -1,9 +1,9 @@
-import { createError } from 'nuxt/server'
 import { defineCachedHandler } from 'nitro/cache'
 import { getRouterParam } from 'nitro/h3'
 import { faceUrls } from '#server/utils/css'
 import { PROVIDER_META, QUERYABLE_PROVIDERS, useProvider } from '#server/utils/unifont'
 import { normaliseWeights } from '#server/utils/weights'
+import { familyParam } from '#server/utils/family'
 
 export interface CompareRow {
   provider: string
@@ -56,10 +56,7 @@ async function measure(urls: string[]) {
 
 /** The same family, asked of every provider that can answer without credentials. */
 export default defineCachedHandler(async (event): Promise<CompareResponse> => {
-  const family = decodeURIComponent(getRouterParam(event, 'family') || '')
-  if (!family) {
-    throw createError({ status: 400, statusText: 'A font family is required.' })
-  }
+  const family = await familyParam(event)
 
   const candidates = QUERYABLE_PROVIDERS.filter(name => name !== 'adobe' && name !== 'npm')
 
@@ -113,5 +110,5 @@ export default defineCachedHandler(async (event): Promise<CompareResponse> => {
   // Measuring one family across every provider is well over a hundred HEAD requests.
   maxAge: 60 * 60 * 24,
   name: 'compare',
-  getKey: event => decodeURIComponent(getRouterParam(event, 'family') || ''),
+  getKey: event => decodeURIComponent(getRouterParam(event, 'family') || '').toLowerCase(),
 })
