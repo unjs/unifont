@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { CATALOGUE_PAGE } from '#shared/featured'
+import { CATALOGUE_PAGE, PREVIEW_MAX, previewText } from '#shared/featured'
 
 const { warm } = useFontWarmup()
 
@@ -18,9 +18,16 @@ const offset = computed(() => {
   return Number.isFinite(value) ? Math.max(Math.trunc(value), 0) : 0
 })
 
+const text = computed(() => previewText(route.query.text))
+
 const term = ref(q.value)
+const preview = ref(text.value ?? '')
 let debounce: ReturnType<typeof setTimeout> | undefined
-onBeforeUnmount(() => clearTimeout(debounce))
+let previewDebounce: ReturnType<typeof setTimeout> | undefined
+onBeforeUnmount(() => {
+  clearTimeout(debounce)
+  clearTimeout(previewDebounce)
+})
 watch(term, (value) => {
   clearTimeout(debounce)
   debounce = setTimeout(() => {
@@ -30,6 +37,19 @@ watch(term, (value) => {
 watch(q, (value) => {
   if (value !== term.value) {
     term.value = value
+  }
+})
+
+// Longer than the search debounce: a keystroke here is a new subset, not a filter.
+watch(preview, (value) => {
+  clearTimeout(previewDebounce)
+  previewDebounce = setTimeout(() => {
+    router.replace({ query: { ...route.query, text: previewText(value) } })
+  }, 400)
+})
+watch(text, (value) => {
+  if ((value ?? '') !== preview.value) {
+    preview.value = value ?? ''
   }
 })
 
@@ -47,14 +67,15 @@ const enumerable = computed(() => catalogue.value?.providers.filter(item => item
  * page as served is inlined into the head instead; searching or paging past it moves to a link.
  */
 const { covered, release } = useInlinedSpecimens('/api/v1/catalogue.css')
-watch([q, provider, offset], () => release())
+watch([q, provider, offset, text], () => release())
 
 const stylesheet = computed(() => {
   const families = data.value?.families.map(item => item.family) ?? []
-  if (!families.length || covered.value) {
+  if (!families.length || (covered.value && !text.value)) {
     return undefined
   }
-  return `/api/v1/css?families=${families.map(encodeURIComponent).join(',')}&preset=specimen`
+  const query = text.value ? `&text=${encodeURIComponent(text.value)}` : '&preset=specimen'
+  return `/api/v1/css?families=${families.map(encodeURIComponent).join(',')}${query}`
 })
 
 useHead(() => ({
@@ -68,6 +89,16 @@ usePageSeo({
   description: 'Search every font family unifont can list, across Google Fonts, Bunny, Fontshare and Fontsource.',
 })
 
+const linkQuery = computed(() => {
+  const query: Record<string, string> = {}
+  if (provider.value) {
+    query.provider = provider.value
+  }
+  if (text.value) {
+    query.text = text.value
+  }
+  return Object.keys(query).length ? query : undefined
+})
 function setProvider(name: string) {
   router.replace({
     query: { ...route.query, provider: provider.value === name ? undefined : name, offset: undefined },
@@ -138,6 +169,23 @@ function turn(delta: number) {
         >
       </div>
 
+      <div class="search">
+        <label
+          class="search__label"
+          for="catalogue-preview"
+        >Preview text</label>
+        <input
+          id="catalogue-preview"
+          v-model="preview"
+          class="search__input"
+          type="text"
+          autocomplete="off"
+          spellcheck="false"
+          :maxlength="PREVIEW_MAX"
+          placeholder="Set your own words…"
+        >
+      </div>
+
       <ul class="filters">
         <li>
           <button
@@ -185,7 +233,7 @@ function turn(delta: number) {
       >
         <NuxtLink
           class="cell__link"
-          :to="{ path: `/fonts/${encodeURIComponent(entry.family)}`, query: provider ? { provider } : undefined }"
+          :to="{ path: `/fonts/${encodeURIComponent(entry.family)}`, query: linkQuery }"
           @mouseenter="prefetch(entry.family, provider)"
           @focus="prefetch(entry.family, provider)"
         >
@@ -193,6 +241,11 @@ function turn(delta: number) {
           <span
             class="cell__specimen"
             :style="{ fontFamily: `'${entry.family}', var(--font-display)` }"
+          >{{ text ?? entry.family }}</span>
+          {{ ' ' }}
+          <span
+            v-if="text"
+            class="cell__name"
           >{{ entry.family }}</span>
           {{ ' ' }}
           <span class="cell__providers">{{ entry.providers.join(' · ') }}</span>
@@ -374,6 +427,11 @@ function turn(delta: number) {
   font-size: clamp(1.1rem, 11cqi, 1.75rem);
   line-height: 1.15;
   overflow-wrap: anywhere;
+}
+
+.cell__name {
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
 }
 
 .cell__providers {

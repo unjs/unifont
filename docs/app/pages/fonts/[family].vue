@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import type { BudgetResponse, FallbackResponse, StacksResponse, TransferResponse } from '#shared/types'
-import { FALLBACK_TEXT, specimenAlias } from '#shared/featured'
+import { FALLBACK_TEXT, previewText, SPECIMEN_TEXT, specimenAlias } from '#shared/featured'
 
 const route = useRoute()
 const router = useRouter()
@@ -82,7 +82,8 @@ usePageSeo({
 })
 
 /* ── The tester ─────────────────────────────────────────── */
-const sample = ref('Typography is what language looks like.')
+const requestedText = previewText(route.query.text)
+const sample = ref(requestedText ?? SPECIMEN_TEXT)
 const size = ref(72)
 
 // 72px is a specimen on a desktop and a broken word on a phone.
@@ -124,8 +125,8 @@ watch([loadedRange, staticWeights], () => {
 
 // The warm face holds one weight and only the glyphs of the untouched specimen, so an edit moves
 // to the preview alias. On events, not on the values, which normalise on load for a family
-// without a 400.
-const usingPreview = ref(false)
+// without a 400. Text given in the URL is already not the warm face, so it starts on the preview.
+const usingPreview = ref(Boolean(requestedText))
 function needsPreviewFace() {
   usingPreview.value = true
 }

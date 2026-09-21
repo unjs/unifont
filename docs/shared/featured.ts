@@ -47,6 +47,15 @@ export const SPECIMEN_TEXT = 'Typography is what language looks like.'
 export const FALLBACK_TEXT = 'Type is laid out before the font arrives, so the browser sets these lines in whatever it already has. When the real file lands they are all redrawn, and the page moves by the difference. How far it moves is what a metric-matched substitute changes.'
 
 /** The characters a specimen sets, for providers that can subset to a glyph list. */
-export function specimenGlyphs(family: string) {
-  return [...new Set(`${family}${SPECIMEN_TEXT}${SPECIMEN_LINE}`)].sort()
+export function specimenGlyphs(family: string, text?: string) {
+  return [...new Set(`${family}${text ?? `${SPECIMEN_TEXT}${SPECIMEN_LINE}`}`)].sort()
+}
+
+/** A glyph list is a URL and a cache key as well as a subset. */
+export const PREVIEW_MAX = 64
+
+/** `undefined` for anything that would not change what a specimen sets. */
+export function previewText(value: unknown) {
+  const text = String(value ?? '').replace(/\s+/g, ' ').trim().slice(0, PREVIEW_MAX)
+  return text || undefined
 }

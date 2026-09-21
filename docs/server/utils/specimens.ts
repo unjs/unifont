@@ -36,8 +36,8 @@ export function assertResolved(css: string, label: string) {
 }
 
 /** Only Google can subset to a glyph list; the others ignore this and answer in full. */
-export function specimenOptions(family: string) {
-  return { google: { experimental: { glyphs: specimenGlyphs(family) } } }
+export function specimenOptions(family: string, text?: string) {
+  return { google: { experimental: { glyphs: specimenGlyphs(family, text) } } }
 }
 
 /**
@@ -46,7 +46,7 @@ export function specimenOptions(family: string) {
  * knows becomes a comment rather than failing the whole sheet.
  *
  * `glyphs` cuts each face to the characters a grid sets, which only Google honours; pass it only
- * for text known in advance.
+ * for text known in advance. `text` does the same for a caller's own specimen line, and implies it.
  *
  * No metric-matched fallback: `fontaine` sources those from `local("sans-serif")`, which matches
  * no installed family, so the face never loads and reading the metrics for it costs a download
@@ -54,7 +54,7 @@ export function specimenOptions(family: string) {
  */
 export async function specimenCss(
   families: string[],
-  overrides: { weights?: string[], subsets?: string[], glyphs?: boolean } = {},
+  overrides: { weights?: string[], subsets?: string[], glyphs?: boolean, text?: string } = {},
 ) {
   const unifont = await useUnifont()
   const needsProperties = !overrides.weights || !overrides.subsets
@@ -66,7 +66,7 @@ export async function specimenCss(
       styles: ['normal'],
       subsets: overrides.subsets ?? specimenSubsets(properties?.subsets),
       formats: ['woff2'],
-      options: overrides.glyphs ? specimenOptions(family) : undefined,
+      options: overrides.glyphs || overrides.text ? specimenOptions(family, overrides.text) : undefined,
     })
     if (!resolved.fonts.length) {
       return null
