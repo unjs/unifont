@@ -372,7 +372,7 @@ export function openApiDocument(origin = 'https://unifont.dev') {
         '',
         'Use it to search a merged catalogue of families, see what a provider actually publishes for a family (weights, styles, subsets, unicode ranges), compare the same family across providers, check whether a family can draw a string, measure what a selection weighs, and get `@font-face` CSS you can ship.',
         '',
-        'No authentication, no rate limit headers, no keys. Everything is a `GET` except the MCP endpoint. This is a best-effort public service rather than production infrastructure: if a deployment of yours depends on it, run `unifont` yourself.',
+        'No authentication, no rate limit headers, no keys. Everything is a `GET` except the MCP endpoint. This is a best-effort public service rather than production infrastructure: if a deployment of yours depends on it, run `unifont` yourself. The `css` endpoints answer scripts and this site’s own pages, but refuse a `<link rel="stylesheet">` from another site.',
       ].join('\n'),
       contact: {
         name: 'unifont on GitHub',
@@ -497,7 +497,7 @@ export function openApiDocument(origin = 'https://unifont.dev') {
           operationId: 'getFontCss',
           tags: ['css'],
           summary: 'Stylesheet for one family',
-          description: '`@font-face` CSS for one family, ready to link to or paste. A selection that resolves to nothing returns an empty stylesheet with a comment, not an error.',
+          description: '`@font-face` CSS for one family, to read, paste or fetch from a script. A selection that resolves to nothing returns an empty stylesheet with a comment, not an error. Linking it as a stylesheet from another site is refused: resolve the family with `unifont` and serve the CSS yourself.',
           parameters: [
             familyParameter,
             ...selectionParameters,

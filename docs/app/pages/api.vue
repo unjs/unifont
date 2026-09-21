@@ -77,7 +77,7 @@ const endpoints: Endpoint[] = [
   {
     method: 'GET',
     path: '/api/v1/fonts/{family}/css',
-    summary: '@font-face CSS you can serve. Link to it directly, or read it and copy. If a selection resolves to nothing you get an empty stylesheet with a comment, not a 404.',
+    summary: '@font-face CSS to read, copy or fetch from a script. If a selection resolves to nothing you get an empty stylesheet with a comment, not a 404.',
     params: [
       { name: 'provider', type: 'string', note: 'Limit the cascade to these providers (comma-separated).' },
       { name: 'weights', type: 'string', note: 'Comma-separated. Default 400.' },
@@ -134,6 +134,11 @@ const anchor = (path: string) => path.replace(/[^a-z0-9]+/gi, '-').replace(/^-|-
         cached, and won't change shape while they're under <code>/v1</code>. Feel free to use them in scripts, editor
         plugins or CI checks, anywhere you want font metadata. There's an
         <a href="https://modelcontextprotocol.io">MCP</a> server too, for agents.
+      </p>
+      <p class="head__machine">
+        The <code>css</code> endpoints are the one exception: they answer scripts and this site's own
+        pages, but a <code>&lt;link rel="stylesheet"&gt;</code> from another site is refused. Resolve
+        the family with <code>unifont</code> and serve the CSS from your own origin.
       </p>
       <p class="head__machine">
         Machine-readable: <a href="/openapi.json">openapi.json</a> describes every endpoint below,

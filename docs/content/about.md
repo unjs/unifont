@@ -27,6 +27,8 @@ Every page here is also an HTTP endpoint. The [catalogue](/fonts), the [provider
 
 Font metadata and font files belong to the foundries that made them and are licensed by them, not by us. This site never proxies or re-hosts font binaries: every file URL in a response points at the provider's own CDN. Check a family's licence with its foundry before shipping it.
 
+The font CSS this site serves is for reading, copying and scripting, and for its own pages. It isn't a font CDN: a `<link rel="stylesheet">` pointing here from another site is refused, because that would put someone else's traffic through our origin and through the providers' terms. Resolve the family with `unifont` and serve the CSS from your own origin.
+
 The public API is best-effort infrastructure for scripts, editor plugins and CI checks. It may be rate-limited or withdrawn, so if a deployment of yours depends on font resolution, install `unifont` and run it yourself, or [self-host the CORS proxy](/docs/proxy).
 
 ## Stacks live in your account
