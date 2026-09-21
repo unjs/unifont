@@ -284,6 +284,33 @@ const schemas = {
     },
     required: ['family', 'name', 'generic', 'fallbacks', 'css', 'overrides'],
   },
+  BudgetResponse: {
+    type: 'object',
+    properties: {
+      family: { type: 'string' },
+      text: { type: 'string', description: 'The text as priced, whitespace-collapsed and capped.' },
+      provider: { type: ['string', 'null'], description: 'The provider that answered.' },
+      characters: { type: 'integer', description: 'Distinct non-whitespace code points in the text.' },
+      weights: { type: 'array', items: { type: 'string' } },
+      styles: { type: 'array', items: { type: 'string' } },
+      plans: {
+        type: 'array',
+        description: 'Everything published, what the text pulls, and, where the provider can subset to a glyph list, that too.',
+        items: {
+          type: 'object',
+          properties: {
+            label: { type: 'string' },
+            faces: { type: 'integer' },
+            files: { type: 'integer' },
+            measured: { type: 'integer', description: 'Files whose size is known.' },
+            bytes: { type: 'integer' },
+          },
+          required: ['label', 'faces', 'files', 'measured', 'bytes'],
+        },
+      },
+    },
+    required: ['family', 'text', 'provider', 'characters', 'weights', 'styles', 'plans'],
+  },
   CompareResponse: {
     type: 'object',
     properties: {
@@ -651,6 +678,51 @@ export function openApiDocument(origin = 'https://unifont.dev') {
             200: jsonResponse('The generated face and its descriptors.', 'FallbackResponse'),
             400: errorResponse('No family was given.'),
             404: errorResponse('No provider could resolve this family.'),
+          },
+        },
+      },
+      '/api/v1/fonts/{family}/budget': {
+        get: {
+          operationId: 'getTextBudget',
+          tags: ['families'],
+          summary: 'What one string costs in this family',
+          description: 'Prices a string three ways against the same family: every file the selection publishes, only the files the text pulls through `unicode-range`, and, for a provider that subsets to a glyph list, the subset. For a family split into a hundred subset files the three differ by orders of magnitude.',
+          parameters: [
+            familyParameter,
+            {
+              name: 'text',
+              in: 'query',
+              required: true,
+              description: 'The string to price. Whitespace is collapsed, and it is capped at 64 characters.',
+              schema: { type: 'string' },
+              example: 'Acme Corp',
+            },
+            {
+              name: 'weights',
+              in: 'query',
+              required: false,
+              description: 'Weights to price (comma-separated). Default 400.',
+              schema: commaList('Comma-separated weights.'),
+            },
+            {
+              name: 'styles',
+              in: 'query',
+              required: false,
+              description: 'Styles to price (comma-separated). Default normal.',
+              schema: commaList('Comma-separated styles.'),
+            },
+            {
+              name: 'provider',
+              in: 'query',
+              required: false,
+              description: 'Limit the cascade to these providers (comma-separated).',
+              schema: commaList('Comma-separated provider names.'),
+            },
+          ],
+          responses: {
+            200: jsonResponse('The three plans, measured the same way.', 'BudgetResponse'),
+            400: errorResponse('No family, or no `text` to price.'),
+            404: errorResponse('No provider knows this family, or none could resolve the selection.'),
           },
         },
       },

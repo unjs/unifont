@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import type { FallbackResponse, StacksResponse, TransferResponse } from '#shared/types'
+import type { BudgetResponse, FallbackResponse, StacksResponse, TransferResponse } from '#shared/types'
 import { FALLBACK_TEXT, specimenAlias } from '#shared/featured'
 
 const route = useRoute()
@@ -305,6 +305,42 @@ useHead(() => ({
     ? [{ rel: 'stylesheet', href: `/api/v1/css?families=${stackFamilies.value.map(encodeURIComponent).join(',')}` }]
     : [],
 }))
+
+/* ── Budget ─────────────────────────────────────────────── */
+// On request, not on keystroke: each answer is a round of HEAD requests plus one download.
+const budgetQuery = computed(() => ({
+  text: sample.value,
+  weights: requested.value?.weights.join(',') ?? '',
+  styles: requested.value?.styles.join(',') ?? '',
+  provider: provider.value,
+}))
+
+const { data: budget, status: budgetStatus, error: budgetError, execute: priceText } = await useFetch<BudgetResponse>(
+  () => `/api/v1/fonts/${encodeURIComponent(family.value)}/budget`,
+  {
+    query: budgetQuery,
+    key: () => `budget-${family.value}`,
+    lazy: true,
+    server: false,
+    immediate: false,
+    watch: false,
+  },
+)
+
+const pricedQuery = ref('')
+const budgetStale = computed(() => Boolean(budget.value) && pricedQuery.value !== JSON.stringify(budgetQuery.value))
+
+function price() {
+  pricedQuery.value = JSON.stringify(budgetQuery.value)
+  priceText()
+}
+
+const budgetMax = computed(() => Math.max(...(budget.value?.plans.map(plan => plan.bytes) ?? [0]), 1))
+
+const budgetWeights = computed(() => {
+  const weights = budget.value?.weights ?? []
+  return weights.map(value => (isRange(value) ? value.replace(/\s+/, '\u2013') : value)).join(', ')
+})
 
 /* ── Fallback ───────────────────────────────────────────── */
 const { data: fallback } = await useFetch<FallbackResponse>(
@@ -752,6 +788,72 @@ export default defineNuxtConfig({
               class="control__note"
             >not in the current selection</span>
           </p>
+        </div>
+
+        <div class="budget">
+          <div class="budget__head">
+            <h3 class="budget__title">
+              What this text costs
+            </h3>
+            <button
+              class="budget__price"
+              type="button"
+              :disabled="budgetStatus === 'pending' || !sample.trim()"
+              @click="price()"
+            >
+              <template v-if="budgetStatus === 'pending'">
+                measuring…
+              </template>
+              <template v-else-if="budget">
+                measure again
+              </template>
+              <template v-else>
+                measure this text
+              </template>
+            </button>
+          </div>
+
+          <p
+            v-if="!budget && budgetStatus !== 'pending'"
+            class="budget__lede"
+          >
+            Bytes on the wire for the sample above: everything the selection publishes, only the
+            files your text pulls, and, where the provider can subset to a glyph list, that too.
+          </p>
+
+          <p
+            v-else-if="budgetError"
+            class="budget__lede"
+          >
+            The provider wouldn’t price this selection.
+          </p>
+
+          <template v-else-if="budget">
+            <ul class="budget__plans">
+              <li
+                v-for="plan in budget.plans"
+                :key="plan.label"
+                class="plan"
+              >
+                <span class="plan__label">{{ plan.label }}</span>
+                <span
+                  class="plan__bar"
+                  :style="{ inlineSize: `${Math.max((plan.bytes / budgetMax) * 100, 1)}%` }"
+                />
+                <span class="plan__figure">
+                  {{ kb(plan.bytes) }}
+                  <span class="plan__files">{{ plan.files }} file{{ plan.files === 1 ? '' : 's' }}</span>
+                </span>
+              </li>
+            </ul>
+            <p class="budget__lede">
+              {{ budget.characters }} distinct characters, weight {{ budgetWeights }}, from
+              <code>{{ budget.provider }}</code>.
+              <template v-if="budgetStale">
+                The sample has changed since this was measured.
+              </template>
+            </p>
+          </template>
         </div>
       </section>
 
@@ -1384,6 +1486,93 @@ export default defineNuxtConfig({
 
 .fallback__css {
   margin-top: var(--space-md);
+}
+
+.budget {
+  margin-top: var(--space-lg);
+  padding-top: var(--space-md);
+  border-top: var(--rule-hair) solid var(--color-rule);
+}
+
+.budget__head {
+  display: flex;
+  gap: var(--space-sm);
+  align-items: baseline;
+  justify-content: space-between;
+  flex-wrap: wrap;
+}
+
+.budget__title {
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+  font-weight: 400;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--color-neutral);
+}
+
+.budget__price {
+  min-height: 2rem;
+  padding: var(--space-2xs) var(--space-xs);
+  background: none;
+  border: var(--rule-hair) solid var(--color-rule);
+  color: var(--color-muted);
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+  cursor: pointer;
+}
+
+.budget__price:disabled {
+  cursor: default;
+  opacity: 0.6;
+}
+
+.budget__lede {
+  max-width: var(--measure);
+  margin-top: var(--space-xs);
+  color: var(--color-neutral);
+  font-size: var(--text-sm);
+}
+
+.budget__plans {
+  margin: var(--space-sm) 0 0;
+  padding: 0;
+  list-style: none;
+  display: grid;
+  gap: var(--space-2xs);
+}
+
+.plan {
+  display: grid;
+  grid-template-columns: minmax(8rem, 12rem) 1fr auto;
+  gap: var(--space-xs);
+  align-items: center;
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+}
+
+.plan__bar {
+  block-size: 0.5rem;
+  background: var(--color-ink);
+}
+
+.plan__figure {
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.plan__files {
+  color: var(--color-neutral);
+}
+
+@media (width < 40rem) {
+  .plan {
+    grid-template-columns: 1fr auto;
+  }
+
+  .plan__bar {
+    display: none;
+  }
 }
 
 .tester__controls {

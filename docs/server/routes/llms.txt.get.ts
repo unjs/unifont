@@ -29,6 +29,7 @@ export default defineEventHandler(async (event) => {
     '- **"Which provider should I load this family from?"** `GET /api/v1/fonts/<family>/compare` asks every credential-free provider the same question and shows where the answers differ (weights, subsets, hosts, file counts, bytes).',
     '- **"Can this font draw this text?"** `GET /api/v1/fonts/<family>/coverage?text=…` checks the resolved `unicode-range`s, which is how you catch a family that silently cannot set Polish, Vietnamese or Greek.',
     '- **"How heavy is this selection?"** `GET /api/v1/fonts/<family>/transfer` measures the real files with `HEAD` requests. Nothing is downloaded. `GET /api/v1/transfer?families=A,B,C` does the same for a list, all quoted against one selection.',
+    '- **"What does *this text* cost in this family?"** `GET /api/v1/fonts/<family>/budget?text=…` prices one string three ways: everything the selection publishes, only the files the text pulls through `unicode-range`, and, where the provider subsets to a glyph list, the subset. For a CJK family the three differ by orders of magnitude.',
     '- **"What should I put in the fallback stack?"** `GET /api/v1/fonts/<family>/fallback` returns a metric-matched `@font-face` and the descriptors it sets.',
     '- **"How do I do this in my own build?"** Read the library documentation below. For a Vite or Nuxt app, the answer is usually `fontless` or `@nuxt/fonts`, both of which wrap unifont.',
     '',

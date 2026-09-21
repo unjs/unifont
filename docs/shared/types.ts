@@ -7,9 +7,11 @@ export type { CompareResponse, CompareRow } from '#server/api/v1/fonts/[family]/
 export type { TransferResponse } from '#server/api/v1/fonts/[family]/transfer.get'
 export type { BaselineTransferResponse } from '#server/api/v1/transfer.get'
 export type { FallbackResponse } from '#server/api/v1/fonts/[family]/fallback.get'
+export type { BudgetResponse } from '#server/api/v1/fonts/[family]/budget.get'
 export type { ProvidersResponse, ProviderSummary } from '#server/api/v1/providers.get'
 export type { StacksResponse } from '#server/api/v1/stacks/index.get'
 export type { BaselineTransfer } from '#server/utils/transfer'
+export type { BudgetPlan } from '#server/utils/budget'
 export type { Profile as StackAuthor } from '#server/utils/pds'
 
 export type StackRecord = Infer<(typeof lexicons)['stack']>
