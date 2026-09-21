@@ -10,6 +10,16 @@ const { data: credits } = await useFetch('/api/v1/contributors', {
 })
 
 const others = computed(() => credits.value?.others ?? 0)
+
+const INDEX = [
+  { to: '/fonts', label: 'fonts' },
+  { to: '/compare', label: 'compare' },
+  { to: '/docs', label: 'docs' },
+  { to: '/api', label: 'api' },
+  { to: '/about', label: 'about' },
+  { to: '/contact', label: 'contact' },
+  { to: '/privacy', label: 'privacy' },
+]
 </script>
 
 <template>
@@ -19,13 +29,21 @@ const others = computed(() => credits.value?.others ?? 0)
         <strong>unifont</strong> is a small library for reading font metadata from CDNs, whatever you build with.
       </p>
       <p class="colophon__line colophon__line--index">
-        <NuxtLink to="/fonts">fonts</NuxtLink> ·
-        <NuxtLink to="/compare">compare</NuxtLink> ·
-        <NuxtLink to="/docs">docs</NuxtLink> ·
-        <NuxtLink to="/api">api</NuxtLink> ·
-        <NuxtLink to="/about">about</NuxtLink> ·
-        <NuxtLink to="/contact">contact</NuxtLink> ·
-        <NuxtLink to="/privacy">privacy</NuxtLink> ·
+        <template
+          v-for="link in INDEX"
+          :key="link.to"
+        >
+          <NuxtLink
+            v-slot="{ href, navigate }"
+            :to="link.to"
+            custom
+          >
+            <a
+              :href="href ?? link.to"
+              @click="navigate"
+            >{{ link.label }}</a>
+          </NuxtLink> ·
+        </template>
         <a href="https://github.com/unjs/unifont">source</a> ·
         <a href="https://npmjs.com/package/unifont">npm</a> ·
         <a href="/llms.txt">llms.txt</a> ·
