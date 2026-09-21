@@ -3,7 +3,7 @@ import type { PublishedStack } from '#shared/types'
 import { stackPath } from '#shared/atproto'
 
 /** Without an `entry` the card renders as a placeholder of the height it will fill. */
-const props = defineProps<{ entry?: PublishedStack, detail?: boolean }>()
+const props = defineProps<{ entry?: PublishedStack }>()
 
 const roles = computed(() => {
   const byRole = new Map(props.entry?.stack.roles.map(role => [role.role, role]))
@@ -17,7 +17,7 @@ const stackFor = (family: string | undefined, fallback: string) =>
 <template>
   <article
     class="card"
-    :class="{ 'card--detail': detail, 'card--loading': !entry }"
+    :class="{ 'card--loading': !entry }"
     :aria-hidden="entry ? undefined : 'true'"
   >
     <p
@@ -54,7 +54,6 @@ const stackFor = (family: string | undefined, fallback: string) =>
     </p>
 
     <p
-      v-if="!detail || roles.mono"
       class="card__mono"
       :style="{ fontFamily: stackFor(roles.mono?.family, 'var(--font-mono)') }"
     >
@@ -107,7 +106,7 @@ const stackFor = (family: string | undefined, fallback: string) =>
 </template>
 
 <style scoped>
-/* Line-box limits keep every card one height; `--detail` lifts them. */
+/* Line-box limits keep every card one height. */
 .card {
   min-inline-size: 0;
   padding-block: var(--space-lg);
@@ -154,22 +153,6 @@ const stackFor = (family: string | undefined, fallback: string) =>
   font-size: var(--text-xs);
   text-overflow: ellipsis;
   white-space: nowrap;
-}
-
-.card--detail .card__heading,
-.card--detail .card__body,
-.card--detail .card__mono,
-.card--detail .card__roles,
-.card--detail .card__by {
-  display: block;
-  block-size: auto;
-  overflow: visible;
-  white-space: normal;
-  overflow-wrap: anywhere;
-}
-
-.card--detail .card__heading {
-  text-wrap: balance;
 }
 
 .card__role {

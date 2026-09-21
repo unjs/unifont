@@ -1,6 +1,5 @@
 <script setup lang="ts">
 import { familyUri, STACK_APP_URI } from '#shared/atproto'
-import { nearestWeight } from '#shared/weights'
 
 const route = useRoute()
 const router = useRouter()
@@ -10,9 +9,9 @@ const router = useRouter()
  * bold and an italic; nothing else is asked for.
  */
 const ROLES = [
-  { key: 'heading', label: 'Heading', fallback: 'var(--font-display)', targets: [600], styles: ['normal'] },
-  { key: 'body', label: 'Body', fallback: 'var(--font-body)', targets: [350, 700], styles: ['normal', 'italic'] },
-  { key: 'mono', label: 'Mono', fallback: 'var(--font-mono)', targets: [400], styles: ['normal'] },
+  { key: 'heading', label: 'Heading' },
+  { key: 'body', label: 'Body' },
+  { key: 'mono', label: 'Mono' },
 ] as const
 
 type Role = typeof ROLES[number]['key']
@@ -23,48 +22,13 @@ const stack = computed(() => Object.fromEntries(
 
 const chosen = computed(() => ROLES.map(role => ({ ...role, family: stack.value[role.key] })).filter(role => role.family))
 
+const roles = computed(() => chosen.value.map(role => ({ role: role.key, family: role.family })))
+
 function setRole(key: Role, value: string) {
   router.replace({ query: { ...route.query, [key]: value.trim() || undefined } })
 }
 
 const families = computed(() => chosen.value.map(role => role.family))
-
-/** A provider serves nothing for a weight it does not publish, so the targets are asked of it. */
-const { data: availableWeights } = await useAsyncData(
-  () => `stack-weights-${families.value.join('|')}`,
-  async () => Object.fromEntries(await Promise.all(families.value.map(async family => [
-    family,
-    await $fetch(`/api/v1/fonts/${encodeURIComponent(family)}`)
-      .then(data => data.properties?.weights ?? [])
-      .catch(() => [] as string[]),
-  ] as const))),
-  { default: () => ({} as Record<string, string[]>), watch: [families] },
-)
-
-/** A variable face covers every target at once; a family of static cuts answers one at a time. */
-function weightsFor(role: typeof chosen.value[number]) {
-  const available = availableWeights.value?.[role.family] ?? []
-  const range = available.find(weight => weight.includes(' '))
-  if (range) {
-    return { request: [range], set: role.targets.map(String) }
-  }
-  const statics = available.filter(weight => !weight.includes(' '))
-  const set = role.targets.map(target => (statics.length ? nearestWeight(statics, target) : String(target)))
-  return { request: [...new Set(set)], set }
-}
-
-/** One sheet per role: each face is asked for at the weights and styles the preview sets. */
-const stylesheets = computed(() => chosen.value.map(role =>
-  `/api/v1/fonts/${encodeURIComponent(role.family)}/css`
-  + `?weights=${encodeURIComponent(weightsFor(role).request.join(','))}&styles=${role.styles.join(',')}`,
-))
-
-useHead(() => ({ link: stylesheets.value.map(href => ({ rel: 'stylesheet', href })) }))
-
-/** The weights the preview sets, so nothing is drawn in a face the page did not ask for. */
-const setWeights = computed(() => Object.fromEntries(
-  chosen.value.map(role => [role.key, weightsFor(role).set]),
-) as Partial<Record<Role, string[]>>)
 
 useProviderPreconnect()
 
@@ -72,13 +36,6 @@ usePageSeo({
   title: () => (families.value.length ? `Stack: ${families.value.join(' + ')}` : 'Stack'),
   description: 'Set a heading, body and mono face side by side and take the config away.',
 })
-
-const MONO_SAMPLE = 'const stack = { heading: 0.1, body: 1.0, mono: 0.3 } // 1234567890'
-
-function stackFor(role: typeof ROLES[number]) {
-  const family = stack.value[role.key]
-  return family ? `'${family}', ${role.fallback}` : role.fallback
-}
 
 /* ── Publishing ───────────────────────────────────────── */
 const { session, signIn, signOut } = useAtprotoSession()
@@ -89,15 +46,55 @@ const published = ref<{ handle: string, rkey: string } | null>(null)
 const failure = ref('')
 const title = ref('')
 
+/** The record being edited, if the builder was opened from one. */
+const rkey = computed(() => String(route.query.rkey ?? '').trim())
+
+/** Kept so an edit does not rewrite when the stack was first made. */
+const createdAt = ref('')
+
+/** The redirect lands on a bare `/stack`, so the stack being built is parked before leaving. */
+const DRAFT = 'unifont-stack-draft'
+
 async function startSignIn() {
   failure.value = ''
   try {
+    sessionStorage.setItem(DRAFT, JSON.stringify({ query: route.query, title: title.value }))
     await signIn(handleInput.value)
   }
   catch (error) {
+    sessionStorage.removeItem(DRAFT)
     failure.value = error instanceof Error ? error.message : 'That handle did not resolve.'
   }
 }
+
+onMounted(() => {
+  const draft = sessionStorage.getItem(DRAFT)
+  sessionStorage.removeItem(DRAFT)
+  if (!draft || families.value.length) {
+    return
+  }
+  try {
+    const { query, title: parked } = JSON.parse(draft) as { query: Record<string, string>, title: string }
+    title.value = parked
+    router.replace({ query })
+  }
+  catch {
+    failure.value = ''
+  }
+})
+
+/** An edit reads the record back, so a title left out of the URL survives the round trip. */
+watch([rkey, session], async () => {
+  if (!rkey.value || !session.value) {
+    return
+  }
+  const record = await $fetch(`/api/v1/stacks/@${session.value.handle}/${encodeURIComponent(rkey.value)}`).catch(() => null)
+  if (!record) {
+    return
+  }
+  createdAt.value = record.stack.createdAt
+  title.value ||= record.stack.title
+}, { immediate: true })
 
 async function publish() {
   const signedIn = session.value
@@ -107,14 +104,22 @@ async function publish() {
 
   publishing.value = true
   failure.value = ''
+  const record = {
+    title: (title.value.trim() || families.value.join(' + ')).slice(0, 120),
+    roles: chosen.value.map(role => ({ role: role.key, family: role.family, uri: familyUri(role.family) })),
+    app: STACK_APP_URI,
+    createdAt: createdAt.value || new Date().toISOString(),
+  }
+
   try {
-    const { rkey } = await signedIn.airspace.stacks.create({
-      title: (title.value.trim() || families.value.join(' + ')).slice(0, 120),
-      roles: chosen.value.map(role => ({ role: role.key, family: role.family, uri: familyUri(role.family) })),
-      app: STACK_APP_URI,
-      createdAt: new Date().toISOString(),
-    })
-    published.value = { handle: signedIn.handle, rkey }
+    if (rkey.value) {
+      await signedIn.airspace.stacks.put(rkey.value, record)
+      published.value = { handle: signedIn.handle, rkey: rkey.value }
+    }
+    else {
+      const written = await signedIn.airspace.stacks.create(record)
+      published.value = { handle: signedIn.handle, rkey: written.rkey }
+    }
   }
   catch (error) {
     failure.value = error instanceof Error ? error.message : 'That did not work.'
@@ -123,24 +128,6 @@ async function publish() {
     publishing.value = false
   }
 }
-
-const snippet = computed(() => {
-  if (!chosen.value.length) {
-    return ''
-  }
-  const options = (role: typeof chosen.value[number]) => [
-    `weights: [${weightsFor(role).set.map(weight => `'${weight}'`).join(', ')}]`,
-    ...(role.styles.length > 1 ? [`styles: [${role.styles.map(style => `'${style}'`).join(', ')}]`] : []),
-  ].join(', ')
-
-  return [
-    `import { createUnifont, providers } from 'unifont'`,
-    ``,
-    `const unifont = await createUnifont([providers.google(), providers.fontshare(), providers.bunny()])`,
-    ``,
-    ...chosen.value.map(role => `const ${role.key} = await unifont.resolveFont('${role.family}', { ${options(role)} })`),
-  ].join('\n')
-})
 </script>
 
 <template>
@@ -173,66 +160,9 @@ const snippet = computed(() => {
       </p>
     </header>
 
-    <section
-      v-if="chosen.length"
-      class="composition"
-      aria-label="Preview"
-    >
-      <p
-        class="composition__label"
-        :style="{ fontFamily: stackFor(ROLES[2]), fontWeight: setWeights.mono?.[0] }"
-      >
-        preview
-      </p>
-      <h2
-        class="composition__heading"
-        :style="{ fontFamily: stackFor(ROLES[0]), fontWeight: setWeights.heading?.[0] }"
-      >
-        Words set in your very own font stack
-      </h2>
-      <p
-        class="composition__body"
-        :style="{
-          'fontFamily': stackFor(ROLES[1]),
-          'fontWeight': setWeights.body?.[0],
-          '--strong-weight': setWeights.body?.[1],
-        }"
-      >
-        A page is <em>mostly</em> body text, so the font face that matters the most is the one you look at least.
-        It's amazing how small changes make a big difference to the impression you get of a page.
-        Read this paragraph, then check the <strong>monospace text</strong> below.
-      </p>
-      <CodeBlock
-        class="composition__mono"
-        :code="MONO_SAMPLE"
-        label="mono"
-        language="typescript"
-        :family="stackFor(ROLES[2])"
-        :weight="setWeights.mono?.[0]"
-      />
-    </section>
-
-    <section
-      v-if="chosen.length"
-      class="roles"
-    >
-      <p
-        v-for="role in chosen"
-        :key="role.key"
-        class="roles__row"
-      >
-        <span class="roles__label">{{ role.label }}</span>
-        <NuxtLink :to="`/fonts/${encodeURIComponent(role.family)}`">
-          {{ role.family }}
-        </NuxtLink>
-      </p>
-    </section>
-
-    <CodeBlock
-      v-if="snippet"
-      :code="snippet"
-      label="resolve the stack"
-      language="typescript"
+    <StackPreview
+      v-if="roles.length"
+      :roles="roles"
     />
 
     <section
@@ -244,14 +174,14 @@ const snippet = computed(() => {
         id="publish-heading"
         class="publish__title"
       >
-        Keep this stack
+        {{ rkey ? 'Edit this stack' : 'Keep this stack' }}
       </h2>
 
       <p
         v-if="published"
         class="publish__lede"
       >
-        Published to your account.
+        {{ rkey ? 'Saved to your account.' : 'Published to your account.' }}
         <NuxtLink :to="`/stacks/@${published.handle}/${published.rkey}`">
           See it
         </NuxtLink>, or find it among
@@ -262,8 +192,14 @@ const snippet = computed(() => {
 
       <template v-else-if="session">
         <p class="publish__lede">
-          Signed in as @{{ session.handle }}. Publishing saves this stack to your own account, from
-          your browser. You can delete it here or anywhere else you reach that account.
+          Signed in as @{{ session.handle }}.
+          <template v-if="rkey">
+            Saving writes over the stack you published, from your browser.
+          </template>
+          <template v-else>
+            Publishing saves this stack to your own account, from your browser.
+          </template>
+          You can delete it here or anywhere else you reach that account.
         </p>
         <p class="publish__row">
           <label class="publish__field">
@@ -282,7 +218,7 @@ const snippet = computed(() => {
             :disabled="publishing"
             @click="publish()"
           >
-            {{ publishing ? 'publishing…' : 'publish to my account' }}
+            {{ publishing ? 'saving…' : rkey ? 'save changes' : 'publish to my account' }}
           </button>
           <button
             class="publish__button"
@@ -373,57 +309,6 @@ const snippet = computed(() => {
   font-family: var(--font-mono);
   font-size: var(--text-xs);
   font-variant-numeric: tabular-nums;
-}
-
-.composition {
-  margin-block: var(--space-xl);
-  padding: var(--space-lg);
-  border: var(--rule-hair) solid var(--color-rule);
-  background: var(--color-paper-2);
-}
-
-.composition__label {
-  margin-bottom: var(--space-md);
-  color: var(--color-muted);
-  font-size: var(--text-xs);
-}
-
-.composition__heading {
-  font-size: var(--text-2xl);
-}
-
-.composition__body {
-  max-width: var(--measure);
-  margin-top: var(--space-md);
-  font-size: var(--text-base);
-  line-height: 1.6;
-}
-
-.composition__body strong {
-  font-weight: var(--strong-weight, 700);
-}
-
-.composition__mono {
-  margin-top: var(--space-lg);
-  background: var(--color-paper);
-}
-
-.roles {
-  padding-block: var(--space-md);
-}
-
-.roles__row {
-  display: grid;
-  grid-template-columns: 6rem 1fr;
-  gap: var(--space-sm);
-  padding-block: var(--space-2xs);
-  font-family: var(--font-mono);
-  font-size: var(--text-xs);
-  font-variant-numeric: tabular-nums;
-}
-
-.roles__label {
-  color: var(--color-neutral);
 }
 
 .publish {

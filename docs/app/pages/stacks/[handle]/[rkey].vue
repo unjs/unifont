@@ -13,12 +13,6 @@ const { data: entry, error } = await useFetch<PublishedStack>(
 
 const families = computed(() => entry.value?.stack.roles.map(role => role.family) ?? [])
 
-useHead(() => ({
-  link: families.value.length
-    ? [{ rel: 'stylesheet', href: `/api/v1/css?families=${families.value.map(encodeURIComponent).join(',')}` }]
-    : [],
-}))
-
 useProviderPreconnect()
 
 usePageSeo({
@@ -60,6 +54,14 @@ const asQuery = computed(() => {
   }
   return query
 })
+
+/** The builder writes back to this record rather than adding another. */
+const editQuery = computed(() => ({ ...asQuery.value, rkey: rkey.value }))
+
+const published = computed(() => {
+  const at = entry.value?.stack.createdAt
+  return at ? new Date(at).toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' }) : ''
+})
 </script>
 
 <template>
@@ -72,14 +74,27 @@ const asQuery = computed(() => {
     </p>
 
     <template v-else-if="entry">
-      <StackCard
-        :entry="entry"
-        detail
-      />
+      <header class="head">
+        <h1 class="head__title">
+          {{ entry.stack.title }}
+        </h1>
+        <p class="head__by">
+          by <NuxtLink :to="`/stacks/@${entry.author.handle}`">@{{ entry.author.handle }}</NuxtLink>
+          <template v-if="published"> · {{ published }}</template>
+        </p>
+        <p
+          v-if="entry.stack.note"
+          class="head__note"
+        >
+          {{ entry.stack.note }}
+        </p>
+      </header>
+
+      <StackPreview :roles="entry.stack.roles" />
 
       <p class="single__actions">
-        <NuxtLink :to="{ path: '/stack', query: asQuery }">
-          open in the builder
+        <NuxtLink :to="{ path: '/stack', query: mine ? editQuery : asQuery }">
+          {{ mine ? 'edit in the builder' : 'open in the builder' }}
         </NuxtLink>
         ·
         <a :href="`https://pdsls.dev/at://${entry.author.did}/dev.unifont.stack/${entry.rkey}`">
@@ -123,6 +138,23 @@ const asQuery = computed(() => {
   margin-inline: auto;
   padding-inline: var(--page-pad);
   padding-block: var(--space-xl);
+}
+
+.head {
+  padding-bottom: var(--space-lg);
+  border-bottom: var(--rule-heavy) solid var(--color-ink);
+}
+
+.head__title {
+  font-size: var(--text-2xl);
+}
+
+.head__by,
+.head__note {
+  max-width: var(--measure);
+  margin-top: var(--space-xs);
+  color: var(--color-muted);
+  font-size: var(--text-sm);
 }
 
 .single__actions {
