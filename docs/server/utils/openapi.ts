@@ -548,7 +548,7 @@ export function openApiDocument(origin = 'https://unifont.dev') {
               name: 'provider',
               in: 'query',
               required: false,
-              description: 'Limit results to one provider. `npm` and `adobe` cannot list their families and are rejected.',
+              description: 'Limit results to one provider. `adobe` cannot list its families and is rejected.',
               schema: provider,
             },
             {
@@ -615,7 +615,7 @@ export function openApiDocument(origin = 'https://unifont.dev') {
           responses: {
             200: jsonResponse('The resolved family.', 'FontResponse'),
             400: errorResponse('No family was given.'),
-            404: errorResponse('No provider publishes the family. It may still exist on Adobe Fonts or npm, neither of which can be listed.'),
+            404: errorResponse('No provider publishes the family. It may still exist on Adobe Fonts, which cannot be listed.'),
           },
         },
       },

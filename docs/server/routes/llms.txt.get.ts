@@ -32,6 +32,7 @@ export default defineEventHandler(async (event) => {
     '- **"What does *this text* cost in this family?"** `GET /api/v1/fonts/<family>/budget?text=…` prices one string three ways: everything the selection publishes, only the files the text pulls through `unicode-range`, and, where the provider subsets to a glyph list, the subset. For a CJK family the three differ by orders of magnitude.',
     '- **"Which families are variable, have an italic, or cover Greek?"** `GET /api/v1/fonts?variable=1&italic=1&subset=greek`, with `GET /api/v1/facets` for the counts.',
     '- **"What should I put in the fallback stack?"** `GET /api/v1/fonts/<family>/fallback` returns a metric-matched `@font-face` and the descriptors it sets.',
+    '- **"Which fonts are only on npm?"** `GET /api/v1/fonts?provider=npm` lists the families this site resolves through the `npm` provider, which the font CDNs do not carry.',
     '- **"How do I do this in my own build?"** Read the library documentation below. For a Vite or Nuxt app, the answer is usually `fontless` or `@nuxt/fonts`, both of which wrap unifont.',
     '',
     'Do not use it for: hosting or serving font binaries (font files always come from the provider CDN), licensing decisions, font subsetting, or families that are not on a public CDN. Adobe Fonts needs a per-user Typekit id, so this site cannot answer for it.',

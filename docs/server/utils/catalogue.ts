@@ -15,10 +15,11 @@ export interface CatalogueEntry {
 }
 
 /**
- * Providers whose `getFontProperties()` reads an index they already hold. Fontsource asks the
- * network per variable family, which would be thousands of requests for one build.
+ * Providers whose `getFontProperties()` reads something they already hold: an index for the font
+ * CDNs, a parsed stylesheet for the curated npm list. Fontsource asks the network per variable
+ * family, which would be thousands of requests for one build.
  */
-const FACET_PROVIDERS = ['google', 'bunny', 'fontshare', 'googleicons'] as const
+const FACET_PROVIDERS = ['google', 'bunny', 'fontshare', 'googleicons', 'npm'] as const
 
 /** Facets are read a page at a time so that one slow provider cannot stall the whole build. */
 const FACET_BATCH = 32
@@ -53,8 +54,8 @@ async function build(): Promise<Catalogue> {
   const unavailable: ProviderName[] = []
 
   const lists = await Promise.all(QUERYABLE_PROVIDERS.map(async (name) => {
-    if (name === 'npm' || name === 'adobe') {
-      // Neither can enumerate: npm is the whole registry, adobe needs a project id.
+    if (name === 'adobe') {
+      // Adobe needs a Typekit project id, so there is no library to enumerate.
       return { name, families: undefined }
     }
     try {
@@ -68,7 +69,7 @@ async function build(): Promise<Catalogue> {
 
   for (const { name, families } of lists) {
     if (!families?.length) {
-      if (name !== 'npm' && name !== 'adobe') {
+      if (name !== 'adobe') {
         unavailable.push(name)
       }
       continue

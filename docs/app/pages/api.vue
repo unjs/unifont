@@ -245,8 +245,8 @@ const anchor = (path: string) => path.replace(/[^a-z0-9]+/gi, '-').replace(/^-|-
         <div class="notes__row">
           <dt>Unknown families</dt>
           <dd>
-            <code>404</code> with a message naming the family. A family may still exist on Adobe Fonts or npm,
-            neither of which can be listed from here.
+            <code>404</code> with a message naming the family. A family may still exist on Adobe Fonts, which
+            cannot be listed from here.
           </dd>
         </div>
         <div class="notes__row">

@@ -3,6 +3,7 @@ import type { ProviderMeta, ProviderName } from '#shared/types'
 import { PROVIDER_NAMES } from '#shared/types'
 import { useStorage } from 'nitro/storage'
 import { createUnifont, providers } from 'unifont'
+import { curatedNpm } from './npm'
 
 export type { ProviderMeta, ProviderName } from '#shared/types'
 export { PROVIDER_NAMES } from '#shared/types'
@@ -14,7 +15,7 @@ export const PROVIDER_META: Record<ProviderName, ProviderMeta> = {
   fontsource: { name: 'fontsource', label: 'Fontsource', origin: 'api.fontsource.org', requiresOptions: false, note: 'Open fonts packaged for npm, served from jsDelivr.' },
   googleicons: { name: 'googleicons', label: 'Google Icons', origin: 'fonts.google.com', requiresOptions: false, note: 'Material Symbols, as variable icon fonts.' },
   adobe: { name: 'adobe', label: 'Adobe Fonts', origin: 'typekit.com', requiresOptions: true, note: 'Needs a Typekit project id, so this site can\'t ask it on your behalf.' },
-  npm: { name: 'npm', label: 'npm', origin: 'unpkg / jsDelivr', requiresOptions: false, note: 'Any font published to npm, resolved from the CDN.' },
+  npm: { name: 'npm', label: 'npm', origin: 'jsDelivr', requiresOptions: false, note: 'Any font published to npm. The registry cannot be listed, so the catalogue carries a curated set the font CDNs do not.' },
 }
 
 /** Providers this site can query without per-user credentials. */
@@ -49,6 +50,7 @@ function create() {
     providers.fontshare(),
     providers.fontsource(),
     providers.googleicons(),
+    curatedNpm(),
   ], { storage: nitroStorage() })
 }
 
@@ -61,7 +63,7 @@ export function useUnifont() {
 const singles = new Map<string, ReturnType<typeof createSingle>>()
 
 function createSingle(name: Exclude<ProviderName, 'adobe'>) {
-  const factory = providers[name] as () => Parameters<typeof createUnifont>[0][number]
+  const factory = (name === 'npm' ? curatedNpm : providers[name]) as () => Parameters<typeof createUnifont>[0][number]
   return createUnifont([factory()], { storage: nitroStorage() })
 }
 
@@ -73,9 +75,9 @@ export function useProvider(name: Exclude<ProviderName, 'adobe'>) {
   return singles.get(name)!
 }
 
-type SharedProviderName = 'google' | 'bunny' | 'fontshare' | 'fontsource' | 'googleicons'
+type SharedProviderName = 'google' | 'bunny' | 'fontshare' | 'fontsource' | 'googleicons' | 'npm'
 
-const SHARED_PROVIDERS: SharedProviderName[] = ['google', 'bunny', 'fontshare', 'fontsource', 'googleicons']
+const SHARED_PROVIDERS: SharedProviderName[] = ['google', 'bunny', 'fontshare', 'fontsource', 'googleicons', 'npm']
 
 /**
  * Names this site can ask on a caller's behalf. Asking for anything else is refused rather than
@@ -99,8 +101,8 @@ export function parseProviderSelection(value: unknown): Exclude<ProviderName, 'a
  * Read the `provider` query parameter, a comma-separated list of the providers a request may
  * answer from. An absent value means every queryable provider.
  *
- * A single name gets its own instance, so `npm`, which the shared cascade does not register, can
- * still be asked directly. Several names narrow the cascade instead.
+ * A single name gets its own instance, so the answer is that provider's rather than the cascade's.
+ * Several names narrow the cascade instead.
  */
 export async function useProviderScope(value: unknown) {
   const requested = parseProviderSelection(value)

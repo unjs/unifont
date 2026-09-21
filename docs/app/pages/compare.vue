@@ -201,8 +201,8 @@ const divergence = computed(() => {
         v-if="!available.length"
         class="empty"
       >
-        None of the providers here host <strong>{{ family }}</strong>. It may still be on Adobe Fonts or published
-        to npm. Both can resolve a family by name; neither can be searched from here.
+        None of the providers here host <strong>{{ family }}</strong>. It may still be on Adobe Fonts, which
+        can resolve a family by name but cannot be searched from here.
       </p>
 
       <template v-else>

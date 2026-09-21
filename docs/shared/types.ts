@@ -4,16 +4,16 @@ import type lexicons from './lexicons'
 
 export type { ContributorsResponse } from '#server/api/v1/contributors.get'
 export type { FacetsResponse } from '#server/api/v1/facets.get'
-export type { CompareResponse, CompareRow } from '#server/api/v1/fonts/[family]/compare.get'
-export type { TransferResponse } from '#server/api/v1/fonts/[family]/transfer.get'
-export type { BaselineTransferResponse } from '#server/api/v1/transfer.get'
-export type { FallbackResponse } from '#server/api/v1/fonts/[family]/fallback.get'
 export type { BudgetResponse } from '#server/api/v1/fonts/[family]/budget.get'
+export type { CompareResponse, CompareRow } from '#server/api/v1/fonts/[family]/compare.get'
+export type { FallbackResponse } from '#server/api/v1/fonts/[family]/fallback.get'
+export type { TransferResponse } from '#server/api/v1/fonts/[family]/transfer.get'
 export type { ProvidersResponse, ProviderSummary } from '#server/api/v1/providers.get'
 export type { StacksResponse } from '#server/api/v1/stacks/index.get'
-export type { BaselineTransfer } from '#server/utils/transfer'
-export type { BudgetPlan } from '#server/utils/budget'
+export type { BaselineTransferResponse } from '#server/api/v1/transfer.get'
 export type { Profile as StackAuthor } from '#server/utils/pds'
+export type { BudgetPlan } from '#server/utils/budget'
+export type { BaselineTransfer } from '#server/utils/transfer'
 
 export type StackRecord = Infer<(typeof lexicons)['stack']>
 export type StackRole = StackRecord['roles'][number]

@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import type { BudgetResponse, FallbackResponse, StacksResponse, TransferResponse } from '#shared/types'
 import { FALLBACK_TEXT, previewText, SPECIMEN_TEXT, specimenAlias } from '#shared/featured'
+import { npmFamilyOptions, npmFontFor } from '#shared/npm-fonts'
 
 const route = useRoute()
 const router = useRouter()
@@ -543,12 +544,18 @@ const TAB_HELP: Partial<Record<typeof tabs[number]['id'], { question: string, an
   },
 }
 
+/** The curated entry behind an npm family, whose package a caller has to name to resolve it. */
+const npmFont = computed(() => (data.value?.provider === 'npm' ? npmFontFor(family.value) : undefined))
+
 const snippets = computed(() => {
   const name = family.value
   const w = requested.value?.weights ?? ['400']
   const s = requested.value?.styles ?? ['normal']
   const sub = requested.value?.subsets ?? ['latin']
   const resolved = data.value?.provider ?? 'google'
+  const npmOptions = npmFont.value
+    ? `\n  options: { npm: { ${npmFamilyOptions(npmFont.value)} } },`
+    : ''
 
   return {
     css: data.value?.css ?? '',
@@ -561,7 +568,7 @@ const unifont = await createUnifont([
 const { fonts, fallbacks } = await unifont.resolveFont('${name}', {
   weights: [${w.map(value => `'${value}'`).join(', ')}],
   styles: [${s.map(value => `'${value}'`).join(', ')}],
-  subsets: [${sub.map(value => `'${value}'`).join(', ')}],
+  subsets: [${sub.map(value => `'${value}'`).join(', ')}],${npmOptions}
 })`,
     fontless: `// vite.config.ts
 import { defineConfig } from 'vite'
@@ -1060,7 +1067,18 @@ export default defineNuxtConfig({
               <dt>Formats</dt>
               <dd>
                 {{ properties?.formats?.join(', ') || 'not reported' }}
-                <span class="facts__caveat">(what the provider can serve. This page asks for woff2)</span>
+                <span class="facts__caveat">(what the provider can serve)</span>
+              </dd>
+            </div>
+            <div
+              v-if="npmFont"
+              class="facts__row"
+            >
+              <dt>Package</dt>
+              <dd>
+                <a :href="`https://www.npmjs.com/package/${npmFont.package}`"><code>{{ npmFont.package }}</code></a>,
+                published as {{ npmFont.licence }}.
+                <span class="facts__caveat">({{ npmFont.note }})</span>
               </dd>
             </div>
             <div class="facts__row">
