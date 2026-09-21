@@ -1,6 +1,7 @@
 <script setup lang="ts">
-import type { StacksResponse, TransferResponse } from '#shared/types'
-import { specimenAlias } from '#shared/featured'
+import type { BudgetResponse, FallbackResponse, StacksResponse, TransferResponse } from '#shared/types'
+import { FALLBACK_TEXT, previewText, SPECIMEN_TEXT, specimenAlias } from '#shared/featured'
+import { npmFamilyOptions, npmFontFor } from '#shared/npm-fonts'
 
 const route = useRoute()
 const router = useRouter()
@@ -82,7 +83,8 @@ usePageSeo({
 })
 
 /* ── The tester ─────────────────────────────────────────── */
-const sample = ref('Typography is what language looks like.')
+const requestedText = previewText(route.query.text)
+const sample = ref(requestedText ?? SPECIMEN_TEXT)
 const size = ref(72)
 
 // 72px is a specimen on a desktop and a broken word on a phone.
@@ -124,8 +126,8 @@ watch([loadedRange, staticWeights], () => {
 
 // The warm face holds one weight and only the glyphs of the untouched specimen, so an edit moves
 // to the preview alias. On events, not on the values, which normalise on load for a family
-// without a 400.
-const usingPreview = ref(false)
+// without a 400. Text given in the URL is already not the warm face, so it starts on the preview.
+const usingPreview = ref(Boolean(requestedText))
 function needsPreviewFace() {
   usingPreview.value = true
 }
@@ -306,6 +308,153 @@ useHead(() => ({
     : [],
 }))
 
+/* ── Budget ─────────────────────────────────────────────── */
+// On request, not on keystroke: each answer is a round of HEAD requests plus one download.
+const budgetQuery = computed(() => ({
+  text: sample.value,
+  weights: requested.value?.weights.join(',') ?? '',
+  styles: requested.value?.styles.join(',') ?? '',
+  provider: provider.value,
+}))
+
+const { data: budget, status: budgetStatus, error: budgetError, execute: priceText } = await useFetch<BudgetResponse>(
+  () => `/api/v1/fonts/${encodeURIComponent(family.value)}/budget`,
+  {
+    query: budgetQuery,
+    key: () => `budget-${family.value}`,
+    lazy: true,
+    server: false,
+    immediate: false,
+    watch: false,
+  },
+)
+
+const pricedQuery = ref('')
+const budgetStale = computed(() => Boolean(budget.value) && pricedQuery.value !== JSON.stringify(budgetQuery.value))
+
+function price() {
+  pricedQuery.value = JSON.stringify(budgetQuery.value)
+  priceText()
+}
+
+const budgetMax = computed(() => Math.max(...(budget.value?.plans.map(plan => plan.bytes) ?? [0]), 1))
+
+const budgetWeights = computed(() => {
+  const weights = budget.value?.weights ?? []
+  return weights.map(value => (isRange(value) ? value.replace(/\s+/, '\u2013') : value)).join(', ')
+})
+
+/* ── Fallback ───────────────────────────────────────────── */
+const { data: fallback } = await useFetch<FallbackResponse>(
+  () => `/api/v1/fonts/${encodeURIComponent(family.value)}/fallback`,
+  {
+    query: { provider },
+    key: () => `fallback-${family.value}-${provider.value}`,
+    lazy: true,
+    server: false,
+  },
+)
+
+useHead(() => ({
+  style: fallback.value?.css ? [{ textContent: fallback.value.css }] : [],
+}))
+
+const adjusted = useTemplateRef<HTMLParagraphElement>('adjusted')
+const unadjusted = useTemplateRef<HTMLParagraphElement>('unadjusted')
+const shift = ref<{ adjusted: number, unadjusted: number } | null>(null)
+
+/* ── Narrowing the comparison ───────────────────────────── */
+const frame = useTemplateRef<HTMLDivElement>('frame')
+/** `null` until dragged, so the comparison starts at whatever width the page gives it. */
+const frameWidth = ref<number | null>(null)
+const frameMax = ref(0)
+
+/** Narrow enough to wrap a phone, wide enough to still set a line. */
+const FRAME_MIN = 220
+const FRAME_STEP = 32
+
+const frameClamped = computed(() => (frameWidth.value === null
+  ? null
+  : Math.round(Math.min(Math.max(frameWidth.value, FRAME_MIN), frameMax.value || frameWidth.value))))
+
+function dragFrame(event: PointerEvent) {
+  const left = frame.value?.getBoundingClientRect().left
+  if (left === undefined) {
+    return
+  }
+
+  const handle = event.currentTarget as HTMLElement
+  handle.setPointerCapture(event.pointerId)
+
+  const move = (moved: PointerEvent) => {
+    frameWidth.value = moved.clientX - left
+  }
+  const stop = () => {
+    handle.releasePointerCapture(event.pointerId)
+    handle.removeEventListener('pointermove', move)
+    handle.removeEventListener('pointerup', stop)
+    handle.removeEventListener('pointercancel', stop)
+  }
+
+  handle.addEventListener('pointermove', move)
+  handle.addEventListener('pointerup', stop)
+  handle.addEventListener('pointercancel', stop)
+}
+
+function nudgeFrame(event: KeyboardEvent) {
+  const current = frameClamped.value ?? frameMax.value
+  const keyed: Record<string, number> = {
+    ArrowLeft: current - FRAME_STEP,
+    ArrowRight: current + FRAME_STEP,
+    Home: FRAME_MIN,
+    End: frameMax.value,
+  }
+
+  const next = keyed[event.key]
+  if (next === undefined) {
+    return
+  }
+
+  event.preventDefault()
+  frameWidth.value = next
+}
+
+// Both paragraphs are set at the same width, so the difference in height is the shift.
+function measureShift() {
+  if (!adjusted.value || !unadjusted.value) {
+    return
+  }
+  shift.value = {
+    adjusted: Math.round(adjusted.value.getBoundingClientRect().height),
+    unadjusted: Math.round(unadjusted.value.getBoundingClientRect().height),
+  }
+}
+
+if (import.meta.client) {
+  watch(() => fallback.value?.css, async (css) => {
+    if (!css) {
+      return
+    }
+    await nextTick()
+    await document.fonts.ready
+    measureShift()
+  }, { immediate: true, flush: 'post' })
+
+  onMounted(() => {
+    const observer = new ResizeObserver(() => {
+      frameMax.value = frame.value?.parentElement?.clientWidth ?? 0
+      measureShift()
+    })
+    watch(frame, (element) => {
+      observer.disconnect()
+      if (element) {
+        observer.observe(element)
+      }
+    }, { immediate: true, flush: 'post' })
+    onBeforeUnmount(() => observer.disconnect())
+  })
+}
+
 /* ── Coverage ───────────────────────────────────────────── */
 interface CoverageCheck { text: string, unrestricted: boolean, covered: string[], missing: string[], subsets: string[] }
 type CoverageRow = Pick<CoverageCheck, 'text' | 'unrestricted' | 'missing'>
@@ -395,12 +544,18 @@ const TAB_HELP: Partial<Record<typeof tabs[number]['id'], { question: string, an
   },
 }
 
+/** The curated entry behind an npm family, whose package a caller has to name to resolve it. */
+const npmFont = computed(() => (data.value?.provider === 'npm' ? npmFontFor(family.value) : undefined))
+
 const snippets = computed(() => {
   const name = family.value
   const w = requested.value?.weights ?? ['400']
   const s = requested.value?.styles ?? ['normal']
   const sub = requested.value?.subsets ?? ['latin']
   const resolved = data.value?.provider ?? 'google'
+  const npmOptions = npmFont.value
+    ? `\n  options: { npm: { ${npmFamilyOptions(npmFont.value)} } },`
+    : ''
 
   return {
     css: data.value?.css ?? '',
@@ -413,7 +568,7 @@ const unifont = await createUnifont([
 const { fonts, fallbacks } = await unifont.resolveFont('${name}', {
   weights: [${w.map(value => `'${value}'`).join(', ')}],
   styles: [${s.map(value => `'${value}'`).join(', ')}],
-  subsets: [${sub.map(value => `'${value}'`).join(', ')}],
+  subsets: [${sub.map(value => `'${value}'`).join(', ')}],${npmOptions}
 })`,
     fontless: `// vite.config.ts
 import { defineConfig } from 'vite'
@@ -642,6 +797,72 @@ export default defineNuxtConfig({
             >not in the current selection</span>
           </p>
         </div>
+
+        <div class="budget">
+          <div class="budget__head">
+            <h3 class="budget__title">
+              What this text costs
+            </h3>
+            <button
+              class="budget__price"
+              type="button"
+              :disabled="budgetStatus === 'pending' || !sample.trim()"
+              @click="price()"
+            >
+              <template v-if="budgetStatus === 'pending'">
+                measuring…
+              </template>
+              <template v-else-if="budget">
+                measure again
+              </template>
+              <template v-else>
+                measure this text
+              </template>
+            </button>
+          </div>
+
+          <p
+            v-if="!budget && budgetStatus !== 'pending'"
+            class="budget__lede"
+          >
+            Bytes on the wire for the sample above: everything the selection publishes, only the
+            files your text pulls, and, where the provider can subset to a glyph list, that too.
+          </p>
+
+          <p
+            v-else-if="budgetError"
+            class="budget__lede"
+          >
+            The provider wouldn’t price this selection.
+          </p>
+
+          <template v-else-if="budget">
+            <ul class="budget__plans">
+              <li
+                v-for="plan in budget.plans"
+                :key="plan.label"
+                class="plan"
+              >
+                <span class="plan__label">{{ plan.label }}</span>
+                <span
+                  class="plan__bar"
+                  :style="{ inlineSize: `${Math.max((plan.bytes / budgetMax) * 100, 1)}%` }"
+                />
+                <span class="plan__figure">
+                  {{ kb(plan.bytes) }}
+                  <span class="plan__files">{{ plan.files }} file{{ plan.files === 1 ? '' : 's' }}</span>
+                </span>
+              </li>
+            </ul>
+            <p class="budget__lede">
+              {{ budget.characters }} distinct characters, weight {{ budgetWeights }}, from
+              <code>{{ budget.provider }}</code>.
+              <template v-if="budgetStale">
+                The sample has changed since this was measured.
+              </template>
+            </p>
+          </template>
+        </div>
       </section>
 
       <div class="workbench">
@@ -846,7 +1067,18 @@ export default defineNuxtConfig({
               <dt>Formats</dt>
               <dd>
                 {{ properties?.formats?.join(', ') || 'not reported' }}
-                <span class="facts__caveat">(what the provider can serve. This page asks for woff2)</span>
+                <span class="facts__caveat">(what the provider can serve)</span>
+              </dd>
+            </div>
+            <div
+              v-if="npmFont"
+              class="facts__row"
+            >
+              <dt>Package</dt>
+              <dd>
+                <a :href="`https://www.npmjs.com/package/${npmFont.package}`"><code>{{ npmFont.package }}</code></a>,
+                published as {{ npmFont.licence }}.
+                <span class="facts__caveat">({{ npmFont.note }})</span>
               </dd>
             </div>
             <div class="facts__row">
@@ -896,6 +1128,93 @@ export default defineNuxtConfig({
           </dl>
         </section>
       </div>
+
+      <section
+        v-if="fallback?.css"
+        id="fallback"
+        class="fallback"
+        aria-labelledby="fallback-heading"
+      >
+        <h2
+          id="fallback-heading"
+          class="section-title"
+        >
+          What it looks like before it loads
+        </h2>
+        <p class="fallback__lede">
+          Both paragraphs are set in <code>{{ fallback.generic }}</code>. The first is adjusted to fit {{ family }}’s metrics using <a href="https://github.com/unjs/fontaine">fontaine</a>. Drag the edge to simulate a narrower container.
+        </p>
+
+        <div
+          ref="frame"
+          class="fallback__frame"
+          :style="frameClamped ? { width: `${frameClamped}px` } : undefined"
+        >
+          <div class="fallback__pair">
+            <figure class="fallback__case">
+              <figcaption class="fallback__caption">
+                metric-matched
+                <span v-if="shift">{{ shift.adjusted }}px tall</span>
+              </figcaption>
+              <p
+                ref="adjusted"
+                class="fallback__sample"
+                :style="{ fontFamily: `'${fallback.name}', ${fallback.generic}` }"
+              >
+                {{ FALLBACK_TEXT }}
+              </p>
+            </figure>
+
+            <figure class="fallback__case">
+              <figcaption class="fallback__caption">
+                unadjusted {{ fallback.generic }}
+                <span v-if="shift">{{ shift.unadjusted }}px tall</span>
+              </figcaption>
+              <p
+                ref="unadjusted"
+                class="fallback__sample"
+                :style="{ fontFamily: fallback.generic }"
+              >
+                {{ FALLBACK_TEXT }}
+              </p>
+            </figure>
+          </div>
+
+          <button
+            class="fallback__handle"
+            type="button"
+            role="separator"
+            aria-orientation="vertical"
+            :aria-label="`Width of the comparison, ${frameClamped ?? frameMax}px`"
+            :aria-valuenow="frameClamped ?? frameMax"
+            :aria-valuemin="FRAME_MIN"
+            :aria-valuemax="frameMax"
+            @pointerdown="dragFrame"
+            @keydown="nudgeFrame"
+          />
+        </div>
+
+        <p
+          v-if="shift"
+          class="fallback__verdict"
+        >
+          <template v-if="shift.adjusted === shift.unadjusted">
+            No difference at this width: either the metrics already agree, or this system has none
+            of the families the fallback names.
+          </template>
+          <template v-else>
+            {{ Math.abs(shift.unadjusted - shift.adjusted) }}px of shift avoided at this width.
+          </template>
+        </p>
+
+        <div class="fallback__css">
+          <CodeBlock
+            :code="fallback.css"
+            label="metric-matched fallback"
+            language="css"
+          />
+        </div>
+      </section>
 
       <section
         id="ship"
@@ -1097,6 +1416,182 @@ export default defineNuxtConfig({
 
 .tester__input:focus-visible {
   outline-offset: 6px;
+}
+
+.fallback {
+  padding-block: var(--space-xl);
+  border-top: var(--rule-hair) solid var(--color-rule);
+}
+
+.fallback__lede {
+  max-width: var(--measure);
+  margin-top: var(--space-xs);
+  color: var(--color-muted);
+  font-size: var(--text-sm);
+}
+
+/* A container, so dragging the handle rewraps the pair the way a narrower screen would. */
+.fallback__frame {
+  container-type: inline-size;
+  position: relative;
+  max-width: 100%;
+  margin-top: var(--space-lg);
+  padding-right: var(--space-md);
+}
+
+.fallback__pair {
+  display: grid;
+  gap: var(--space-lg);
+}
+
+@container (width >= 40rem) {
+  .fallback__pair {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+.fallback__handle {
+  position: absolute;
+  inset-block: 0;
+  right: 0;
+  width: var(--space-md);
+  padding: 0;
+  border: 0;
+  border-left: var(--rule-hair) dashed var(--color-rule);
+  background: none;
+  cursor: ew-resize;
+  touch-action: none;
+}
+
+.fallback__handle::after {
+  content: '';
+  display: block;
+  width: var(--rule-heavy);
+  height: var(--space-lg);
+  margin-inline: auto;
+  background: var(--color-neutral);
+}
+
+.fallback__handle:hover::after,
+.fallback__handle:focus-visible::after {
+  background: var(--color-ink);
+}
+
+.fallback__case {
+  margin: 0;
+}
+
+.fallback__caption {
+  display: flex;
+  gap: var(--space-xs);
+  justify-content: space-between;
+  color: var(--color-neutral);
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+}
+
+/* The browser's own line height, which is where the metric overrides show up at all. */
+.fallback__sample {
+  margin-top: var(--space-2xs);
+  font-size: var(--text-md);
+  line-height: normal;
+}
+
+.fallback__verdict {
+  margin-top: var(--space-md);
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+}
+
+.fallback__css {
+  margin-top: var(--space-md);
+}
+
+.budget {
+  margin-top: var(--space-lg);
+  padding-top: var(--space-md);
+  border-top: var(--rule-hair) solid var(--color-rule);
+}
+
+.budget__head {
+  display: flex;
+  gap: var(--space-sm);
+  align-items: baseline;
+  justify-content: space-between;
+  flex-wrap: wrap;
+}
+
+.budget__title {
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+  font-weight: 400;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--color-neutral);
+}
+
+.budget__price {
+  min-height: 2rem;
+  padding: var(--space-2xs) var(--space-xs);
+  background: none;
+  border: var(--rule-hair) solid var(--color-rule);
+  color: var(--color-muted);
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+  cursor: pointer;
+}
+
+.budget__price:disabled {
+  cursor: default;
+  opacity: 0.6;
+}
+
+.budget__lede {
+  max-width: var(--measure);
+  margin-top: var(--space-xs);
+  color: var(--color-neutral);
+  font-size: var(--text-sm);
+}
+
+.budget__plans {
+  margin: var(--space-sm) 0 0;
+  padding: 0;
+  list-style: none;
+  display: grid;
+  gap: var(--space-2xs);
+}
+
+.plan {
+  display: grid;
+  grid-template-columns: minmax(8rem, 12rem) 1fr auto;
+  gap: var(--space-xs);
+  align-items: center;
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+}
+
+.plan__bar {
+  block-size: 0.5rem;
+  background: var(--color-ink);
+}
+
+.plan__figure {
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.plan__files {
+  color: var(--color-neutral);
+}
+
+@media (width < 40rem) {
+  .plan {
+    grid-template-columns: 1fr auto;
+  }
+
+  .plan__bar {
+    display: none;
+  }
 }
 
 .tester__controls {

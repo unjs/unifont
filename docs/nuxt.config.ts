@@ -4,6 +4,7 @@ import { dirname, join } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { fontless } from 'fontless'
 import { FEATURED_FAMILIES, specimenGlyphs } from './shared/featured.ts'
+import { STYLESHEET_PATH } from './shared/hotlink.ts'
 
 /** The families the interface is set in, resolved in full rather than to a glyph list. */
 const INTERFACE_FAMILIES = ['Newsreader', 'Switzer', 'JetBrains Mono']
@@ -20,6 +21,9 @@ const staticRoutes = [
   '/privacy',
   '/api/v1/catalogue.css',
   '/api/v1/specimens.css',
+  '/hotlink.css',
+  // The families the homepage links to. The rest are server-rendered, and in the sitemap.
+  ...FEATURED_FAMILIES.map(family => `/fonts/${encodeURIComponent(family)}`),
   '/api/content/navigation',
   // Machine-readable descriptions of the site: their answers depend on the content, not the request.
   '/openapi.json',
@@ -49,6 +53,22 @@ const vercelMarkdownRoutes = [
   has: [{ type: 'header', key: 'accept', value: '.*text/markdown.*' }],
   headers: { vary: 'Accept, Accept-Encoding' },
 }))
+
+/**
+ * Hotlinking, refused before the CDN answers: two of the stylesheets are prerendered static files,
+ * which Vercel serves without running a function, so the middleware never sees them. A browser
+ * sets both headers on a subresource; a script sends neither.
+ */
+const vercelHotlinkRoutes = [{
+  src: STYLESHEET_PATH,
+  has: [
+    { type: 'header', key: 'sec-fetch-site', value: 'cross-site' },
+    { type: 'header', key: 'sec-fetch-dest', value: 'style' },
+  ],
+  dest: '/hotlink.css',
+  status: 403,
+  headers: { 'vary': 'Sec-Fetch-Site, Sec-Fetch-Dest', 'cache-control': 'public, max-age=3600' },
+}]
 
 /** A day: a family's faces change when a provider republishes it, and a deployment resets this. */
 const DAY = 60 * 60 * 24
@@ -131,7 +151,7 @@ export default defineNuxtConfig({
       og: { driver: 'fs-lite', base: join(cacheBase, 'unifont-og') },
     },
     vercel: {
-      config: { version: 3, routes: vercelMarkdownRoutes },
+      config: { version: 3, routes: [...vercelHotlinkRoutes, ...vercelMarkdownRoutes] },
     },
     routeRules: {
       // Prerendered so the deployed site never spends one of its 60 unauthenticated GitHub

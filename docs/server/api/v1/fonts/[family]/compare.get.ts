@@ -1,6 +1,7 @@
 import { defineCachedHandler } from 'nitro/cache'
 import { getRouterParam } from 'nitro/h3'
 import { faceUrls } from '#server/utils/css'
+import { measureFaces } from '#server/utils/transfer'
 import { PROVIDER_META, QUERYABLE_PROVIDERS, useProvider } from '#server/utils/unifont'
 import { normaliseWeights } from '#server/utils/weights'
 import { familyParam } from '#server/utils/family'
@@ -29,31 +30,6 @@ export interface CompareResponse {
   results: CompareRow[]
 }
 
-/** Total transferred bytes for a set of files, via HEAD so nothing is downloaded. */
-async function measure(urls: string[]) {
-  // A finely split family runs to well over a hundred files, and CDNs start dropping requests
-  // long before that many are in flight at once.
-  const CONCURRENCY = 8
-  const sizes: (number | undefined)[] = []
-
-  for (let i = 0; i < urls.length; i += CONCURRENCY) {
-    const batch = await Promise.all(urls.slice(i, i + CONCURRENCY).map(async (url) => {
-      try {
-        const response = await fetch(url, { method: 'HEAD' })
-        const length = Number(response.headers.get('content-length'))
-        return Number.isFinite(length) && length > 0 ? length : undefined
-      }
-      catch {
-        return undefined
-      }
-    }))
-    sizes.push(...batch)
-  }
-
-  const known = sizes.filter((size): size is number => size !== undefined)
-  return { bytes: known.reduce((total, size) => total + size, 0), measured: known.length }
-}
-
 /** The same family, asked of every provider that can answer without credentials. */
 export default defineCachedHandler(async (event): Promise<CompareResponse> => {
   const family = await familyParam(event)
@@ -74,7 +50,7 @@ export default defineCachedHandler(async (event): Promise<CompareResponse> => {
         formats: ['woff2'],
       })
       const urls = faceUrls(resolved.fonts)
-      const transfer = await measure(urls)
+      const transfer = await measureFaces(urls)
 
       return {
         provider: name,

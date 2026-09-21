@@ -301,8 +301,8 @@ importers:
         specifier: 0.8.2
         version: 0.8.2(postcss@8.5.28)(rolldown@1.2.8)(vite@8.3.0)
       fontless:
-        specifier: ^0.4.2
-        version: 0.4.5(db0@0.4.1)(postcss@8.5.28)(rolldown@1.2.8)(subset-font@2.9.0)(vite@8.3.0)
+        specifier: ^1.0.0
+        version: 1.0.0(jiti@2.7.0)(lightningcss@1.33.0)(postcss@8.5.28)(rolldown@1.2.8)(subset-font@2.9.0)(vite@8.3.0)
       microlighter:
         specifier: ^2.1.0
         version: 2.2.0
@@ -2792,17 +2792,32 @@ packages:
       postcss:
         optional: true
 
+  fontaine@1.0.0:
+    resolution: {integrity: sha512-bFJk8HxdHxTh8vzVyF2pTO0CnqaI/ToMqP0GvU5RifLehv19zYyQVDc6JAxq1aWZyPcLPROvu4rIUEKDDJeyDQ==}
+    engines: {node: ^20.19.0 || >=22.12.0}
+    peerDependencies:
+      postcss: ^8.4.31
+    peerDependenciesMeta:
+      postcss:
+        optional: true
+
   fontkitten@1.0.3:
     resolution: {integrity: sha512-Wp1zXWPVUPBmfoa3Cqc9ctaKuzKAV6uLstRqlR56kSjplf5uAce+qeyYym7F+PHbGTk+tCEdkCW6RD7DX/gBZw==}
     engines: {node: '>=20'}
 
-  fontless@0.4.5:
-    resolution: {integrity: sha512-Pv8/cScA9b1pWczasxcXoNJEvRbgfGxVvRuk6nBwNgRAJSUowg7g7zNBuxNldL62OO0JgBSuiPOp0xj2M3+3sA==}
+  fontless@1.0.0:
+    resolution: {integrity: sha512-xdXBppWYpExRhDPN4DKO8O7ZDG6QC0q54UPkJr+UtjVwcCfFbqj1M1RfN5DelXqtjgcrQD3qCzLfNFCMa9wa/A==}
     engines: {node: ^20.19.0 || >=22.12.0}
     peerDependencies:
+      jiti: ^2.6.1
+      lightningcss: ^1.33.0
       subset-font: ^2.5.0
       vite: '*'
     peerDependenciesMeta:
+      jiti:
+        optional: true
+      lightningcss:
+        optional: true
       subset-font:
         optional: true
       vite:
@@ -7539,57 +7554,57 @@ snapshots:
       - vite
       - webpack
 
+  fontaine@1.0.0(postcss@8.5.28)(rolldown@1.2.8)(vite@8.3.0):
+    dependencies:
+      '@capsizecss/unpack': 4.0.1
+      css-tree: 3.2.1
+      magic-string: 1.4.1
+      unplugin: 3.4.0(rolldown@1.2.8)(vite@8.3.0)
+    optionalDependencies:
+      postcss: 8.5.28
+    transitivePeerDependencies:
+      - '@farmfe/core'
+      - '@rsbuild/core'
+      - '@rspack/core'
+      - bun-types-no-globals
+      - esbuild
+      - rolldown
+      - rollup
+      - unloader
+      - vite
+      - webpack
+
   fontkitten@1.0.3:
     dependencies:
       tiny-inflate: 1.0.3
 
-  fontless@0.4.5(db0@0.4.1)(postcss@8.5.28)(rolldown@1.2.8)(subset-font@2.9.0)(vite@8.3.0):
+  fontless@1.0.0(jiti@2.7.0)(lightningcss@1.33.0)(postcss@8.5.28)(rolldown@1.2.8)(subset-font@2.9.0)(vite@8.3.0):
     dependencies:
       consola: 3.4.2
       css-tree: 3.2.1
       defu: 6.1.7
       exsolve: 1.1.1
-      fontaine: 0.8.2(postcss@8.5.28)(rolldown@1.2.8)(vite@8.3.0)
-      jiti: 2.7.0
-      lightningcss: 1.33.0
+      fontaine: 1.0.0(postcss@8.5.28)(rolldown@1.2.8)(vite@8.3.0)
       magic-string: 1.4.1
       ohash: 2.0.12
       pathe: 2.0.3
       ufo: 1.6.4
       unifont: 'link:'
-      unstorage: 1.17.5(db0@0.4.1)
     optionalDependencies:
+      jiti: 2.7.0
+      lightningcss: 1.33.0
       subset-font: 2.9.0
       vite: 8.3.0(@types/node@24.13.6)(@vitejs/devtools@0.7.5)(jiti@2.7.0)(yaml@2.9.1)
     transitivePeerDependencies:
-      - '@azure/app-configuration'
-      - '@azure/cosmos'
-      - '@azure/data-tables'
-      - '@azure/identity'
-      - '@azure/keyvault-secrets'
-      - '@azure/storage-blob'
-      - '@capacitor/preferences'
-      - '@deno/kv'
       - '@farmfe/core'
-      - '@netlify/blobs'
-      - '@planetscale/database'
       - '@rsbuild/core'
       - '@rspack/core'
-      - '@upstash/redis'
-      - '@vercel/blob'
-      - '@vercel/functions'
-      - '@vercel/kv'
-      - aws4fetch
       - bun-types-no-globals
-      - db0
       - esbuild
-      - idb-keyval
-      - ioredis
       - postcss
       - rolldown
       - rollup
       - unloader
-      - uploadthing
       - webpack
 
   fontverter@2.0.0:

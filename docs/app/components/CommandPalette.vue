@@ -87,9 +87,13 @@ let debounceTimer: ReturnType<typeof setTimeout> | undefined
 watch(query, (value) => {
   clearTimeout(debounceTimer)
   debounceTimer = setTimeout(() => search(value), 140)
-})
-watch(rows, () => {
   active.value = 0
+})
+
+watch(rows, (list) => {
+  if (active.value >= list.length) {
+    active.value = 0
+  }
 })
 
 // Every listed family is on screen, so all of them need their specimen face.

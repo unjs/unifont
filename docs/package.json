@@ -16,7 +16,8 @@
     "test:watch": "vitest",
     "test:a11y": "playwright test",
     "test:a11y:advisory": "A11Y_ADVISORY=1 playwright test axe.spec.ts",
-    "prime": "node scripts/prime-font-cache.mjs"
+    "prime": "node scripts/prime-font-cache.mjs",
+    "check:npm": "node --experimental-strip-types scripts/check-npm-fonts.mjs"
   },
   "dependencies": {
     "@atproto/oauth-client-browser": "^0.5.7",
@@ -27,10 +28,10 @@
     "airspace": "^0.1.6",
     "comark-content": "^0.4.0",
     "fontaine": "0.8.2",
-    "fontless": "^0.4.2",
-    "subset-font": "^2.5.0",
+    "fontless": "^1.0.0",
     "microlighter": "^2.1.0",
     "nuxt": "npm:nuxt-nightly@5x",
+    "subset-font": "^2.5.0",
     "unifont": "link:..",
     "vue": "3.5.43"
   },

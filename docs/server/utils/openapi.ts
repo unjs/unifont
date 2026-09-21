@@ -102,8 +102,36 @@ const schemas = {
     properties: {
       family: { type: 'string', description: 'Family name as the provider spells it.' },
       providers: { type: 'array', items: provider, description: 'Providers that publish this family.' },
+      facets: {
+        type: 'object',
+        description: 'Absent for a family whose only provider publishes no properties in its index.',
+        properties: {
+          variable: { type: 'boolean', description: 'The family publishes a weight range, not only discrete weights.' },
+          italic: { type: 'boolean' },
+          subsets: { type: 'array', items: { type: 'string' } },
+        },
+        required: ['variable', 'italic', 'subsets'],
+      },
     },
     required: ['family', 'providers'],
+  },
+  FacetsResponse: {
+    type: 'object',
+    properties: {
+      variable: { type: 'integer', description: 'Families publishing a weight range.' },
+      italic: { type: 'integer', description: 'Families publishing an italic.' },
+      subsets: {
+        type: 'array',
+        description: 'Scripts the index knows about, most families first.',
+        items: {
+          type: 'object',
+          properties: { name: { type: 'string' }, families: { type: 'integer' } },
+          required: ['name', 'families'],
+        },
+      },
+      unknown: { type: 'integer', description: 'Families whose only provider publishes no properties, so no filter can keep them.' },
+    },
+    required: ['variable', 'italic', 'subsets', 'unknown'],
   },
   FontsResponse: {
     type: 'object',
@@ -233,6 +261,83 @@ const schemas = {
       unavailable: { type: 'boolean', description: '`true` when the index could not be reached.' },
     },
     required: ['stacks'],
+  },
+  BaselineTransferResponse: {
+    type: 'object',
+    properties: {
+      basis: {
+        type: 'object',
+        description: 'The selection every figure is quoted against.',
+        properties: {
+          weights: { type: 'array', items: { type: 'string' } },
+          styles: { type: 'array', items: { type: 'string' } },
+          subsets: { type: 'array', items: { type: 'string' } },
+          formats: { type: 'array', items: { type: 'string' } },
+        },
+        required: ['weights', 'styles', 'subsets', 'formats'],
+      },
+      families: {
+        type: 'object',
+        description: 'Keyed by family. `null` where no provider resolved it, or no file reported a length.',
+        additionalProperties: {
+          type: ['object', 'null'],
+          properties: {
+            bytes: { type: 'integer' },
+            files: { type: 'integer' },
+            measured: { type: 'integer', description: 'Files that reported a `content-length`.' },
+          },
+          required: ['bytes', 'files', 'measured'],
+        },
+      },
+    },
+    required: ['basis', 'families'],
+  },
+  FallbackResponse: {
+    type: 'object',
+    properties: {
+      family: { type: 'string' },
+      name: { type: 'string', description: 'The family name the generated face is declared under.' },
+      generic: { type: 'string', description: 'The generic the adjustment is built against.' },
+      fallbacks: { type: 'array', items: { type: 'string' } },
+      css: { type: 'string', description: 'Empty when no metrics could be read from the served file.' },
+      overrides: {
+        type: ['object', 'null'],
+        properties: {
+          sizeAdjust: { type: ['string', 'null'] },
+          ascentOverride: { type: ['string', 'null'] },
+          descentOverride: { type: ['string', 'null'] },
+          lineGapOverride: { type: ['string', 'null'] },
+        },
+      },
+    },
+    required: ['family', 'name', 'generic', 'fallbacks', 'css', 'overrides'],
+  },
+  BudgetResponse: {
+    type: 'object',
+    properties: {
+      family: { type: 'string' },
+      text: { type: 'string', description: 'The text as priced, whitespace-collapsed and capped.' },
+      provider: { type: ['string', 'null'], description: 'The provider that answered.' },
+      characters: { type: 'integer', description: 'Distinct non-whitespace code points in the text.' },
+      weights: { type: 'array', items: { type: 'string' } },
+      styles: { type: 'array', items: { type: 'string' } },
+      plans: {
+        type: 'array',
+        description: 'Everything published, what the text pulls, and, where the provider can subset to a glyph list, that too.',
+        items: {
+          type: 'object',
+          properties: {
+            label: { type: 'string' },
+            faces: { type: 'integer' },
+            files: { type: 'integer' },
+            measured: { type: 'integer', description: 'Files whose size is known.' },
+            bytes: { type: 'integer' },
+          },
+          required: ['label', 'faces', 'files', 'measured', 'bytes'],
+        },
+      },
+    },
+    required: ['family', 'text', 'provider', 'characters', 'weights', 'styles', 'plans'],
   },
   CompareResponse: {
     type: 'object',
@@ -372,7 +477,7 @@ export function openApiDocument(origin = 'https://unifont.dev') {
         '',
         'Use it to search a merged catalogue of families, see what a provider actually publishes for a family (weights, styles, subsets, unicode ranges), compare the same family across providers, check whether a family can draw a string, measure what a selection weighs, and get `@font-face` CSS you can ship.',
         '',
-        'No authentication, no rate limit headers, no keys. Everything is a `GET` except the MCP endpoint. This is a best-effort public service rather than production infrastructure: if a deployment of yours depends on it, run `unifont` yourself.',
+        'No authentication, no rate limit headers, no keys. Everything is a `GET` except the MCP endpoint. This is a best-effort public service rather than production infrastructure: if a deployment of yours depends on it, run `unifont` yourself. The `css` endpoints answer scripts and this site’s own pages, but refuse a `<link rel="stylesheet">` from another site.',
       ].join('\n'),
       contact: {
         name: 'unifont on GitHub',
@@ -443,8 +548,30 @@ export function openApiDocument(origin = 'https://unifont.dev') {
               name: 'provider',
               in: 'query',
               required: false,
-              description: 'Limit results to one provider. `npm` and `adobe` cannot list their families and are rejected.',
+              description: 'Limit results to one provider. `adobe` cannot list its families and is rejected.',
               schema: provider,
+            },
+            {
+              name: 'variable',
+              in: 'query',
+              required: false,
+              description: 'Keep only families publishing a weight range. A family whose provider publishes no properties is dropped by any filter.',
+              schema: { type: 'boolean' },
+            },
+            {
+              name: 'italic',
+              in: 'query',
+              required: false,
+              description: 'Keep only families publishing an italic.',
+              schema: { type: 'boolean' },
+            },
+            {
+              name: 'subset',
+              in: 'query',
+              required: false,
+              description: 'Keep only families covering this script, as `/api/v1/facets` names them.',
+              schema: { type: 'string' },
+              example: 'cyrillic',
             },
             {
               name: 'limit',
@@ -488,7 +615,7 @@ export function openApiDocument(origin = 'https://unifont.dev') {
           responses: {
             200: jsonResponse('The resolved family.', 'FontResponse'),
             400: errorResponse('No family was given.'),
-            404: errorResponse('No provider publishes the family. It may still exist on Adobe Fonts or npm, neither of which can be listed.'),
+            404: errorResponse('No provider publishes the family. It may still exist on Adobe Fonts, which cannot be listed.'),
           },
         },
       },
@@ -497,7 +624,7 @@ export function openApiDocument(origin = 'https://unifont.dev') {
           operationId: 'getFontCss',
           tags: ['css'],
           summary: 'Stylesheet for one family',
-          description: '`@font-face` CSS for one family, ready to link to or paste. A selection that resolves to nothing returns an empty stylesheet with a comment, not an error.',
+          description: '`@font-face` CSS for one family, to read, paste or fetch from a script. A selection that resolves to nothing returns an empty stylesheet with a comment, not an error. Linking it as a stylesheet from another site is refused: resolve the family with `unifont` and serve the CSS yourself.',
           parameters: [
             familyParameter,
             ...selectionParameters,
@@ -556,6 +683,107 @@ export function openApiDocument(origin = 'https://unifont.dev') {
           responses: {
             200: cssResponse('The stylesheet.'),
             400: errorResponse('`families` was missing or empty.'),
+          },
+        },
+      },
+      '/api/v1/facets': {
+        get: {
+          operationId: 'listFacets',
+          tags: ['catalogue'],
+          summary: 'What the catalogue can be filtered by',
+          description: 'Counts for each filter the catalogue offers, so a caller knows what a filter would keep before applying it.',
+          responses: {
+            200: jsonResponse('Filter counts.', 'FacetsResponse'),
+          },
+        },
+      },
+      '/api/v1/transfer': {
+        get: {
+          operationId: 'getBaselineTransferSizes',
+          tags: ['catalogue'],
+          summary: 'Transfer size for many families',
+          description: 'Bytes on the wire for up to 40 families, all quoted against one selection (400 and 700, latin, woff2) so that two families are compared on the same terms. Measured with HEAD requests, so nothing is downloaded.',
+          parameters: [
+            {
+              name: 'families',
+              in: 'query',
+              required: true,
+              description: 'Families to measure (comma-separated, up to 40).',
+              schema: commaList('Comma-separated family names.'),
+              example: 'Anton,Erode,Spectral',
+            },
+          ],
+          responses: {
+            200: jsonResponse('Measured transfer sizes.', 'BaselineTransferResponse'),
+            400: errorResponse('`families` was missing or empty.'),
+          },
+        },
+      },
+      '/api/v1/fonts/{family}/fallback': {
+        get: {
+          operationId: 'getFontFallback',
+          tags: ['families'],
+          summary: 'Metric-matched fallback for one family',
+          description: 'A `@font-face` that makes a generic match this family’s metrics, so a page does not reflow when the real font lands. Metrics are read from the served file, and the face points at families a system may actually have rather than at the generic itself, which resolves nowhere.',
+          parameters: [
+            familyParameter,
+            {
+              name: 'provider',
+              in: 'query',
+              required: false,
+              description: 'Limit the cascade to these providers (comma-separated).',
+              schema: commaList('Comma-separated provider names.'),
+            },
+          ],
+          responses: {
+            200: jsonResponse('The generated face and its descriptors.', 'FallbackResponse'),
+            400: errorResponse('No family was given.'),
+            404: errorResponse('No provider could resolve this family.'),
+          },
+        },
+      },
+      '/api/v1/fonts/{family}/budget': {
+        get: {
+          operationId: 'getTextBudget',
+          tags: ['families'],
+          summary: 'What one string costs in this family',
+          description: 'Prices a string three ways against the same family: every file the selection publishes, only the files the text pulls through `unicode-range`, and, for a provider that subsets to a glyph list, the subset. For a family split into a hundred subset files the three differ by orders of magnitude.',
+          parameters: [
+            familyParameter,
+            {
+              name: 'text',
+              in: 'query',
+              required: true,
+              description: 'The string to price. Whitespace is collapsed, and it is capped at 64 characters.',
+              schema: { type: 'string' },
+              example: 'Acme Corp',
+            },
+            {
+              name: 'weights',
+              in: 'query',
+              required: false,
+              description: 'Weights to price (comma-separated). Default 400.',
+              schema: commaList('Comma-separated weights.'),
+            },
+            {
+              name: 'styles',
+              in: 'query',
+              required: false,
+              description: 'Styles to price (comma-separated). Default normal.',
+              schema: commaList('Comma-separated styles.'),
+            },
+            {
+              name: 'provider',
+              in: 'query',
+              required: false,
+              description: 'Limit the cascade to these providers (comma-separated).',
+              schema: commaList('Comma-separated provider names.'),
+            },
+          ],
+          responses: {
+            200: jsonResponse('The three plans, measured the same way.', 'BudgetResponse'),
+            400: errorResponse('No family, or no `text` to price.'),
+            404: errorResponse('No provider knows this family, or none could resolve the selection.'),
           },
         },
       },

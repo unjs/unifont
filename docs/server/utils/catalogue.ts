@@ -1,14 +1,42 @@
 import type { ProviderName } from './unifont'
 import { QUERYABLE_PROVIDERS, useProvider } from './unifont'
 
+export interface CatalogueFacets {
+  variable: boolean
+  italic: boolean
+  subsets: string[]
+}
+
 export interface CatalogueEntry {
   family: string
   providers: ProviderName[]
+  /** Absent where no facet-bearing provider publishes this family. */
+  facets?: CatalogueFacets
+}
+
+/**
+ * Providers whose `getFontProperties()` reads something they already hold: an index for the font
+ * CDNs, a parsed stylesheet for the curated npm list. Fontsource asks the network per variable
+ * family, which would be thousands of requests for one build.
+ */
+const FACET_PROVIDERS = ['google', 'bunny', 'fontshare', 'googleicons', 'npm'] as const
+
+/** Facets are read a page at a time so that one slow provider cannot stall the whole build. */
+const FACET_BATCH = 32
+
+export interface FacetSummary {
+  variable: number
+  italic: number
+  /** Scripts the index knows about, most families first. */
+  subsets: { name: string, families: number }[]
+  /** Families whose only provider publishes no properties, so no facet filter can keep them. */
+  unknown: number
 }
 
 interface Catalogue {
   entries: CatalogueEntry[]
   byFamily: Map<string, CatalogueEntry>
+  facets: FacetSummary
   builtAt: number
   /** Providers that failed to answer, so the UI can say so rather than under-report. */
   unavailable: ProviderName[]
@@ -26,8 +54,8 @@ async function build(): Promise<Catalogue> {
   const unavailable: ProviderName[] = []
 
   const lists = await Promise.all(QUERYABLE_PROVIDERS.map(async (name) => {
-    if (name === 'npm' || name === 'adobe') {
-      // Neither can enumerate: npm is the whole registry, adobe needs a project id.
+    if (name === 'adobe') {
+      // Adobe needs a Typekit project id, so there is no library to enumerate.
       return { name, families: undefined }
     }
     try {
@@ -41,7 +69,7 @@ async function build(): Promise<Catalogue> {
 
   for (const { name, families } of lists) {
     if (!families?.length) {
-      if (name !== 'npm' && name !== 'adobe') {
+      if (name !== 'adobe') {
         unavailable.push(name)
       }
       continue
@@ -60,8 +88,71 @@ async function build(): Promise<Catalogue> {
     }
   }
 
+  await addFacets([...byFamily.values()])
+
   const entries = [...byFamily.values()].sort((a, b) => a.family.localeCompare(b.family))
-  return { entries, byFamily, builtAt: Date.now(), unavailable }
+  return { entries, byFamily, facets: summariseFacets(entries), builtAt: Date.now(), unavailable }
+}
+
+async function addFacets(entries: CatalogueEntry[]) {
+  const instances = new Map<string, Awaited<ReturnType<typeof useProvider>>>()
+  for (const name of FACET_PROVIDERS) {
+    try {
+      instances.set(name, await useProvider(name))
+    }
+    catch {
+      // A provider that did not answer contributed no families either.
+    }
+  }
+
+  async function facetsFor(entry: CatalogueEntry) {
+    for (const name of FACET_PROVIDERS) {
+      if (!entry.providers.includes(name)) {
+        continue
+      }
+      const properties = await instances.get(name)?.getFontProperties(entry.family).catch(() => undefined)
+      if (!properties) {
+        continue
+      }
+      entry.facets = {
+        variable: (properties.weights ?? []).some(weight => weight.includes(' ')),
+        italic: (properties.styles ?? []).includes('italic'),
+        // `menu` is Google's one-line subset for rendering a family's own name in a picker.
+        subsets: (properties.subsets ?? []).filter(subset => subset !== 'menu'),
+      }
+      return
+    }
+  }
+
+  for (let index = 0; index < entries.length; index += FACET_BATCH) {
+    await Promise.all(entries.slice(index, index + FACET_BATCH).map(facetsFor))
+  }
+}
+
+function summariseFacets(entries: CatalogueEntry[]): FacetSummary {
+  const subsets = new Map<string, number>()
+  let variable = 0
+  let italic = 0
+  let unknown = 0
+
+  for (const entry of entries) {
+    if (!entry.facets) {
+      unknown += 1
+      continue
+    }
+    variable += entry.facets.variable ? 1 : 0
+    italic += entry.facets.italic ? 1 : 0
+    for (const subset of entry.facets.subsets) {
+      subsets.set(subset, (subsets.get(subset) ?? 0) + 1)
+    }
+  }
+
+  return {
+    variable,
+    italic,
+    subsets: [...subsets].map(([name, families]) => ({ name, families })).sort((a, b) => b.families - a.families || a.name.localeCompare(b.name)),
+    unknown,
+  }
 }
 
 export function useCatalogue() {
@@ -94,15 +185,35 @@ export function useCatalogue() {
 export interface SearchOptions {
   query?: string
   provider?: ProviderName
+  /** Any filter also drops families whose facets are unknown. */
+  variable?: boolean
+  italic?: boolean
+  subset?: string
   limit?: number
   offset?: number
+}
+
+export function matchesFacets(entry: CatalogueEntry, { variable, italic, subset }: SearchOptions) {
+  if (variable === undefined && italic === undefined && !subset) {
+    return true
+  }
+  if (!entry.facets) {
+    return false
+  }
+  if (variable !== undefined && entry.facets.variable !== variable) {
+    return false
+  }
+  if (italic !== undefined && entry.facets.italic !== italic) {
+    return false
+  }
+  return !subset || entry.facets.subsets.includes(subset)
 }
 
 /**
  * Rank families for a query: exact match, then prefix, then word boundary, then substring. Not
  * fuzzy, because a typo returning the wrong family is worse than returning nothing.
  */
-export async function searchCatalogue({ query = '', provider, limit = 60, offset = 0 }: SearchOptions) {
+export async function searchCatalogue({ query = '', provider, variable, italic, subset, limit = 60, offset = 0 }: SearchOptions) {
   const catalogue = await useCatalogue()
   const needle = query.trim().toLowerCase()
 
@@ -110,6 +221,7 @@ export async function searchCatalogue({ query = '', provider, limit = 60, offset
   if (provider) {
     pool = pool.filter(entry => entry.providers.includes(provider))
   }
+  pool = pool.filter(entry => matchesFacets(entry, { variable, italic, subset }))
 
   let ranked: CatalogueEntry[]
   if (!needle) {

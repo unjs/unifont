@@ -105,7 +105,7 @@ export const MCP_TOOLS: McpTool[] = [
         `weights: ${properties.weights?.join(', ') ?? 'not reported'}`,
         `styles: ${properties.styles?.join(', ') ?? 'not reported'}`,
         `subsets: ${properties.subsets?.join(', ') ?? 'not reported'}`,
-        `formats: ${properties.formats?.join(', ') ?? 'not reported'} (what the provider can serve, not what this family has)`,
+        `formats: ${properties.formats?.join(', ') ?? 'not reported'} (what the provider can serve)`,
         `fallbacks: ${resolved.fallbacks?.join(', ') || 'none suggested'}`,
         `resolves to ${resolved.fonts.length} faces across ${faceUrls(resolved.fonts).length} files`,
       ].join('\n')

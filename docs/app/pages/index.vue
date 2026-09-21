@@ -161,8 +161,9 @@ await unifont.getFontProperties('Switzer')
         <NuxtLink to="/fonts">Browse the whole catalogue →</NuxtLink>
       </p>
       <p class="index__more">
-        Or build a <NuxtLink to="/stack">stack</NuxtLink> and see what
-        <NuxtLink to="/stacks">other people have published</NuxtLink>.
+        Or build a <NuxtLink to="/stack">stack</NuxtLink>, see what
+        <NuxtLink to="/stacks">other people have published</NuxtLink>, or browse the families only
+        <NuxtLink to="/fonts?provider=npm">npm</NuxtLink> can resolve.
       </p>
     </section>
 
