@@ -53,7 +53,7 @@
   "devDependencies": {
     "@antfu/eslint-config": "9.5.1",
     "@types/css-tree": "3.2.0",
-    "@types/node": "24.13.4",
+    "@types/node": "24.13.6",
     "@vitest/coverage-v8": "5.0.0",
     "bumpp": "12.3.0",
     "changelogithub": "15.0.5",
