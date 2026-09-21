@@ -2,7 +2,7 @@
 import type { TransferResponse } from '#shared/types'
 import { specimenAlias } from '#shared/featured'
 
-const route = useRoute('fonts-family')
+const route = useRoute()
 const router = useRouter()
 
 const family = computed(() => String(route.params.family ?? ''))
@@ -31,7 +31,7 @@ const { drop } = useFontWarmup()
 const requested = computed(() => data.value?.requested)
 const properties = computed(() => data.value?.properties)
 
-const scopedProvider = computed(() => (provider.value ? `&provider=${encodeURIComponent(provider.value)}` : ''))
+const scopedProvider = computed(() => providerScope(provider.value || undefined))
 
 // One weight, subset to the specimen's own glyphs, and the URL the grid warms on hover.
 const warmFamily = computed(() => specimenAlias(family.value))

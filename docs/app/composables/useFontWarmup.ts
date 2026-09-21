@@ -1,9 +1,13 @@
 import { specimenAlias } from '#shared/featured'
 
+/** The `&provider=` suffix for a font CSS URL, empty when the cascade is left to pick. */
+export function providerScope(provider?: string) {
+  return provider ? `&provider=${encodeURIComponent(provider)}` : ''
+}
+
 /** The warmed sheet's URL, so the family page can link and await the very tag warming used. */
 export function warmStylesheetUrl(family: string, provider?: string) {
-  const scope = provider ? `&provider=${encodeURIComponent(provider)}` : ''
-  return `/api/v1/fonts/${encodeURIComponent(family)}/css?preset=warm&as=${encodeURIComponent(specimenAlias(family))}${scope}`
+  return `/api/v1/fonts/${encodeURIComponent(family)}/css?preset=warm&as=${encodeURIComponent(specimenAlias(family))}${providerScope(provider)}`
 }
 
 /**
