@@ -57,7 +57,7 @@
     "@vitest/coverage-v8": "5.0.1",
     "bumpp": "12.3.0",
     "changelogithub": "15.0.5",
-    "eslint": "10.10.0",
+    "eslint": "10.11.0",
     "lint-staged": "17.5.1",
     "pkg-pr-new": "0.0.88",
     "rou3": "0.9.2",
