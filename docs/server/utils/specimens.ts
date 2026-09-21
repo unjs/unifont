@@ -6,6 +6,35 @@ import { cssComment, toFontFaceCss } from './css'
 import { useUnifont } from './unifont'
 import { specimenSubsets, specimenWeights } from './weights'
 
+const FAILED = 'no provider could resolve this family'
+
+/** Every family the sheet accounts for, and the ones it could not resolve. */
+export function sheetFamilies(css: string) {
+  const blocks = [...css.matchAll(/\/\* (.+?): (.+?) \*\//g)]
+  return { total: blocks.length, missing: blocks.filter(block => block[2] === FAILED).map(block => block[1]!) }
+}
+
+/** Anything missing from a prerendered sheet stays missing until the next deployment. */
+export function assertResolved(css: string, label: string) {
+  if (!import.meta.prerender) {
+    return css
+  }
+
+  const { total, missing } = sheetFamilies(css)
+  if (!missing.length) {
+    return css
+  }
+
+  const report = `${label}: no provider resolved ${missing.join(', ')}`
+  // A page of specimens with a few holes still reads; one with nothing in it does not.
+  if (missing.length >= total) {
+    throw new Error(`${report}. Refusing to prerender a stylesheet with nothing in it.`)
+  }
+
+  console.warn(`${report}. Baking the rest.`)
+  return css
+}
+
 /** Only Google can subset to a glyph list; the others ignore this and answer in full. */
 export function specimenOptions(family: string) {
   return { google: { experimental: { glyphs: specimenGlyphs(family) } } }
@@ -30,28 +59,41 @@ export async function specimenCss(
   const unifont = await useUnifont()
   const needsProperties = !overrides.weights || !overrides.subsets
 
+  async function block(family: string) {
+    const properties = needsProperties ? await unifont.getFontProperties(family) : undefined
+    const resolved = await unifont.resolveFont(family, {
+      weights: overrides.weights ?? specimenWeights(properties?.weights ?? ['400']),
+      styles: ['normal'],
+      subsets: overrides.subsets ?? specimenSubsets(properties?.subsets),
+      formats: ['woff2'],
+      options: overrides.glyphs ? specimenOptions(family) : undefined,
+    })
+    if (!resolved.fonts.length) {
+      return null
+    }
+    return [
+      `/* ${cssComment(family)}: ${resolved.provider} */`,
+      toFontFaceCss(family, resolved.fonts),
+    ].join('\n')
+  }
+
   const blocks = await Promise.all(families.map(async (requested) => {
     const family = await canonicalFamily(requested)
-    try {
-      const properties = needsProperties ? await unifont.getFontProperties(family) : undefined
-      const resolved = await unifont.resolveFont(family, {
-        weights: overrides.weights ?? specimenWeights(properties?.weights ?? ['400']),
-        styles: ['normal'],
-        subsets: overrides.subsets ?? specimenSubsets(properties?.subsets),
-        formats: ['woff2'],
-        options: overrides.glyphs ? specimenOptions(family) : undefined,
-      })
-      if (!resolved.fonts.length) {
-        return `/* ${cssComment(family)}: no provider could resolve this family */`
+    // Retried once: a sheet baked at build time keeps its holes for the life of the deployment.
+    for (const attempt of [0, 1]) {
+      try {
+        const css = await block(family)
+        if (css) {
+          return css
+        }
       }
-      return [
-        `/* ${cssComment(family)}: ${resolved.provider} */`,
-        toFontFaceCss(family, resolved.fonts),
-      ].join('\n')
+      catch {
+        if (attempt) {
+          return `/* ${cssComment(family)}: ${FAILED} */`
+        }
+      }
     }
-    catch {
-      return `/* ${cssComment(family)}: provider request failed */`
-    }
+    return `/* ${cssComment(family)}: ${FAILED} */`
   }))
 
   return `${blocks.join('\n\n')}\n`
