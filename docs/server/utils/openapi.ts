@@ -234,6 +234,36 @@ const schemas = {
     },
     required: ['stacks'],
   },
+  BaselineTransferResponse: {
+    type: 'object',
+    properties: {
+      basis: {
+        type: 'object',
+        description: 'The selection every figure is quoted against.',
+        properties: {
+          weights: { type: 'array', items: { type: 'string' } },
+          styles: { type: 'array', items: { type: 'string' } },
+          subsets: { type: 'array', items: { type: 'string' } },
+          formats: { type: 'array', items: { type: 'string' } },
+        },
+        required: ['weights', 'styles', 'subsets', 'formats'],
+      },
+      families: {
+        type: 'object',
+        description: 'Keyed by family. `null` where no provider resolved it, or no file reported a length.',
+        additionalProperties: {
+          type: ['object', 'null'],
+          properties: {
+            bytes: { type: 'integer' },
+            files: { type: 'integer' },
+            measured: { type: 'integer', description: 'Files that reported a `content-length`.' },
+          },
+          required: ['bytes', 'files', 'measured'],
+        },
+      },
+    },
+    required: ['basis', 'families'],
+  },
   CompareResponse: {
     type: 'object',
     properties: {
@@ -555,6 +585,28 @@ export function openApiDocument(origin = 'https://unifont.dev') {
           ],
           responses: {
             200: cssResponse('The stylesheet.'),
+            400: errorResponse('`families` was missing or empty.'),
+          },
+        },
+      },
+      '/api/v1/transfer': {
+        get: {
+          operationId: 'getBaselineTransferSizes',
+          tags: ['catalogue'],
+          summary: 'Transfer size for many families',
+          description: 'Bytes on the wire for up to 40 families, all quoted against one selection (400 and 700, latin, woff2) so that two families are compared on the same terms. Measured with HEAD requests, so nothing is downloaded.',
+          parameters: [
+            {
+              name: 'families',
+              in: 'query',
+              required: true,
+              description: 'Families to measure (comma-separated, up to 40).',
+              schema: commaList('Comma-separated family names.'),
+              example: 'Anton,Erode,Spectral',
+            },
+          ],
+          responses: {
+            200: jsonResponse('Measured transfer sizes.', 'BaselineTransferResponse'),
             400: errorResponse('`families` was missing or empty.'),
           },
         },
