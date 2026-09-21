@@ -18,7 +18,7 @@ const provider = computed(() => String(route.query.provider ?? ''))
 // than blanking the page.
 const { data, status, error, refresh } = await useFetch(() => `/api/v1/fonts/${encodeURIComponent(family.value)}`, {
   query: { weights, subsets, styles, provider },
-  key: () => familyDataKey(family.value),
+  key: () => familyDataKey(family.value, provider.value),
   transform: toFamilySummary,
   getCachedData: (key, nuxtApp, ctx) => cachedFamilyData(key, nuxtApp, ctx.cause),
 })
@@ -31,7 +31,7 @@ const { drop } = useFontWarmup()
 const requested = computed(() => data.value?.requested)
 const properties = computed(() => data.value?.properties)
 
-const scopedProvider = computed(() => (provider.value ? `&provider=${encodeURIComponent(provider.value)}` : ''))
+const scopedProvider = computed(() => providerScope(provider.value || undefined))
 
 // One weight, subset to the specimen's own glyphs, and the URL the grid warms on hover.
 const warmFamily = computed(() => specimenAlias(family.value))

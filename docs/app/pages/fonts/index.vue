@@ -3,9 +3,9 @@ import { CATALOGUE_PAGE } from '#shared/featured'
 
 const { warm } = useFontWarmup()
 
-function prefetch(family: string) {
-  warm(family)
-  prefetchFamilyData(family)
+function prefetch(family: string, provider: string) {
+  warm(family, provider)
+  prefetchFamilyData(family, provider)
 }
 
 const route = useRoute()
@@ -186,8 +186,8 @@ function turn(delta: number) {
         <NuxtLink
           class="cell__link"
           :to="{ path: `/fonts/${encodeURIComponent(entry.family)}`, query: provider ? { provider } : undefined }"
-          @mouseenter="prefetch(entry.family)"
-          @focus="prefetch(entry.family)"
+          @mouseenter="prefetch(entry.family, provider)"
+          @focus="prefetch(entry.family, provider)"
         >
           <!-- The name is set once, in its own face, and is the link's accessible name. -->
           <span
