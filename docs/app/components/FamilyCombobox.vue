@@ -54,8 +54,13 @@ async function search(term: string) {
   }
 }
 
+/** Strip characters with no place in a font family name but that could break out of markup/CSS contexts. */
+function sanitizeFamilyName(value: string) {
+  return value.replace(/[<>"'`]/g, '')
+}
+
 function onInput(value: string) {
-  query.value = value
+  query.value = sanitizeFamilyName(value)
   open.value = true
   clearTimeout(debounce)
   debounce = setTimeout(() => search(value), 140)
@@ -64,7 +69,7 @@ function onInput(value: string) {
 function commit(value: string) {
   clearTimeout(debounce)
   sequence++
-  const family = spellings.get(value.trim().toLowerCase()) ?? value
+  const family = spellings.get(value.trim().toLowerCase()) ?? sanitizeFamilyName(value)
   query.value = family
   open.value = false
   matches.value = []
