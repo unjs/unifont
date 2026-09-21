@@ -27,10 +27,10 @@
     "airspace": "^0.1.6",
     "comark-content": "^0.4.0",
     "fontaine": "0.8.2",
-    "fontless": "^0.4.2",
-    "subset-font": "^2.5.0",
+    "fontless": "^1.0.0",
     "microlighter": "^2.1.0",
     "nuxt": "npm:nuxt-nightly@5x",
+    "subset-font": "^2.5.0",
     "unifont": "link:..",
     "vue": "3.5.43"
   },
