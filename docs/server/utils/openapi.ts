@@ -264,6 +264,26 @@ const schemas = {
     },
     required: ['basis', 'families'],
   },
+  FallbackResponse: {
+    type: 'object',
+    properties: {
+      family: { type: 'string' },
+      name: { type: 'string', description: 'The family name the generated face is declared under.' },
+      generic: { type: 'string', description: 'The generic the adjustment is built against.' },
+      fallbacks: { type: 'array', items: { type: 'string' } },
+      css: { type: 'string', description: 'Empty when no metrics could be read from the served file.' },
+      overrides: {
+        type: ['object', 'null'],
+        properties: {
+          sizeAdjust: { type: ['string', 'null'] },
+          ascentOverride: { type: ['string', 'null'] },
+          descentOverride: { type: ['string', 'null'] },
+          lineGapOverride: { type: ['string', 'null'] },
+        },
+      },
+    },
+    required: ['family', 'name', 'generic', 'fallbacks', 'css', 'overrides'],
+  },
   CompareResponse: {
     type: 'object',
     properties: {
@@ -608,6 +628,29 @@ export function openApiDocument(origin = 'https://unifont.dev') {
           responses: {
             200: jsonResponse('Measured transfer sizes.', 'BaselineTransferResponse'),
             400: errorResponse('`families` was missing or empty.'),
+          },
+        },
+      },
+      '/api/v1/fonts/{family}/fallback': {
+        get: {
+          operationId: 'getFontFallback',
+          tags: ['families'],
+          summary: 'Metric-matched fallback for one family',
+          description: 'A `@font-face` that makes a generic match this family’s metrics, so a page does not reflow when the real font lands. Metrics are read from the served file, and the face points at families a system may actually have rather than at the generic itself, which resolves nowhere.',
+          parameters: [
+            familyParameter,
+            {
+              name: 'provider',
+              in: 'query',
+              required: false,
+              description: 'Limit the cascade to these providers (comma-separated).',
+              schema: commaList('Comma-separated provider names.'),
+            },
+          ],
+          responses: {
+            200: jsonResponse('The generated face and its descriptors.', 'FallbackResponse'),
+            400: errorResponse('No family was given.'),
+            404: errorResponse('No provider could resolve this family.'),
           },
         },
       },

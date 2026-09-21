@@ -118,11 +118,7 @@ export async function metricFallbackCss(family: string, faces: FontFaceData[], f
   }
 
   return generics
-    .map(generic => generateFontFace(metrics!, {
-      name: fallbackFamily(family),
-      font: generic,
-      metrics: undefined,
-    }))
+    .map(generic => generateFontFace(metrics!, { name: fallbackFamily(family), font: generic, metrics: undefined }))
     .join('\n')
 }
 

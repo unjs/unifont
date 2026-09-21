@@ -43,6 +43,9 @@ export const SPECIMEN_LINE = 'Handgloves & 0123'
 
 export const SPECIMEN_TEXT = 'Typography is what language looks like.'
 
+/** Long enough to wrap in either column of the fallback comparison, where the reflow shows. */
+export const FALLBACK_TEXT = 'Type is laid out before the font arrives, so the browser sets these lines in whatever it already has. When the real file lands they are all redrawn, and the page moves by the difference. How far it moves is what a metric-matched substitute changes.'
+
 /** The characters a specimen sets, for providers that can subset to a glyph list. */
 export function specimenGlyphs(family: string) {
   return [...new Set(`${family}${SPECIMEN_TEXT}${SPECIMEN_LINE}`)].sort()

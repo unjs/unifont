@@ -1,6 +1,6 @@
 <script setup lang="ts">
-import type { StacksResponse, TransferResponse } from '#shared/types'
-import { specimenAlias } from '#shared/featured'
+import type { FallbackResponse, StacksResponse, TransferResponse } from '#shared/types'
+import { FALLBACK_TEXT, specimenAlias } from '#shared/featured'
 
 const route = useRoute()
 const router = useRouter()
@@ -305,6 +305,117 @@ useHead(() => ({
     ? [{ rel: 'stylesheet', href: `/api/v1/css?families=${stackFamilies.value.map(encodeURIComponent).join(',')}` }]
     : [],
 }))
+
+/* ── Fallback ───────────────────────────────────────────── */
+const { data: fallback } = await useFetch<FallbackResponse>(
+  () => `/api/v1/fonts/${encodeURIComponent(family.value)}/fallback`,
+  {
+    query: { provider },
+    key: () => `fallback-${family.value}-${provider.value}`,
+    lazy: true,
+    server: false,
+  },
+)
+
+useHead(() => ({
+  style: fallback.value?.css ? [{ textContent: fallback.value.css }] : [],
+}))
+
+const adjusted = useTemplateRef<HTMLParagraphElement>('adjusted')
+const unadjusted = useTemplateRef<HTMLParagraphElement>('unadjusted')
+const shift = ref<{ adjusted: number, unadjusted: number } | null>(null)
+
+/* ── Narrowing the comparison ───────────────────────────── */
+const frame = useTemplateRef<HTMLDivElement>('frame')
+/** `null` until dragged, so the comparison starts at whatever width the page gives it. */
+const frameWidth = ref<number | null>(null)
+const frameMax = ref(0)
+
+/** Narrow enough to wrap a phone, wide enough to still set a line. */
+const FRAME_MIN = 220
+const FRAME_STEP = 32
+
+const frameClamped = computed(() => (frameWidth.value === null
+  ? null
+  : Math.round(Math.min(Math.max(frameWidth.value, FRAME_MIN), frameMax.value || frameWidth.value))))
+
+function dragFrame(event: PointerEvent) {
+  const left = frame.value?.getBoundingClientRect().left
+  if (left === undefined) {
+    return
+  }
+
+  const handle = event.currentTarget as HTMLElement
+  handle.setPointerCapture(event.pointerId)
+
+  const move = (moved: PointerEvent) => {
+    frameWidth.value = moved.clientX - left
+  }
+  const stop = () => {
+    handle.releasePointerCapture(event.pointerId)
+    handle.removeEventListener('pointermove', move)
+    handle.removeEventListener('pointerup', stop)
+    handle.removeEventListener('pointercancel', stop)
+  }
+
+  handle.addEventListener('pointermove', move)
+  handle.addEventListener('pointerup', stop)
+  handle.addEventListener('pointercancel', stop)
+}
+
+function nudgeFrame(event: KeyboardEvent) {
+  const current = frameClamped.value ?? frameMax.value
+  const keyed: Record<string, number> = {
+    ArrowLeft: current - FRAME_STEP,
+    ArrowRight: current + FRAME_STEP,
+    Home: FRAME_MIN,
+    End: frameMax.value,
+  }
+
+  const next = keyed[event.key]
+  if (next === undefined) {
+    return
+  }
+
+  event.preventDefault()
+  frameWidth.value = next
+}
+
+// Both paragraphs are set at the same width, so the difference in height is the shift.
+function measureShift() {
+  if (!adjusted.value || !unadjusted.value) {
+    return
+  }
+  shift.value = {
+    adjusted: Math.round(adjusted.value.getBoundingClientRect().height),
+    unadjusted: Math.round(unadjusted.value.getBoundingClientRect().height),
+  }
+}
+
+if (import.meta.client) {
+  watch(() => fallback.value?.css, async (css) => {
+    if (!css) {
+      return
+    }
+    await nextTick()
+    await document.fonts.ready
+    measureShift()
+  }, { immediate: true, flush: 'post' })
+
+  onMounted(() => {
+    const observer = new ResizeObserver(() => {
+      frameMax.value = frame.value?.parentElement?.clientWidth ?? 0
+      measureShift()
+    })
+    watch(frame, (element) => {
+      observer.disconnect()
+      if (element) {
+        observer.observe(element)
+      }
+    }, { immediate: true, flush: 'post' })
+    onBeforeUnmount(() => observer.disconnect())
+  })
+}
 
 /* ── Coverage ───────────────────────────────────────────── */
 interface CoverageCheck { text: string, unrestricted: boolean, covered: string[], missing: string[], subsets: string[] }
@@ -898,6 +1009,93 @@ export default defineNuxtConfig({
       </div>
 
       <section
+        v-if="fallback?.css"
+        id="fallback"
+        class="fallback"
+        aria-labelledby="fallback-heading"
+      >
+        <h2
+          id="fallback-heading"
+          class="section-title"
+        >
+          What it looks like before it loads
+        </h2>
+        <p class="fallback__lede">
+          Both paragraphs are set in <code>{{ fallback.generic }}</code>. The first is adjusted to fit {{ family }}’s metrics using <a href="https://github.com/unjs/fontaine">fontaine</a>. Drag the edge to simulate a narrower container.
+        </p>
+
+        <div
+          ref="frame"
+          class="fallback__frame"
+          :style="frameClamped ? { width: `${frameClamped}px` } : undefined"
+        >
+          <div class="fallback__pair">
+            <figure class="fallback__case">
+              <figcaption class="fallback__caption">
+                metric-matched
+                <span v-if="shift">{{ shift.adjusted }}px tall</span>
+              </figcaption>
+              <p
+                ref="adjusted"
+                class="fallback__sample"
+                :style="{ fontFamily: `'${fallback.name}', ${fallback.generic}` }"
+              >
+                {{ FALLBACK_TEXT }}
+              </p>
+            </figure>
+
+            <figure class="fallback__case">
+              <figcaption class="fallback__caption">
+                unadjusted {{ fallback.generic }}
+                <span v-if="shift">{{ shift.unadjusted }}px tall</span>
+              </figcaption>
+              <p
+                ref="unadjusted"
+                class="fallback__sample"
+                :style="{ fontFamily: fallback.generic }"
+              >
+                {{ FALLBACK_TEXT }}
+              </p>
+            </figure>
+          </div>
+
+          <button
+            class="fallback__handle"
+            type="button"
+            role="separator"
+            aria-orientation="vertical"
+            :aria-label="`Width of the comparison, ${frameClamped ?? frameMax}px`"
+            :aria-valuenow="frameClamped ?? frameMax"
+            :aria-valuemin="FRAME_MIN"
+            :aria-valuemax="frameMax"
+            @pointerdown="dragFrame"
+            @keydown="nudgeFrame"
+          />
+        </div>
+
+        <p
+          v-if="shift"
+          class="fallback__verdict"
+        >
+          <template v-if="shift.adjusted === shift.unadjusted">
+            No difference at this width: either the metrics already agree, or this system has none
+            of the families the fallback names.
+          </template>
+          <template v-else>
+            {{ Math.abs(shift.unadjusted - shift.adjusted) }}px of shift avoided at this width.
+          </template>
+        </p>
+
+        <div class="fallback__css">
+          <CodeBlock
+            :code="fallback.css"
+            label="metric-matched fallback"
+            language="css"
+          />
+        </div>
+      </section>
+
+      <section
         id="ship"
         class="ship"
         aria-labelledby="ship-heading"
@@ -1097,6 +1295,95 @@ export default defineNuxtConfig({
 
 .tester__input:focus-visible {
   outline-offset: 6px;
+}
+
+.fallback {
+  padding-block: var(--space-xl);
+  border-top: var(--rule-hair) solid var(--color-rule);
+}
+
+.fallback__lede {
+  max-width: var(--measure);
+  margin-top: var(--space-xs);
+  color: var(--color-muted);
+  font-size: var(--text-sm);
+}
+
+/* A container, so dragging the handle rewraps the pair the way a narrower screen would. */
+.fallback__frame {
+  container-type: inline-size;
+  position: relative;
+  max-width: 100%;
+  margin-top: var(--space-lg);
+  padding-right: var(--space-md);
+}
+
+.fallback__pair {
+  display: grid;
+  gap: var(--space-lg);
+}
+
+@container (width >= 40rem) {
+  .fallback__pair {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+.fallback__handle {
+  position: absolute;
+  inset-block: 0;
+  right: 0;
+  width: var(--space-md);
+  padding: 0;
+  border: 0;
+  border-left: var(--rule-hair) dashed var(--color-rule);
+  background: none;
+  cursor: ew-resize;
+  touch-action: none;
+}
+
+.fallback__handle::after {
+  content: '';
+  display: block;
+  width: var(--rule-heavy);
+  height: var(--space-lg);
+  margin-inline: auto;
+  background: var(--color-neutral);
+}
+
+.fallback__handle:hover::after,
+.fallback__handle:focus-visible::after {
+  background: var(--color-ink);
+}
+
+.fallback__case {
+  margin: 0;
+}
+
+.fallback__caption {
+  display: flex;
+  gap: var(--space-xs);
+  justify-content: space-between;
+  color: var(--color-neutral);
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+}
+
+/* The browser's own line height, which is where the metric overrides show up at all. */
+.fallback__sample {
+  margin-top: var(--space-2xs);
+  font-size: var(--text-md);
+  line-height: normal;
+}
+
+.fallback__verdict {
+  margin-top: var(--space-md);
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+}
+
+.fallback__css {
+  margin-top: var(--space-md);
 }
 
 .tester__controls {
