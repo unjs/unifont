@@ -163,6 +163,17 @@ const stackFor = (family: string | undefined, fallback: string) =>
   display: none;
 }
 
+/* Equal card heights are worth less than reachable text once these lines stop fitting. */
+@media (width < 40rem) {
+  .card__roles,
+  .card__by {
+    block-size: auto;
+    overflow: visible;
+    text-overflow: clip;
+    white-space: normal;
+  }
+}
+
 .card--loading .card__body {
   display: block;
 }
