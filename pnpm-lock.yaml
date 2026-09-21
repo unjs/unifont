@@ -204,7 +204,7 @@ settings:
   excludeLinksFromLockfile: false
 
 overrides:
-  '@nuxt/cli': npm:@nuxt/cli-nightly@4.0.0-20260920-121149-6393ba4
+  '@nuxt/cli': npm:@nuxt/cli-nightly@4.0.0-20260920-212707-4d81025
   ofetch: ^2.0.0-alpha.3
   unifont: link:.
 
@@ -951,8 +951,8 @@ packages:
       '@emnapi/core': ^1.7.1 || ^2.0.0-alpha.4
       '@emnapi/runtime': ^1.7.1 || ^2.0.0-alpha.4
 
-  '@nuxt/cli-nightly@4.0.0-20260920-121149-6393ba4':
-    resolution: {integrity: sha512-PM7aHTKgmnd6mt1KRC4WNLDnNrG3iuqOeQDQqVbyaqoHu2EFEr+uOpCAz7WQILTmBAPJhuQqoaDxRcNag6/Hzg==}
+  '@nuxt/cli-nightly@4.0.0-20260920-212707-4d81025':
+    resolution: {integrity: sha512-zCnKNQnepeTV2wrZP1TGS4TKhXMc4aGSDRKOBSSHlOvhZH/cOnhCTJAhK8kFLzWAl+Gw3aK7K1rQNCf9m/5FVQ==}
     engines: {node: ^22.19.0 || ^24.11.0 || >=26.0.0}
     hasBin: true
     peerDependencies:
@@ -5403,7 +5403,7 @@ snapshots:
       '@tybys/wasm-util': 0.10.4
     optional: true
 
-  '@nuxt/cli-nightly@4.0.0-20260920-121149-6393ba4(@nuxt/schema-nightly@5.0.0-29830089.dc519522)(jiti@2.7.0)(rolldown@1.2.8)(vite@8.3.0)':
+  '@nuxt/cli-nightly@4.0.0-20260920-212707-4d81025(@nuxt/schema-nightly@5.0.0-29830089.dc519522)(jiti@2.7.0)(rolldown@1.2.8)(vite@8.3.0)':
     dependencies:
       '@clack/prompts': 1.8.1
       args-tokenizer: 0.3.0
@@ -8498,7 +8498,7 @@ snapshots:
   nuxt-nightly@5.0.0-29830089.dc519522(f9006744db1e679f7975e6b3fe38da74):
     dependencies:
       '@dxup/nuxt': 0.5.10(magicast@0.5.5)(rolldown@1.2.8)(vite@8.3.0)
-      '@nuxt/cli': '@nuxt/cli-nightly@4.0.0-20260920-121149-6393ba4(@nuxt/schema-nightly@5.0.0-29830089.dc519522)(jiti@2.7.0)(rolldown@1.2.8)(vite@8.3.0)'
+      '@nuxt/cli': '@nuxt/cli-nightly@4.0.0-20260920-212707-4d81025(@nuxt/schema-nightly@5.0.0-29830089.dc519522)(jiti@2.7.0)(rolldown@1.2.8)(vite@8.3.0)'
       '@nuxt/devtools': 4.0.0-beta.1(be15f1421342e8b4681172472fb8c6e5)
       '@nuxt/kit': '@nuxt/kit-nightly@5.0.0-29830089.dc519522(@nuxt/schema-nightly@5.0.0-29830089.dc519522)(confbox@0.3.1)(dotenv@17.4.2)(giget@3.3.1)(jiti@2.7.0)(magic-string@1.4.1)(mlly@1.8.2)(rolldown@1.2.8)(unplugin@3.4.0(rolldown@1.2.8)(vite@8.3.0))'
       '@nuxt/nitro-server': '@nuxt/nitro-server-nightly@5.0.0-29830089.dc519522(@nuxt/schema-nightly@5.0.0-29830089.dc519522)(@oxc-project/types@0.149.0)(@vitejs/devtools-kit@0.7.5(@devframes/agentic@1.0.0(crossws@0.4.12(srvx@1.0.5))(devframe@1.0.0)(ocache@0.3.0))(cac@7.0.0)(crossws@0.4.12(srvx@1.0.5))(ocache@0.3.0)(srvx@1.0.5)(vite@8.3.0))(acorn@8.18.0)(confbox@0.3.1)(dotenv@17.4.2)(giget@3.3.1)(jiti@2.7.0)(lightningcss@1.33.0)(mlly@1.8.2)(nuxt-nightly@5.0.0-29830089.dc519522)(rolldown@1.2.8)(typescript@6.0.3)(vite@8.3.0)'
