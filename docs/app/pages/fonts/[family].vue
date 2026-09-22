@@ -688,22 +688,6 @@ export default defineNuxtConfig({
         >
           Type tester
         </h2>
-        <div class="tester__stage">
-          <label
-            class="visually-hidden"
-            for="sample"
-          >Sample text</label>
-          <textarea
-            id="sample"
-            v-model="sample"
-            class="tester__input"
-            rows="2"
-            spellcheck="false"
-            :style="previewStyle"
-            @input="needsPreviewFace()"
-          />
-        </div>
-
         <div class="tester__controls">
           <p class="control">
             <label :for="'size'">size <span class="control__value">{{ size }}px</span></label>
@@ -796,6 +780,22 @@ export default defineNuxtConfig({
               class="control__note"
             >not in the current selection</span>
           </p>
+        </div>
+
+        <div class="tester__stage">
+          <label
+            class="visually-hidden"
+            for="sample"
+          >Sample text</label>
+          <textarea
+            id="sample"
+            v-model="sample"
+            class="tester__input"
+            rows="2"
+            spellcheck="false"
+            :style="previewStyle"
+            @input="needsPreviewFace()"
+          />
         </div>
 
         <div class="budget">
@@ -1598,9 +1598,9 @@ export default defineNuxtConfig({
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(min(11rem, 100%), 1fr));
   gap: var(--space-md) var(--space-xl);
-  margin-top: var(--space-xl);
-  padding-top: var(--space-md);
-  border-top: var(--rule-hair) solid var(--color-rule);
+  margin-bottom: var(--space-xl);
+  padding-bottom: var(--space-md);
+  border-bottom: var(--rule-hair) solid var(--color-rule);
 }
 
 .control {
