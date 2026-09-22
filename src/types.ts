@@ -117,7 +117,6 @@ export interface FontMetrics {
   xWidthAvg?: number
 }
 
-// TODO: name
 export interface FontFaceData {
   src: Array<LocalFontSource | RemoteFontSource>
   /**
