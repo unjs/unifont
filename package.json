@@ -1,7 +1,7 @@
 {
   "name": "unifont",
   "type": "module",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "devEngines": {
     "runtime": {
       "name": "node",
