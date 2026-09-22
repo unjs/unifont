@@ -1,6 +1,5 @@
 <script setup lang="ts">
 const palette = useCommandPalette()
-const shortcut = useCommandShortcut()
 const route = useRoute()
 
 const links = [
@@ -36,7 +35,7 @@ function isCurrent(to: string) {
         <!-- Vue condenses whitespace between elements, so the separator is explicit or the two
              labels concatenate in the accessible name and in extracted text. -->
         {{ ' ' }}
-        <kbd class="pill__hint">{{ shortcut }}</kbd>
+        <CommandShortcut class="pill__hint" />
       </button>
 
       <nav

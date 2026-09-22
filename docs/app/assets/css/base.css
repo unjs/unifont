@@ -114,7 +114,7 @@ pre {
 }
 
 /* Paths and identifiers offer no break opportunities, so at 320px they leave the viewport. */
-:not(pre) > code {
+:not(pre)>code {
   overflow-wrap: anywhere;
 }
 
@@ -124,6 +124,7 @@ pre {
 }
 
 @media (prefers-reduced-motion: reduce) {
+
   *,
   *::before,
   *::after {
@@ -148,6 +149,18 @@ pre {
 
 .skip:focus-visible {
   transform: none;
+}
+
+.shortcut--apple {
+  display: none;
+}
+
+.platform-apple .shortcut--apple {
+  display: inline;
+}
+
+.platform-apple .shortcut--other {
+  display: none;
 }
 
 .visually-hidden {

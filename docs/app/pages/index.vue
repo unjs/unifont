@@ -2,7 +2,6 @@
 import { FEATURED_FAMILIES } from '#shared/featured'
 
 const palette = useCommandPalette()
-const shortcut = useCommandShortcut()
 
 const { data: catalogue } = await useProviders()
 
@@ -111,7 +110,7 @@ await unifont.getFontProperties('Switzer')
           <!-- Vue condenses whitespace between elements, so the separator is explicit or the label
                and the shortcut concatenate in the accessible name and in extracted text. -->
           {{ ' ' }}
-          <kbd>{{ shortcut }}</kbd>
+          <CommandShortcut />
         </button>
         <NuxtLink
           class="jump"

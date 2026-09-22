@@ -27,6 +27,12 @@ useHead({
   ],
 })
 
+onPrehydrate(() => {
+  if (/mac|iphone|ipad|ipod/i.test(navigator.userAgent)) {
+    document.documentElement.classList.add('platform-apple')
+  }
+})
+
 // The template has to survive into the client, where a navigation sets a title through it.
 useSeoMeta({
   titleTemplate: title => withSiteName(title ?? undefined),
