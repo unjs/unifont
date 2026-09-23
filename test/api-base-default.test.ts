@@ -53,7 +53,8 @@ describe('default apiBase', () => {
 
     try {
       const { createUnifont, providers } = await import('../src')
-      await createUnifont([providers.bunny()])
+      const unifont = await createUnifont([providers.bunny()])
+      await unifont.resolveFont('Mock')
     }
     finally {
       vi.unstubAllGlobals()
