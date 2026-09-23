@@ -59,43 +59,62 @@ export const defaultResolveOptions: ProviderResolveFontOptions = {
 export async function createUnifont<T extends [Provider, ...Provider[]]>(providers: T, unifontOptions?: UnifontOptions): Promise<Unifont<T>> {
   await installProxyDispatcher()
 
-  const stack: Record<string, InitializedProvider> = {}
-
   const storage = unifontOptions?.storage ?? memoryStorage()
   const fetch = createAPIFetch(unifontOptions?.apiBase)
 
+  const factories: Record<string, Provider> = {}
   // preserve provider order
   for (const provider of providers) {
-    // @ts-expect-error we will remove undefined keys later
-    stack[provider._name] = undefined
+    factories[provider._name] = provider
   }
 
-  // initialize all providers in parallel
-  await Promise.all(providers.map(async (provider) => {
-    const context: ProviderContext = {
-      storage: createAsyncStorage(storage, {
-        cachedBy: [provider._name, provider._options],
-      }),
-      fetch,
-    }
-    try {
-      const initializedProvider = await provider(context)
-      if (initializedProvider)
-        stack[provider._name] = initializedProvider
-    }
-    catch (cause) {
-      const message = `Could not initialize provider \`${provider._name}\`. \`unifont\` will not be able to process fonts provided by this provider.`
-      if (unifontOptions?.throwOnError) {
-        throw new Error(message, { cause })
-      }
-      console.error(message, cause)
-    }
-    if (!stack[provider._name]?.resolveFont) {
-      delete stack[provider._name]
-    }
-  }))
+  const allProviders = Object.keys(factories)
 
-  const allProviders = Object.keys(stack)
+  const stack: Record<string, Promise<InitializedProvider | Error | undefined>> = {}
+
+  async function* initializeProviders<Id extends string>(ids: Id[], errors: Error[]) {
+    for (const id of ids) {
+      const factory = factories[id]
+      if (!factory) {
+        continue
+      }
+      stack[id] ??= (async () => {
+        const context: ProviderContext = {
+          storage: createAsyncStorage(storage, {
+            cachedBy: [factory._name, factory._options],
+          }),
+          fetch,
+        }
+        try {
+          const provider = await factory(context)
+          return provider?.resolveFont ? provider : undefined
+        }
+        catch (cause) {
+          return new Error(`Could not initialize provider \`${id}\`. \`unifont\` will not be able to process fonts provided by this provider.`, { cause })
+        }
+      })()
+      const provider = await stack[id]
+      if (provider instanceof Error) {
+        errors.push(provider)
+      }
+      else if (provider) {
+        yield [id, provider] as const
+      }
+    }
+  }
+
+  function reportErrors(errors: Error[], message: string, resolved: boolean) {
+    if (errors.length === 0) {
+      return
+    }
+    if (unifontOptions?.throwOnError && !resolved) {
+      throw errors.length === 1 ? errors[0]! : new AggregateError(errors, message)
+    }
+    const log = resolved ? console.warn : console.error
+    for (const error of errors) {
+      log(error.message, error.cause)
+    }
+  }
 
   async function resolveFont(
     fontFamily: string,
@@ -111,17 +130,17 @@ export async function createUnifont<T extends [Provider, ...Provider[]]>(provide
     const { variableAxis: requestedVariableAxis, ...resolveOptions } = options
     const variableAxis = normalizeVariableAxis(requestedVariableAxis)
     const mergedOptions = { ...defaultResolveOptions, ...resolveOptions, ...(variableAxis ? { variableAxis } : {}) }
-    for (const id of providers) {
-      const provider = stack[id]
-
+    const errors: Error[] = []
+    for await (const [id, provider] of initializeProviders(providers, errors)) {
       try {
-        const result = await provider?.resolveFont(fontFamily, {
+        const result = await provider.resolveFont(fontFamily, {
           ...mergedOptions,
           options: mergedOptions.options?.[id] as any,
         })
         if (result) {
           const { appliedVariableAxis, ...providerResult } = result
           const { fonts, variableAxis: resolvedVariableAxis } = applyVariableAxis(result.fonts, variableAxis, appliedVariableAxis)
+          reportErrors(errors, `Could not resolve font face for \`${fontFamily}\`.`, true)
           return {
             provider: id,
             ...providerResult,
@@ -131,13 +150,10 @@ export async function createUnifont<T extends [Provider, ...Provider[]]>(provide
         }
       }
       catch (cause) {
-        const message = `Could not resolve font face for \`${fontFamily}\` from \`${id}\` provider.`
-        if (unifontOptions?.throwOnError) {
-          throw new Error(message, { cause })
-        }
-        console.error(message, cause)
+        errors.push(new Error(`Could not resolve font face for \`${fontFamily}\` from \`${id}\` provider.`, { cause }))
       }
     }
+    reportErrors(errors, `Could not resolve font face for \`${fontFamily}\`.`, false)
     return { fonts: [] }
   }
 
@@ -147,12 +163,12 @@ export async function createUnifont<T extends [Provider, ...Provider[]]>(provide
   ): Promise<
     (FontProperties & { provider?: T[number]['_name'] }) | undefined
   > {
-    for (const id of providers) {
-      const provider = stack[id]
-
+    const errors: Error[] = []
+    for await (const [id, provider] of initializeProviders(providers, errors)) {
       try {
-        const result = await provider?.getFontProperties?.(fontFamily)
+        const result = await provider.getFontProperties?.(fontFamily)
         if (result) {
+          reportErrors(errors, `Could not get font properties for \`${fontFamily}\`.`, true)
           return {
             ...result,
             provider: id,
@@ -160,36 +176,29 @@ export async function createUnifont<T extends [Provider, ...Provider[]]>(provide
         }
       }
       catch (cause) {
-        const message = `Could not get font properties for \`${fontFamily}\` from \`${id}\` provider.`
-        if (unifontOptions?.throwOnError) {
-          throw new Error(message, { cause })
-        }
-        console.error(message, cause)
+        errors.push(new Error(`Could not get font properties for \`${fontFamily}\` from \`${id}\` provider.`, { cause }))
       }
     }
+    reportErrors(errors, `Could not get font properties for \`${fontFamily}\`.`, false)
     return undefined
   }
 
   async function listFonts(providers: T[number]['_name'][] = allProviders): Promise<string[] | undefined> {
     let names: string[] | undefined
-    for (const id of providers) {
-      const provider = stack[id]
-
+    const errors: Error[] = []
+    for await (const [id, provider] of initializeProviders(providers, errors)) {
       try {
-        const result = await provider?.listFonts?.()
+        const result = await provider.listFonts?.()
         if (result) {
           names ??= []
           names.push(...result)
         }
       }
       catch (cause) {
-        const message = `Could not list names from \`${id}\` provider.`
-        if (unifontOptions?.throwOnError) {
-          throw new Error(message, { cause })
-        }
-        console.error(message, cause)
+        errors.push(new Error(`Could not list names from \`${id}\` provider.`, { cause }))
       }
     }
+    reportErrors(errors, `Could not list names.`, false)
     return names
   }
 

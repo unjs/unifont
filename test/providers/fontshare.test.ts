@@ -218,8 +218,8 @@ describe('fontshare', () => {
 
     try {
       const unifont = await createUnifont([providers.fontshare()])
-      expect(offsets).toStrictEqual(['0', '100'])
       expect(await unifont.listFonts()).toHaveLength(101)
+      expect(offsets).toStrictEqual(['0', '100'])
     }
     finally {
       restore()

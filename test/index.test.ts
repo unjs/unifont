@@ -85,10 +85,86 @@ describe('unifont', () => {
     globalThis.fetch.mockRestore()
   })
 
-  it('throws if a provider fails to initialize and throwOnError is enabled', async () => {
-    await expect(() => createUnifont([
+  it('throws if a provider that is needed fails to initialize and throwOnError is enabled', async () => {
+    const unifont = await createUnifont([
       defineFontProvider('bad-provider', () => { throw new Error('test') })(),
-    ], { throwOnError: true })).rejects.toThrow()
+    ], { throwOnError: true })
+    await expect(() => unifont.resolveFont('Poppins')).rejects.toThrow('Could not initialize provider `bad-provider`.')
+  })
+
+  it('does not initialize providers that are not used', async () => {
+    const setup = vi.fn(() => ({ resolveFont: () => ({ fonts: [] }) }))
+    const unifont = await createUnifont([
+      defineFontProvider('used', () => ({ resolveFont: () => ({ fonts: [{ src: [{ url: 'https://example.com/font.woff2', format: 'woff2' }] }] }) }))(),
+      defineFontProvider('unused', setup)(),
+    ])
+    const { provider } = await unifont.resolveFont('Poppins')
+    expect(provider).toBe('used')
+    expect(setup).not.toHaveBeenCalled()
+  })
+
+  it('initializes a provider once across concurrent requests', async () => {
+    const setup = vi.fn(async () => ({ resolveFont: () => ({ fonts: [] }), listFonts: () => ['Poppins'] }))
+    const unifont = await createUnifont([defineFontProvider('slow', setup)()])
+    await Promise.all([unifont.resolveFont('Poppins'), unifont.resolveFont('Inter'), unifont.listFonts()])
+    expect(setup).toHaveBeenCalledTimes(1)
+  })
+
+  it('continues to the next provider when one throws from getFontProperties', async () => {
+    const error = vi.spyOn(console, 'error').mockImplementation(() => {})
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {})
+    const unifont = await createUnifont([
+      defineFontProvider('bad-properties', () => ({ resolveFont: () => ({ fonts: [] }), getFontProperties() { throw new Error('properties failure') } }))(),
+      defineFontProvider('good', () => ({ resolveFont: () => ({ fonts: [] }), getFontProperties: () => ({ weights: ['400'] }) }))(),
+    ], { throwOnError: true })
+
+    expect(await unifont.getFontProperties('Poppins')).toEqual({ weights: ['400'], provider: 'good' })
+    expect(console.error).not.toHaveBeenCalled()
+    expect(console.warn).toHaveBeenCalledTimes(1)
+    error.mockRestore()
+    warn.mockRestore()
+  })
+
+  it('does not let a failing provider break resolution for families it does not serve', async () => {
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {})
+    const error = vi.spyOn(console, 'error').mockImplementation(() => {})
+    const unifont = await createUnifont([
+      defineFontProvider('bad-init', () => { throw new Error('init failure') })(),
+      defineFontProvider('bad-resolve', () => ({ resolveFont() { throw new Error('resolve failure') } }))(),
+      defineFontProvider('good', () => ({ resolveFont: () => ({ fonts: [{ src: [{ url: 'https://example.com/font.woff2', format: 'woff2' }] }] }) }))(),
+    ], { throwOnError: true })
+
+    const { provider, fonts } = await unifont.resolveFont('Poppins')
+    expect(provider).toBe('good')
+    expect(fonts).toHaveLength(1)
+    expect(console.error).not.toHaveBeenCalled()
+    expect(console.warn).toHaveBeenCalledTimes(2)
+    warn.mockRestore()
+    error.mockRestore()
+  })
+
+  it('throws from listFonts when any provider fails and throwOnError is enabled', async () => {
+    const unifont = await createUnifont([
+      defineFontProvider('good', () => ({ resolveFont: () => ({ fonts: [] }), listFonts: () => ['Poppins'] }))(),
+      defineFontProvider('bad-list', () => ({ resolveFont: () => ({ fonts: [] }), listFonts() { throw new Error('list failure') } }))(),
+    ], { throwOnError: true })
+
+    await expect(() => unifont.listFonts()).rejects.toThrow('Could not list names from `bad-list` provider.')
+  })
+
+  it('aggregates provider errors when no provider can serve the family', async () => {
+    const unifont = await createUnifont([
+      defineFontProvider('bad-init', () => { throw new Error('init failure') })(),
+      defineFontProvider('bad-resolve', () => ({ resolveFont() { throw new Error('resolve failure') } }))(),
+    ], { throwOnError: true })
+
+    const error: AggregateError = await unifont.resolveFont('Poppins').catch(error => error)
+    expect(error).toBeInstanceOf(AggregateError)
+    expect(error.errors.map((e: Error) => e.message)).toEqual([
+      'Could not initialize provider `bad-init`. `unifont` will not be able to process fonts provided by this provider.',
+      'Could not resolve font face for `Poppins` from `bad-resolve` provider.',
+    ])
+    expect(error.errors.map((e: Error) => (e.cause as Error).message)).toEqual(['init failure', 'resolve failure'])
   })
 
   it('throws if a provider resolveFont fails and throwOnError is enabled', async () => {

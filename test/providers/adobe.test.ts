@@ -20,7 +20,8 @@ describe('adobe', () => {
 
   it('handles empty id', async () => {
     // @ts-expect-error id is required
-    await createUnifont([providers.adobe({})])
+    const unifont = await createUnifont([providers.adobe({})])
+    expect(await unifont.resolveFont('Aleo').then(r => r.fonts)).toEqual([])
   })
 
   it('handles string id', async () => {
@@ -69,11 +70,11 @@ describe('adobe', () => {
     try {
       const unifont = await createUnifont([providers.adobe({ id: 'nometa' })])
 
+      expect(await unifont.resolveFont('Aleo').then(r => r.fonts)).toEqual([])
       expect(error).toHaveBeenCalledWith(
         'Could not initialize provider `adobe`. `unifont` will not be able to process fonts provided by this provider.',
         expect.objectContaining({ message: 'No font metadata found in adobe response.' }),
       )
-      expect(await unifont.resolveFont('Aleo').then(r => r.fonts)).toEqual([])
     }
     finally {
       restoreFetch()
@@ -97,7 +98,6 @@ describe('adobe', () => {
 
     try {
       const unifont = await createUnifont([providers.adobe({ id: 'negcache' })])
-      expect(apiCallCount).toBe(1)
 
       // First miss triggers a refresh, after which the family is negatively cached.
       expect(await unifont.resolveFont('Missing').then(r => r.fonts)).toEqual([])
@@ -175,7 +175,6 @@ describe('adobe', () => {
 
     try {
       const unifont = await createUnifont([providers.adobe({ id: 'inflight' })])
-      expect(apiCallCount).toBe(1)
 
       // Both misses race: the first starts the refresh, the second awaits it.
       const [a, b] = await Promise.all([
@@ -364,6 +363,7 @@ describe('adobe', () => {
       vi.spyOn(Date, 'now').mockImplementation(() => time)
 
       const unifont = await createUnifont([providers.adobe({ id: 'racetest' })])
+      await unifont.listFonts()
       expect(apiCallCount).toBe(1)
 
       // Advance time past KIT_REFRESH_TIMEOUT (5 minutes)
@@ -539,12 +539,10 @@ describe('adobe', () => {
     })
 
     try {
-      // Initialize unifont with the initial kit (without NewFont)
       const unifont = await createUnifont([providers.adobe({ id: 'test123' })])
-      expect(apiCallCount).toBe(1)
 
-      // Verify NewFont is not initially available
       const initialFonts = await unifont.listFonts()
+      expect(apiCallCount).toBe(1)
       expect(initialFonts).toEqual(expect.arrayContaining(['Aleo']))
       expect(initialFonts).not.toContain('NewFont')
 

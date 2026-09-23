@@ -117,7 +117,8 @@ describe('apiBase', () => {
     const mock = mockFetch({ '/bunny/v1/list': {} })
     restore = mock.restore
 
-    await createUnifont([providers.bunny()], { apiBase: `${API_BASE}/` })
+    const unifont = await createUnifont([providers.bunny()], { apiBase: `${API_BASE}/` })
+    await unifont.resolveFont('Mock')
 
     expect(mock.requests).toEqual([`${API_BASE}/bunny/v1/list`])
   })
@@ -126,7 +127,8 @@ describe('apiBase', () => {
     const mock = mockFetch({})
     restore = mock.restore
 
-    await createUnifont([providers.bunny()]).catch(() => {})
+    const unifont = await createUnifont([providers.bunny()])
+    await unifont.resolveFont('Mock').catch(() => {})
 
     expect(mock.requests).toEqual(['https://fonts.bunny.net/list'])
   })
