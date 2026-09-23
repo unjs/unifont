@@ -1,5 +1,5 @@
 import type { ResolveFontOptions } from '../../src'
-import { describe, expect, it, vi } from 'vitest'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { createUnifont, providers } from '../../src'
 import { getOptimizerIdentityFromUrl, groupBy, mockFetchReturn, pickUniqueBy } from '../utils'
 
@@ -202,7 +202,7 @@ describe('google', () => {
     const unifont = await createUnifont([providers.google({
       experimental: {
         glyphs: {
-          Poppings: ['Hello', 'World'],
+          Poppins: ['Hello', 'World'],
         },
       },
     })])
@@ -231,15 +231,8 @@ describe('google', () => {
           {
             "format": "woff2",
             "identifier": {
-              "kit": "",
-              "skey": "",
-            },
-          },
-          {
-            "format": "woff2",
-            "identifier": {
-              "kit": "",
-              "skey": "",
+              "kit": "pxiEyp8kv8JHgFVrFJXUdVNFIvDDHy0hxgHa",
+              "skey": "87759fb096548f6d",
             },
           },
         ],
@@ -377,6 +370,176 @@ describe('google', () => {
       weights: ['400 1100'],
     })
     expect(pickUniqueBy(fonts, fnt => String(fnt.weight)).sort()).toEqual(['400', '900'])
+  })
+
+  describe('curated subsets with glyphs', () => {
+    const CURATED_CSS = `/* latin-ext */
+@font-face {
+  font-family: 'Mock';
+  font-style: normal;
+  font-weight: 400;
+  src: url(https://fonts.gstatic.com/s/mock/v1/latin-ext.woff2) format('woff2');
+  unicode-range: U+00C0-00CF;
+}
+/* latin */
+@font-face {
+  font-family: 'Mock';
+  font-style: normal;
+  font-weight: 400;
+  src: url(https://fonts.gstatic.com/s/mock/v1/latin.woff2) format('woff2');
+  unicode-range: U+0041-005A, U+0061-007A;
+}`
+
+    const TEXT_CSS = `@font-face {
+  font-family: 'Mock';
+  font-style: normal;
+  font-weight: 400;
+  src: url(https://fonts.gstatic.com/s/mock/v1/text.woff2) format('woff2');
+  unicode-range: U+00C0-00C2;
+}`
+
+    function mockCurated(curatedCss = CURATED_CSS) {
+      const requests = vi.fn()
+      const restore = mockFetchReturn(/fonts\.googleapis\.com\/css2/, (input) => {
+        const url = decodeURIComponent(input as string)
+        requests(url)
+        return new Response(url.includes('&text=') ? TEXT_CSS : curatedCss)
+      })
+      return { requests, restore }
+    }
+
+    function curatedFace(unicodeRange: string | null, name: string) {
+      return `@font-face {
+  font-family: 'Mock';
+  font-style: normal;
+  font-weight: 400;
+  src: url(https://fonts.gstatic.com/s/mock/v1/${name}.woff2) format('woff2');
+  ${unicodeRange === null ? '' : `unicode-range: ${unicodeRange};`}
+}`
+    }
+
+    const ASCII_LETTERS = Array.from({ length: 52 }, (_, i) => String.fromCodePoint(i < 26 ? 0x41 + i : 0x61 + i - 26))
+    const LATIN_EXT = Array.from({ length: 16 }, (_, i) => String.fromCodePoint(0xC0 + i))
+
+    async function resolveWithGlyphs(glyphs: string[]) {
+      const unifont = await createUnifont([providers.google()])
+      return unifont.resolveFont('Mock Curated', {
+        formats: ['woff2'],
+        styles: ['normal'],
+        weights: ['400'],
+        options: { google: { experimental: { glyphs } } },
+      })
+    }
+
+    let restoreMeta: () => void
+
+    beforeEach(() => {
+      restoreMeta = mockFetchReturn(/fonts\.google\.com\/metadata\/fonts/, () => new Response(JSON.stringify({
+        familyMetadataList: [{
+          family: 'Mock Curated',
+          fonts: { 400: {} },
+          subsets: ['latin', 'latin-ext'],
+          category: 'Sans Serif',
+          axes: [],
+        }],
+      })))
+    })
+
+    afterEach(() => restoreMeta())
+
+    it('serves curated subsets without a text request when the glyphs cover them', async () => {
+      const { requests, restore } = mockCurated()
+      try {
+        const { fonts } = await resolveWithGlyphs([...ASCII_LETTERS, ...LATIN_EXT])
+        expect(requests).toHaveBeenCalledTimes(1)
+        expect(requests).toHaveBeenCalledWith('https://fonts.googleapis.com/css2?family=Mock Curated:ital,wght@0,400')
+        expect(pickUniqueBy(fonts, fnt => fnt.meta?.subset).sort()).toEqual(['latin', 'latin-ext'])
+      }
+      finally {
+        restore()
+      }
+    })
+
+    it('requests text= for a glyph list narrower than the curated subsets', async () => {
+      const { requests, restore } = mockCurated()
+      try {
+        const { fonts } = await resolveWithGlyphs(['Hello', 'World'])
+        expect(requests.mock.calls.flat()).toEqual([
+          'https://fonts.googleapis.com/css2?family=Mock Curated:ital,wght@0,400',
+          'https://fonts.googleapis.com/css2?family=Mock Curated:ital,wght@0,400&text=HeloWrd',
+        ])
+        expect(fonts.flatMap(fnt => fnt.src.flatMap(src => 'url' in src ? src.url : []))).toEqual([
+          'https://fonts.gstatic.com/s/mock/v1/text.woff2',
+        ])
+      }
+      finally {
+        restore()
+      }
+    })
+
+    it('combines covered curated subsets with a text request for the rest', async () => {
+      const { requests, restore } = mockCurated()
+      try {
+        const { fonts } = await resolveWithGlyphs([...ASCII_LETTERS, '0123456789!?', 'À', 'Á', 'Â'])
+        expect(requests).toHaveBeenCalledTimes(2)
+        expect(requests).toHaveBeenCalledWith('https://fonts.googleapis.com/css2?family=Mock Curated:ital,wght@0,400')
+        expect(requests).toHaveBeenCalledWith('https://fonts.googleapis.com/css2?family=Mock Curated:ital,wght@0,400&text=0123456789!?ÀÁÂ')
+        expect(fonts.flatMap(fnt => fnt.src.flatMap(src => 'url' in src ? src.url : []))).toEqual([
+          'https://fonts.gstatic.com/s/mock/v1/latin.woff2',
+          'https://fonts.gstatic.com/s/mock/v1/text.woff2',
+        ])
+      }
+      finally {
+        restore()
+      }
+    })
+
+    it('covers wildcard and single-codepoint ranges', async () => {
+      const { requests, restore } = mockCurated([curatedFace('U+006?', 'wildcard'), curatedFace('U+0041', 'single')].join('\n'))
+      try {
+        const { fonts } = await resolveWithGlyphs([...Array.from({ length: 16 }, (_, i) => String.fromCodePoint(0x60 + i)), 'A'])
+        expect(requests).toHaveBeenCalledTimes(1)
+        expect(fonts.flatMap(fnt => fnt.src.flatMap(src => 'url' in src ? src.url : []))).toEqual([
+          'https://fonts.gstatic.com/s/mock/v1/wildcard.woff2',
+          'https://fonts.gstatic.com/s/mock/v1/single.woff2',
+        ])
+      }
+      finally {
+        restore()
+      }
+    })
+
+    it('never covers a face whose unicode-range is missing or unreadable', async () => {
+      const { requests, restore } = mockCurated([curatedFace(null, 'unranged'), curatedFace('U+0041-005A-0060', 'unreadable')].join('\n'))
+      try {
+        const { fonts } = await resolveWithGlyphs(['AB'])
+        expect(requests.mock.calls.flat()).toEqual([
+          'https://fonts.googleapis.com/css2?family=Mock Curated:ital,wght@0,400',
+          'https://fonts.googleapis.com/css2?family=Mock Curated:ital,wght@0,400&text=AB',
+        ])
+        expect(fonts.flatMap(fnt => fnt.src.flatMap(src => 'url' in src ? src.url : []))).toEqual([
+          'https://fonts.gstatic.com/s/mock/v1/text.woff2',
+        ])
+      }
+      finally {
+        restore()
+      }
+    })
+
+    it('serves glyphs outside the curated subsets whatever the length of the list', async () => {
+      const { requests, restore } = mockCurated()
+      try {
+        await resolveWithGlyphs([...ASCII_LETTERS, ...LATIN_EXT, '\u0416'])
+        expect(requests).toHaveBeenCalledWith('https://fonts.googleapis.com/css2?family=Mock Curated:ital,wght@0,400&text=\u0416')
+
+        requests.mockClear()
+        await resolveWithGlyphs(['\u0416x'])
+        expect(requests).toHaveBeenCalledWith('https://fonts.googleapis.com/css2?family=Mock Curated:ital,wght@0,400&text=\u0416x')
+      }
+      finally {
+        restore()
+      }
+    })
   })
 
   describe('axis clamping', () => {
