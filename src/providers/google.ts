@@ -287,13 +287,19 @@ async function resolveGlyphFaces(glyphs: string, baseUrl: string, fetchFaces: (u
 }
 
 function isRangeCovered([start, end]: [number, number], codepoints: Set<number>) {
-  if (end - start >= codepoints.size)
-    return false
   for (let codepoint = start; codepoint <= end; codepoint++) {
-    if (!codepoints.has(codepoint))
+    if (!codepoints.has(codepoint) && !isGlyphless(codepoint))
       return false
   }
   return true
+}
+
+/** C0 controls, DEL and C1 controls, and noncharacters, none of which a font draws. */
+function isGlyphless(codepoint: number) {
+  return codepoint <= 0x1F
+    || (codepoint >= 0x7F && codepoint <= 0x9F)
+    || (codepoint >= 0xFDD0 && codepoint <= 0xFDEF)
+    || (codepoint & 0xFFFE) === 0xFFFE
 }
 
 const UNICODE_RANGE_RE = /^u\+([0-9a-f?]{1,6})(?:-([0-9a-f]{1,6}))?$/

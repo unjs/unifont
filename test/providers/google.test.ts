@@ -418,6 +418,20 @@ describe('google', () => {
 }`
     }
 
+    const GOOGLE_LATIN_RANGE = 'U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD'
+
+    function drawableGlyphs(unicodeRange: string) {
+      const glyphs: string[] = []
+      for (const token of unicodeRange.split(',')) {
+        const [start, end = start] = token.trim().replace(/^U\+/, '').split('-').map(value => Number.parseInt(value, 16))
+        for (let codepoint = start!; codepoint <= end!; codepoint++) {
+          if (codepoint > 0x1F && (codepoint < 0x7F || codepoint > 0x9F))
+            glyphs.push(String.fromCodePoint(codepoint))
+        }
+      }
+      return glyphs
+    }
+
     const ASCII_LETTERS = Array.from({ length: 52 }, (_, i) => String.fromCodePoint(i < 26 ? 0x41 + i : 0x61 + i - 26))
     const LATIN_EXT = Array.from({ length: 16 }, (_, i) => String.fromCodePoint(0xC0 + i))
 
@@ -487,6 +501,34 @@ describe('google', () => {
         expect(fonts.flatMap(fnt => fnt.src.flatMap(src => 'url' in src ? src.url : []))).toEqual([
           'https://fonts.gstatic.com/s/mock/v1/latin.woff2',
           'https://fonts.gstatic.com/s/mock/v1/text.woff2',
+        ])
+      }
+      finally {
+        restore()
+      }
+    })
+
+    it('covers a curated range from a glyph list without control characters', async () => {
+      const { requests, restore } = mockCurated(curatedFace(GOOGLE_LATIN_RANGE, 'latin'))
+      try {
+        const { fonts } = await resolveWithGlyphs(drawableGlyphs(GOOGLE_LATIN_RANGE))
+        expect(requests).toHaveBeenCalledTimes(1)
+        expect(fonts.flatMap(fnt => fnt.src.flatMap(src => 'url' in src ? src.url : []))).toEqual([
+          'https://fonts.gstatic.com/s/mock/v1/latin.woff2',
+        ])
+      }
+      finally {
+        restore()
+      }
+    })
+
+    it('covers a curated range containing noncharacters', async () => {
+      const { requests, restore } = mockCurated(curatedFace('U+0041, U+FDD0-FDEF, U+FFFE-FFFF', 'noncharacters'))
+      try {
+        const { fonts } = await resolveWithGlyphs(['A'])
+        expect(requests).toHaveBeenCalledTimes(1)
+        expect(fonts.flatMap(fnt => fnt.src.flatMap(src => 'url' in src ? src.url : []))).toEqual([
+          'https://fonts.gstatic.com/s/mock/v1/noncharacters.woff2',
         ])
       }
       finally {
