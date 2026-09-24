@@ -176,31 +176,33 @@ export default defineFontProvider('google', async (providerOptions: GoogleProvid
         continue
 
       for (const request of requests) {
-        let url = `https://fonts.googleapis.com/css2?family=${request}`
-        if (glyphs) {
-          url += `&text=${encodeURIComponent(glyphs)}`
+        const baseUrl = `https://fonts.googleapis.com/css2?family=${request}`
+        const fetchFaces = async (url: string) => {
+          const rawCss = await ctx.fetch(url, {
+            headers: {
+              'user-agent': userAgent,
+            },
+          }).then(res => res.text())
+          return splitCssIntoSubsets(rawCss)
+            .filter(group => group.subset ? options.subsets.includes(group.subset) : true)
+            .flatMap(group => extractFontFaceData(group.css).map(face => ({ face, subset: group.subset })))
         }
-        const rawCss = await ctx.fetch(url, {
-          headers: {
-            'user-agent': userAgent,
-          },
-        }).then(res => res.text())
-        const groups = splitCssIntoSubsets(rawCss).filter(group => group.subset ? options.subsets.includes(group.subset) : true)
-        for (const group of groups) {
-          const data = extractFontFaceData(group.css)
-          data.map((f) => {
-            // avoid accidental pinning to a single width
-            if (!resolvedVariableAxes.wdth && f.stretch && !f.stretch.includes(' ')) {
-              delete f.stretch
-            }
-            f.meta ??= {}
-            f.meta.priority = priority
-            if (group.subset) {
-              f.meta.subset = group.subset
-            }
-            return f
-          })
-          resolvedFontFaceData.push(...data)
+
+        const faces = glyphs
+          ? await resolveGlyphFaces(glyphs, baseUrl, fetchFaces)
+          : await fetchFaces(baseUrl)
+
+        for (const { face, subset } of faces) {
+          // avoid accidental pinning to a single width
+          if (!resolvedVariableAxes.wdth && face.stretch && !face.stretch.includes(' ')) {
+            delete face.stretch
+          }
+          face.meta ??= {}
+          face.meta.priority = priority
+          if (subset) {
+            face.meta.subset = subset
+          }
+          resolvedFontFaceData.push(face)
         }
       }
       priority++
@@ -257,6 +259,61 @@ export default defineFontProvider('google', async (providerOptions: GoogleProvid
 })
 
 /** internal */
+
+interface SubsetFace {
+  face: FontFaceData
+  subset: string | null
+}
+
+/** Serves curated faces the glyphs cover in full, and builds the rest with `text=`. */
+async function resolveGlyphFaces(glyphs: string, baseUrl: string, fetchFaces: (url: string) => Promise<SubsetFace[]>): Promise<SubsetFace[]> {
+  const codepoints = new Set([...glyphs].map(glyph => glyph.codePointAt(0)!))
+  const covered: SubsetFace[] = []
+  const coveredRanges: [number, number][] = []
+
+  for (const entry of await fetchFaces(baseUrl)) {
+    const ranges = entry.face.unicodeRange?.map(parseUnicodeRange)
+    if (!ranges?.every(range => !!range && isRangeCovered(range, codepoints)))
+      continue
+    covered.push(entry)
+    coveredRanges.push(...ranges.filter(range => !!range))
+  }
+
+  const remainder = [...codepoints].filter(codepoint => !coveredRanges.some(([start, end]) => codepoint >= start && codepoint <= end))
+  if (remainder.length === 0)
+    return covered
+
+  return [...covered, ...await fetchFaces(`${baseUrl}&text=${encodeURIComponent(String.fromCodePoint(...remainder))}`)]
+}
+
+function isRangeCovered([start, end]: [number, number], codepoints: Set<number>) {
+  for (let codepoint = start; codepoint <= end; codepoint++) {
+    if (!codepoints.has(codepoint) && !isGlyphless(codepoint))
+      return false
+  }
+  return true
+}
+
+/** C0 controls, DEL and C1 controls, and noncharacters, none of which a font draws. */
+function isGlyphless(codepoint: number) {
+  return codepoint <= 0x1F
+    || (codepoint >= 0x7F && codepoint <= 0x9F)
+    || (codepoint >= 0xFDD0 && codepoint <= 0xFDEF)
+    || (codepoint & 0xFFFE) === 0xFFFE
+}
+
+const UNICODE_RANGE_RE = /^u\+([0-9a-f?]{1,6})(?:-([0-9a-f]{1,6}))?$/
+
+function parseUnicodeRange(value: string): [number, number] | undefined {
+  const match = value.trim().toLowerCase().match(UNICODE_RANGE_RE)
+  if (!match)
+    return undefined
+  const [, start, end] = match as unknown as [string, string, string | undefined]
+  return [
+    Number.parseInt(start.replaceAll('?', '0'), 16),
+    end === undefined ? Number.parseInt(start.replaceAll('?', 'f'), 16) : Number.parseInt(end, 16),
+  ]
+}
 
 /** Expresses the values requested from `css2` (`62.5..100`) in the shape unifont reports. */
 function toNormalizedValues(instanced: Record<string, string[]>): NormalizedVariableAxis {
