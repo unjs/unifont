@@ -253,8 +253,8 @@ importers:
         specifier: 0.0.88
         version: 0.0.88
       rou3:
-        specifier: 0.12.1
-        version: 0.12.1
+        specifier: 1.0.0
+        version: 1.0.0
       simple-git-hooks:
         specifier: 2.14.0
         version: 2.14.0
@@ -375,8 +375,8 @@ importers:
         specifier: ^0.3.0
         version: 0.3.0
       rou3:
-        specifier: ^0.12.0
-        version: 0.12.1
+        specifier: ^1.0.0
+        version: 1.0.0
     devDependencies:
       nitro:
         specifier: 3.0.260610-beta
@@ -3875,10 +3875,6 @@ packages:
     resolution: {integrity: sha512-qpSwIyz0jHQq5qXBTNxFmE6664rJ7O+4TvPFOiOaBSrz8IOHc1koKKSqTM2H6u1UG1+TveuC6vaDHKXFOvb1Kw==}
     engines: {node: ^20.19.0 || >=22.12.0}
     hasBin: true
-
-  rou3@0.12.1:
-    resolution: {integrity: sha512-uv7TWJWh0lB6TyXnK1xDn9+OyzOb6Foeh+9bh+wV5hJ0v0ASpMiaGdatrlc9MPc4EBGWBMo8j0lkNxkNBel5Sg==}
-    engines: {node: '>=20.19.0'}
 
   rou3@0.8.1:
     resolution: {integrity: sha512-ePa+XGk00/3HuCqrEnK3LxJW7I0SdNg6EFzKUJG73hMAdDcOUC/i/aSz7LSDwLrGr33kal/rqOGydzwl6U7zBA==}
@@ -8880,8 +8876,6 @@ snapshots:
       '@rolldown/binding-openharmony-arm64': 1.2.11
       '@rolldown/binding-win32-arm64-msvc': 1.2.11
       '@rolldown/binding-win32-x64-msvc': 1.2.11
-
-  rou3@0.12.1: {}
 
   rou3@0.8.1: {}
 
