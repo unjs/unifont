@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { cleanFontFaces, prepareWeights, splitCssIntoSubsets } from '../src/utils'
+import { cleanFontFaces, prepareWeights, resolveRemoteFontSources, splitCssIntoSubsets } from '../src/utils'
 
 describe('utils', () => {
   describe('prepareWeights()', () => {
@@ -265,6 +265,55 @@ describe('utils', () => {
 ]`)
     })
   })
+
+  describe('resolveRemoteFontSources()', () => {
+    const baseUrl = 'https://fonts.example.com/css/font.css'
+
+    it('resolves relative and protocol-relative URLs against the stylesheet', () => {
+      expect(resolveRemoteFontSources([{
+        src: [
+          { url: 'files/a.woff2' },
+          { url: '../b.woff2' },
+          { url: '//cdn.example.com/c.woff2' },
+          { url: 'HTTPS://cdn.example.com/d.woff2' },
+        ],
+      }], baseUrl)).toEqual([{
+        src: [
+          { url: 'https://fonts.example.com/css/files/a.woff2' },
+          { url: 'https://fonts.example.com/b.woff2' },
+          { url: 'https://cdn.example.com/c.woff2' },
+          { url: 'https://cdn.example.com/d.woff2' },
+        ],
+      }])
+    })
+
+    it('keeps http, data and local() sources', () => {
+      const src = [
+        { name: 'Font' },
+        { url: 'http://fonts.example.com/a.woff2', format: 'woff2' },
+        { url: 'data:font/woff2;base64,AAA', format: 'woff2' },
+      ]
+      expect(resolveRemoteFontSources([{ src, weight: 400 }], baseUrl)).toEqual([{ src, weight: 400 }])
+    })
+
+    it('drops sources with other protocols', () => {
+      expect(resolveRemoteFontSources([{
+        src: [
+          { url: 'file:///etc/passwd' },
+          { url: ' FILE:/etc/passwd' },
+          { url: 'fi\tle:///etc/passwd' },
+          { url: 'blob:https://fonts.example.com/a' },
+          { url: 'javascript:alert(1)' },
+          { url: 'https://fonts.example.com/a.woff2' },
+        ],
+      }], baseUrl)).toEqual([{ src: [{ url: 'https://fonts.example.com/a.woff2' }] }])
+    })
+
+    it('drops faces left without a source', () => {
+      expect(resolveRemoteFontSources([{ src: [{ url: 'file:///etc/passwd' }] }], baseUrl)).toEqual([])
+    })
+  })
+
   describe('splitCssIntoSubsets()', () => {
     it('associates subsets and css correctly if there are comments', () => {
       expect(

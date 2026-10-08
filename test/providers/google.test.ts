@@ -54,6 +54,23 @@ describe('google', () => {
     `)
   })
 
+  it('drops font sources that are not http, https or data URLs', async () => {
+    const { restore } = mockCss2(`@font-face {
+  font-family: 'Mock';
+  font-style: normal;
+  font-weight: 400;
+  src: url(file:///etc/passwd) format('woff2'), url(https://fonts.gstatic.com/s/mock/v1/mock.woff2) format('woff2');
+}`)
+    try {
+      const unifont = await createUnifont([providers.google()])
+      const { fonts } = await unifont.resolveFont('Poppins', { formats: ['woff2'], weights: ['400'], styles: ['normal'] })
+      expect(fonts.flatMap(font => font.src)).toEqual([{ url: 'https://fonts.gstatic.com/s/mock/v1/mock.woff2', format: 'woff2' }])
+    }
+    finally {
+      restore()
+    }
+  })
+
   it('filters fonts based on provided options', async () => {
     const unifont = await createUnifont([providers.google()])
 

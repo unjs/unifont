@@ -24,6 +24,26 @@ describe('bunny', () => {
     }
   })
 
+  it('drops font sources that are not http, https or data URLs', async () => {
+    const restore = mockFetchReturn(/fonts\.bunny\.net\/css\?/, () => new Response(`
+      @font-face {
+        font-family: 'Abel';
+        font-style: normal;
+        font-weight: 400;
+        src: url(file:///etc/passwd) format('woff2'), url(https://fonts.bunny.net/abel/files/abel-latin-400-normal.woff2) format('woff2');
+      }
+    `))
+
+    try {
+      const unifont = await createUnifont([providers.bunny()])
+      const { fonts } = await unifont.resolveFont('Abel', { weights: ['400'], styles: ['normal'] })
+      expect(fonts.flatMap(font => font.src)).toEqual([{ url: 'https://fonts.bunny.net/abel/files/abel-latin-400-normal.woff2', format: 'woff2' }])
+    }
+    finally {
+      restore()
+    }
+  })
+
   it('works', async () => {
     const unifont = await createUnifont([providers.bunny()])
     expect(await unifont.resolveFont('NonExistent Font').then(r => r.fonts)).toMatchInlineSnapshot(`[]`)

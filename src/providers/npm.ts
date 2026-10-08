@@ -5,7 +5,7 @@ import { fileURLToPath, pathToFileURL } from 'node:url'
 import { extractFontFaceData, extractFontFaceFamilies, extractImports } from '../css/parse'
 
 import { hash } from '../hash'
-import { cleanFontFaces, defineFontProvider, filterKnownStyles } from '../utils'
+import { cleanFontFaces, defineFontProvider, filterKnownStyles, resolveRemoteFontSources } from '../utils'
 
 export interface NpmProviderOptions {
   /**
@@ -452,24 +452,6 @@ export default defineFontProvider('npm', (providerOptions: NpmProviderOptions, c
     return detectedFonts
   }
 
-  function resolveUrlsToAbsolute(fontFaces: FontFaceData[], baseUrl: string): void {
-    for (const face of fontFaces) {
-      face.src = face.src.map((src) => {
-        if ('url' in src) {
-          const url = src.url
-          if (url.startsWith('http') || url.startsWith('data:') || url.startsWith('//')) {
-            return src
-          }
-          return {
-            ...src,
-            url: new URL(url, baseUrl).href,
-          }
-        }
-        return src
-      })
-    }
-  }
-
   /**
    * Rewrite relative URLs to `file://` URLs pointing at the installed package.
    * Sources whose files are missing on disk are dropped rather than silently
@@ -568,8 +550,7 @@ export default defineFontProvider('npm', (providerOptions: NpmProviderOptions, c
     const fontFaces: FontFaceData[] = []
     for (const group of groups) {
       const cssPath = relative(pkgDir, group.location).replaceAll('\\', '/')
-      resolveUrlsToAbsolute(group.faces, `${cdn}/${pkgName}@${version}/${cssPath}`)
-      fontFaces.push(...group.faces)
+      fontFaces.push(...resolveRemoteFontSources(group.faces, `${cdn}/${pkgName}@${version}/${cssPath}`))
     }
 
     return cleanFontFaces(fontFaces, formats)
@@ -586,8 +567,7 @@ export default defineFontProvider('npm', (providerOptions: NpmProviderOptions, c
 
     const fontFaces: FontFaceData[] = []
     for (const group of groups) {
-      resolveUrlsToAbsolute(group.faces, group.location)
-      fontFaces.push(...group.faces)
+      fontFaces.push(...resolveRemoteFontSources(group.faces, group.location))
     }
 
     if (fontFaces.length === 0) {

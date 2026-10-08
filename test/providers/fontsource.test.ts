@@ -334,6 +334,33 @@ describe('fontsource', () => {
     `)
   })
 
+  it('drops font sources that are not http, https or data URLs', async () => {
+    const restoreFetch = mockFetchReturn(/api\.fontsource\.org\/v1\/fonts\/roboto-mono$/, () => new Response(JSON.stringify({
+      unicodeRange: { latin: 'U+0000-00FF' },
+      variants: {
+        400: {
+          normal: {
+            latin: {
+              url: {
+                woff2: 'file:///etc/passwd',
+                woff: 'https://cdn.jsdelivr.net/fontsource/fonts/roboto-mono@latest/latin-400-normal.woff',
+              },
+            },
+          },
+        },
+      },
+    })))
+
+    try {
+      const unifont = await createUnifont([providers.fontsource()])
+      const { fonts } = await unifont.resolveFont('Roboto Mono', { weights: ['400'], styles: ['normal'], subsets: ['latin'], formats: ['woff2', 'woff'] })
+      expect(fonts.flatMap(font => font.src)).toEqual([{ url: 'https://cdn.jsdelivr.net/fontsource/fonts/roboto-mono@latest/latin-400-normal.woff', format: 'woff' }])
+    }
+    finally {
+      restoreFetch()
+    }
+  })
+
   it('supports variable fonts', async () => {
     const unifont = await createUnifont([providers.fontsource()])
     const { fonts } = await unifont.resolveFont('Roboto Mono', { weights: ['400 700'] })

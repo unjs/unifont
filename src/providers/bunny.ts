@@ -2,7 +2,7 @@ import type { FontFaceData, ResolveFontOptions } from '../types'
 
 import { extractFontFaceData } from '../css/parse'
 import { hash } from '../hash'
-import { cleanFontFaces, defineFontProvider, filterKnownStyles, prepareWeights, splitCssIntoSubsets } from '../utils'
+import { cleanFontFaces, defineFontProvider, filterKnownStyles, prepareWeights, resolveRemoteFontSources, splitCssIntoSubsets } from '../utils'
 
 const BASE_URL = 'https://fonts.bunny.net'
 
@@ -40,13 +40,14 @@ export default defineFontProvider('bunny', async (_options, ctx) => {
 
     const resolvedVariants = weights.flatMap(w => Array.from(styles, s => `${w.weight}${s}`))
 
-    const css = await ctx.fetch(`${BASE_URL}/css?family=${id}:${resolvedVariants.join(',')}`).then(res => res.text())
+    const cssUrl = `${BASE_URL}/css?family=${id}:${resolvedVariants.join(',')}`
+    const css = await ctx.fetch(cssUrl).then(res => res.text())
 
     const resolvedFontFaceData: FontFaceData[] = []
 
     const groups = splitCssIntoSubsets(css).filter(group => group.subset ? options.subsets.includes(group.subset) : true)
     for (const group of groups) {
-      const data = extractFontFaceData(group.css)
+      const data = resolveRemoteFontSources(extractFontFaceData(group.css), cssUrl)
       data.map((f) => {
         f.meta ??= {}
         if (group.subset) {

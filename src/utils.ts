@@ -242,6 +242,35 @@ const variationFormatMap: Record<string, string> = {
   'truetype-variations': 'truetype',
 }
 
+const REMOTE_SOURCE_PROTOCOLS = new Set(['http:', 'https:', 'data:'])
+
+/**
+ * Resolves the URL sources of font faces fetched from `baseUrl` against it, dropping any that do
+ * not resolve to an `http:`, `https:` or `data:` URL, and any faces left without a source.
+ */
+export function resolveRemoteFontSources(fonts: FontFaceData[], baseUrl: string): FontFaceData[] {
+  const result: FontFaceData[] = []
+
+  for (const font of fonts) {
+    const src: FontFaceData['src'] = []
+    for (const source of font.src) {
+      if (!('url' in source)) {
+        src.push(source)
+        continue
+      }
+      const url = URL.parse(source.url, baseUrl)
+      if (url && REMOTE_SOURCE_PROTOCOLS.has(url.protocol)) {
+        src.push({ ...source, url: url.href })
+      }
+    }
+    if (src.length > 0) {
+      result.push({ ...font, src })
+    }
+  }
+
+  return result
+}
+
 function computeIdFromSource(source: LocalFontSource | RemoteFontSource): string {
   return 'name' in source ? source.name : source.url
 }

@@ -147,6 +147,23 @@ describe('fontshare', () => {
     `)
   })
 
+  it('drops font sources that are not http, https or data URLs', async () => {
+    restoreFetch = mockFetchReturn(/api\.fontshare\.com/, (request) => {
+      if (String(request).includes('/fonts?')) {
+        return new Response(JSON.stringify({ has_more: false, fonts: fixtures }))
+      }
+      return new Response(`@font-face {
+  font-family: 'Satoshi';
+  src: url('file:///etc/passwd') format('woff2'), url('//cdn.fontshare.com/wf/satoshi-400.woff2') format('woff2');
+  font-weight: 400;
+  font-style: normal;
+}`)
+    })
+    const unifont = await createUnifont([providers.fontshare()])
+    const { fonts } = await unifont.resolveFont('Satoshi', { weights: ['400'], styles: ['normal'] })
+    expect(fonts.flatMap(font => font.src)).toEqual([{ url: 'https://cdn.fontshare.com/wf/satoshi-400.woff2', format: 'woff2' }])
+  })
+
   it('handles italic styles', async () => {
     mockFontshare()
     const unifont = await createUnifont([providers.fontshare()])

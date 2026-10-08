@@ -96,6 +96,15 @@ const MOCK_LOCAL_SOURCE_CSS = `
 }
 `
 
+const MOCK_FILE_SOURCE_CSS = `
+@font-face {
+  font-family: 'Roboto';
+  font-style: normal;
+  font-weight: 400;
+  src: url(file:///etc/passwd) format('woff2'), url(./files/roboto-latin-400-normal.woff2) format('woff2');
+}
+`
+
 const MOCK_INTER_VARIABLE_CSS = `
 /* inter-latin-wght-normal */
 @font-face {
@@ -279,8 +288,21 @@ describe('npm', () => {
       const { fonts } = await unifont.resolveFont('Roboto')
 
       expect(fonts.length).toBe(1)
-      // Protocol-relative URLs should be preserved as-is
-      expect(fonts[0]!.src[0]).toHaveProperty('url', '//cdn.example.com/fonts/roboto.woff2')
+      expect(fonts[0]!.src[0]).toHaveProperty('url', 'https://cdn.example.com/fonts/roboto.woff2')
+
+      restoreFetch()
+    })
+
+    it('drops font sources that are not http, https or data URLs', async () => {
+      const restoreFetch = mockFetchReturn(/@fontsource\/roboto/, () =>
+        new Response(MOCK_FILE_SOURCE_CSS))
+
+      const unifont = await createUnifont([providers.npm()])
+      const { fonts } = await unifont.resolveFont('Roboto', { weights: ['400'], styles: ['normal'] })
+
+      expect(fonts.flatMap(font => font.src)).toStrictEqual([
+        { url: 'https://cdn.jsdelivr.net/npm/@fontsource/roboto@latest/files/roboto-latin-400-normal.woff2', format: 'woff2' },
+      ])
 
       restoreFetch()
     })
@@ -739,6 +761,25 @@ describe('npm', () => {
       }
       // Should have read the local CSS file
       expect(readFile).toHaveBeenCalledWith('./node_modules/@fontsource/roboto/index.css')
+    })
+
+    it('drops font sources that are not http, https or data URLs', async () => {
+      const readFile = vi.fn(async (path: string) => {
+        if (path === './package.json')
+          return MOCK_PACKAGE_JSON
+        if (path === './node_modules/@fontsource/roboto/400.css')
+          return MOCK_FILE_SOURCE_CSS
+        if (path === './node_modules/@fontsource/roboto/package.json')
+          return MOCK_PKG_VERSION_JSON
+        return null
+      })
+
+      const unifont = await createUnifont([providers.npm({ readFile })])
+      const { fonts } = await unifont.resolveFont('Roboto', { weights: ['400'], styles: ['normal'] })
+
+      expect(fonts.flatMap(font => font.src)).toStrictEqual([
+        { url: 'https://cdn.jsdelivr.net/npm/@fontsource/roboto@5.2.9/files/roboto-latin-400-normal.woff2', format: 'woff2' },
+      ])
     })
 
     it('resolves getFontProperties from local node_modules', async () => {

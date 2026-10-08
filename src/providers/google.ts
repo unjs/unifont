@@ -2,7 +2,7 @@ import type { FontAxis, FontFaceData, FontFormat, FontStyles, NormalizedVariable
 
 import { extractFontFaceData } from '../css/parse'
 import { hash } from '../hash'
-import { cleanFontFaces, defineFontProvider, normalizeVariableAxis, prepareWeights, splitCssIntoSubsets } from '../utils'
+import { cleanFontFaces, defineFontProvider, normalizeVariableAxis, prepareWeights, resolveRemoteFontSources, splitCssIntoSubsets } from '../utils'
 
 export interface GoogleProviderOptions {
   experimental?: {
@@ -185,7 +185,7 @@ export default defineFontProvider('google', async (providerOptions: GoogleProvid
           }).then(res => res.text())
           return splitCssIntoSubsets(rawCss)
             .filter(group => group.subset ? options.subsets.includes(group.subset) : true)
-            .flatMap(group => extractFontFaceData(group.css).map(face => ({ face, subset: group.subset })))
+            .flatMap(group => resolveRemoteFontSources(extractFontFaceData(group.css), url).map(face => ({ face, subset: group.subset })))
         }
 
         const faces = glyphs
