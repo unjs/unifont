@@ -1401,7 +1401,7 @@ describe('npm', () => {
       warn.mockRestore()
     })
 
-    it('preserves data and protocol-relative URLs', async () => {
+    it('preserves data URLs and resolves protocol-relative URLs to https', async () => {
       const cssWithInlineSources = `
 @font-face {
   font-family: 'Roboto';
@@ -1423,7 +1423,7 @@ describe('npm', () => {
 
       expect(fonts[0]!.src).toStrictEqual([
         { url: 'data:font/woff2;base64,AAA', format: 'woff2' },
-        { url: '//cdn.example.com/roboto.woff2', format: 'woff2' },
+        { url: 'https://cdn.example.com/roboto.woff2', format: 'woff2' },
       ])
     })
 

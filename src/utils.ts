@@ -244,6 +244,10 @@ const variationFormatMap: Record<string, string> = {
 
 const REMOTE_SOURCE_PROTOCOLS = new Set(['http:', 'https:', 'data:'])
 
+export function isRemoteSourceUrl(url: URL): boolean {
+  return REMOTE_SOURCE_PROTOCOLS.has(url.protocol)
+}
+
 /**
  * Resolves the URL sources of font faces fetched from `baseUrl` against it, dropping any that do
  * not resolve to an `http:`, `https:` or `data:` URL, and any faces left without a source.
@@ -259,7 +263,7 @@ export function resolveRemoteFontSources(fonts: FontFaceData[], baseUrl: string)
         continue
       }
       const url = URL.parse(source.url, baseUrl)
-      if (url && REMOTE_SOURCE_PROTOCOLS.has(url.protocol)) {
+      if (url && isRemoteSourceUrl(url)) {
         src.push({ ...source, url: url.href })
       }
     }
