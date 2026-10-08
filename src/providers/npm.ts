@@ -593,17 +593,14 @@ export default defineFontProvider('npm', (providerOptions: NpmProviderOptions, c
   }
 
   async function resolveFromCdn(pkgName: string, pkgVersion: string, cssFiles: string[], family: string, formats: ResolveFontOptions['formats'], allowAnyFamily: boolean): Promise<FontFaceData[] | null> {
-    const pkgUrl = URL.parse(`${cdn}/${pkgName}@${pkgVersion}/`)
-    if (!pkgUrl) {
-      return null
-    }
+    const pkgUrl = `${cdn}/${pkgName}@${pkgVersion}/`
 
     const stylesheets = await collectStylesheets(
-      cssFiles.map(cssFile => `${cdn}/${pkgName}@${pkgVersion}/${cssFile}`),
+      cssFiles.map(cssFile => `${pkgUrl}${cssFile}`),
       url => ctx.fetch(url).then(res => res.text()).catch(() => null),
       (from, specifier) => {
         const url = URL.parse(specifier, from)
-        return url && isWithinUrl(pkgUrl, url) ? url.href : null
+        return url && isWithinUrl(new URL(pkgUrl), url) ? url.href : null
       },
     )
 
