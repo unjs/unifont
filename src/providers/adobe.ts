@@ -1,7 +1,7 @@
 import type { FontStyles, ProviderContext, ResolveFontOptions } from '../types'
 
-import { hash } from 'ohash'
 import { extractFontFaceData } from '../css/parse'
+import { hash } from '../hash'
 import { defineFontProvider, prepareWeights } from '../utils'
 
 export interface AdobeProviderOptions {

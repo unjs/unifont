@@ -1,7 +1,7 @@
 import type { FontFaceData, ResolveFontOptions } from '../types'
 
-import { hash } from 'ohash'
 import { extractFontFaceData } from '../css/parse'
+import { hash } from '../hash'
 import { cleanFontFaces, defineFontProvider, filterKnownStyles, prepareWeights, splitCssIntoSubsets } from '../utils'
 
 const BASE_URL = 'https://fonts.bunny.net'

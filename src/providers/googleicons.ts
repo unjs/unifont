@@ -1,6 +1,6 @@
 import type { ResolveFontOptions } from '../types'
-import { hash } from 'ohash'
 import { extractFontFaceData } from '../css/parse'
+import { hash } from '../hash'
 import { cleanFontFaces, defineFontProvider } from '../utils'
 import { userAgents } from './google'
 

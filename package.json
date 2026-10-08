@@ -46,7 +46,7 @@
   },
   "dependencies": {
     "css-tree": "^3.1.0",
-    "ohash": "^2.0.11",
+    "fnv1a-64": "^0.1.2",
     "std-env": "^4.2.0",
     "undici": "^8.0.0"
   },

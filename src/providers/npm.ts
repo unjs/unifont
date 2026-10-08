@@ -2,9 +2,9 @@ import type { FontFaceData, ResolveFontOptions } from '../types'
 
 import { dirname, relative, resolve } from 'node:path'
 import { fileURLToPath, pathToFileURL } from 'node:url'
-import { hash } from 'ohash'
-
 import { extractFontFaceData, extractFontFaceFamilies, extractImports } from '../css/parse'
+
+import { hash } from '../hash'
 import { cleanFontFaces, defineFontProvider, filterKnownStyles } from '../utils'
 
 export interface NpmProviderOptions {

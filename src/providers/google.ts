@@ -1,7 +1,7 @@
 import type { FontAxis, FontFaceData, FontFormat, FontStyles, NormalizedVariableAxis, ProviderResolveFontOptions, VariableAxis, VariableAxisValue } from '../types'
 
-import { hash } from 'ohash'
 import { extractFontFaceData } from '../css/parse'
+import { hash } from '../hash'
 import { cleanFontFaces, defineFontProvider, normalizeVariableAxis, prepareWeights, splitCssIntoSubsets } from '../utils'
 
 export interface GoogleProviderOptions {
