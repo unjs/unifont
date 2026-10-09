@@ -39,6 +39,8 @@ describe('hash', () => {
       /a/,
       new Map([['a', 1]]),
       new Set(['a']),
+      new URL('https://a.test'),
+      new URL('https://b.test'),
     ]
     expect(new Set(values.map(hash)).size).toBe(values.length)
   })

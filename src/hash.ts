@@ -34,6 +34,8 @@ function serialize(value: unknown, seen: Set<object>): string {
       return `map:${serialize([...obj.entries()].map(e => serialize(e, seen)).sort(), seen)}`
     if (obj instanceof Set)
       return `set:${serialize([...obj].map(v => serialize(v, seen)).sort(), seen)}`
+    if (obj instanceof URL)
+      return `url:${obj.href}`
     const entries = Object.keys(obj)
       .sort()
       .map(key => `${JSON.stringify(key)}:${serialize((obj as Record<string, unknown>)[key], seen)}`)
