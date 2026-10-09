@@ -1,6 +1,6 @@
 import type { FontFaceData, FontFormat, FontStyles, LocalFontSource, NormalizedVariableAxis, ProviderDefinition, ProviderFactory, RemoteFontSource, ResolvedVariableAxis, ResolveFontOptions, ResolveFontResult, VariableAxisBound } from './types'
 import { findAll, generate, parse } from 'css-tree'
-import { hash } from 'ohash'
+import { hash } from './hash'
 
 export function defineFontProvider<
   Name extends string,

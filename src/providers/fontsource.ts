@@ -1,6 +1,6 @@
 import type { FontAxis, FontFaceData, ProviderContext, ResolveFontOptions } from '../types'
 
-import { hash } from 'ohash'
+import { hash } from '../hash'
 import { cleanFontFaces, defineFontProvider, filterKnownStyles, prepareWeights } from '../utils'
 
 const BASE_URL = 'https://api.fontsource.org/v1'

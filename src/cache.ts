@@ -1,5 +1,5 @@
-import { hash } from 'ohash'
 import { version } from '../package.json'
+import { hash } from './hash'
 
 type Awaitable<T> = T | Promise<T>
 

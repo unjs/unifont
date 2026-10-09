@@ -1,7 +1,7 @@
 import type { FontMetrics, FontStyles, ResolveFontOptions } from '../types'
 
-import { hash } from 'ohash'
 import { extractFontFaceData } from '../css/parse'
+import { hash } from '../hash'
 import { cleanFontFaces, defineFontProvider, prepareWeights } from '../utils'
 
 const BASE_URL = 'https://api.fontshare.com/v2'
