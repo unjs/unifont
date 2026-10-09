@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { createUnifont, providers } from '../../src'
-import { getOptimizerIdentityFromUrl, groupBy, sanitizeFontSource } from '../utils'
+import { getOptimizerIdentityFromUrl, groupBy, mockFetchReturn, sanitizeFontSource } from '../utils'
 
 describe('googleicons', () => {
   it('works', async () => {
@@ -40,6 +40,23 @@ describe('googleicons', () => {
         },
       ]
     `)
+  })
+
+  it('drops font sources that are not http, https or data URLs', async () => {
+    const restore = mockFetchReturn(/fonts\.googleapis\.com\/css2/, () => new Response(`@font-face {
+  font-family: 'Material Symbols Outlined';
+  font-style: normal;
+  font-weight: 100 700;
+  src: url(file:///etc/passwd) format('woff2'), url(https://fonts.gstatic.com/s/mock/v1/mock.woff2) format('woff2');
+}`))
+    try {
+      const unifont = await createUnifont([providers.googleicons()])
+      const { fonts } = await unifont.resolveFont('Material Symbols Outlined', { formats: ['woff2'] })
+      expect(fonts.flatMap(font => font.src)).toEqual([{ url: 'https://fonts.gstatic.com/s/mock/v1/mock.woff2', format: 'woff2' }])
+    }
+    finally {
+      restore()
+    }
   })
 
   it('handles listFonts correctly', async () => {

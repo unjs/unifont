@@ -1,7 +1,7 @@
 import type { FontAxis, FontFaceData, ProviderContext, ResolveFontOptions } from '../types'
 
 import { hash } from '../hash'
-import { cleanFontFaces, defineFontProvider, filterKnownStyles, prepareWeights } from '../utils'
+import { cleanFontFaces, defineFontProvider, filterKnownStyles, prepareWeights, resolveRemoteFontSources } from '../utils'
 
 const BASE_URL = 'https://api.fontsource.org/v1'
 
@@ -52,7 +52,8 @@ export default defineFontProvider('fontsource', async (_options, ctx) => {
     if (weights.length === 0 || styles.length === 0)
       return []
 
-    const fontDetail = await ctx.fetch(`${BASE_URL}/fonts/${font.id}`).then(res => res.json() as Promise<FontsourceFontDetail>)
+    const detailUrl = `${BASE_URL}/fonts/${font.id}`
+    const fontDetail = await ctx.fetch(detailUrl).then(res => res.json() as Promise<FontsourceFontDetail>)
     const fontFaceData: FontFaceData[] = []
 
     for (const subset of subsets) {
@@ -92,7 +93,7 @@ export default defineFontProvider('fontsource', async (_options, ctx) => {
       }
     }
 
-    return cleanFontFaces(fontFaceData, options.formats)
+    return cleanFontFaces(resolveRemoteFontSources(fontFaceData, detailUrl), options.formats)
   }
 
   return {

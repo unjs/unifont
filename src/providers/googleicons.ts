@@ -1,7 +1,7 @@
 import type { ResolveFontOptions } from '../types'
 import { extractFontFaceData } from '../css/parse'
 import { hash } from '../hash'
-import { cleanFontFaces, defineFontProvider } from '../utils'
+import { cleanFontFaces, defineFontProvider, resolveRemoteFontSources } from '../utils'
 import { userAgents } from './google'
 
 export interface GoogleiconsProviderOptions {
@@ -71,7 +71,7 @@ export default defineFontProvider('googleicons', async (providerOptions: Googlei
       }
     }
 
-    return cleanFontFaces(extractFontFaceData(css), options.formats)
+    return cleanFontFaces(resolveRemoteFontSources(extractFontFaceData(css), 'https://fonts.googleapis.com/'), options.formats)
   }
 
   return {

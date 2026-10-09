@@ -51,6 +51,18 @@ jobs:
       - name: 🔍 Typecheck site
         run: pnpm --filter unifont-site test:types
 
+  test-windows:
+    runs-on: windows-latest
+
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+      - uses: pnpm/setup@fbda4c85fc2e1e08721cd8763afea8f48d60f024 # v3.0.0
+        with:
+          cache: true
+
+      - name: 🧪 Test npm provider paths
+        run: pnpm vitest run --project unifont test/providers/npm-untrusted.test.ts
+
   a11y:
     runs-on: ubuntu-latest
 

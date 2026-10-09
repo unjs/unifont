@@ -2,7 +2,7 @@ import type { FontMetrics, FontStyles, ResolveFontOptions } from '../types'
 
 import { extractFontFaceData } from '../css/parse'
 import { hash } from '../hash'
-import { cleanFontFaces, defineFontProvider, prepareWeights } from '../utils'
+import { cleanFontFaces, defineFontProvider, prepareWeights, resolveRemoteFontSources } from '../utils'
 
 const BASE_URL = 'https://api.fontshare.com/v2'
 
@@ -115,20 +115,10 @@ export default defineFontProvider('fontshare', async (_options, ctx) => {
     if (numbers.length === 0)
       return []
 
-    const css = await ctx.fetch(`${BASE_URL}/css?f[]=${font.slug}@${numbers.join(',')}`).then(res => res.text())
+    const cssUrl = `${BASE_URL}/css?f[]=${font.slug}@${numbers.join(',')}`
+    const css = await ctx.fetch(cssUrl).then(res => res.text())
 
-    const fontFaces = extractFontFaceData(css)
-    for (const face of fontFaces) {
-      for (const source of face.src) {
-        // fontshare serves protocol-relative URLs, which are only resolvable from within a
-        // stylesheet loaded over http(s)
-        if ('url' in source && source.url.startsWith('//')) {
-          source.url = `https:${source.url}`
-        }
-      }
-    }
-
-    const faces = cleanFontFaces(fontFaces, options.formats)
+    const faces = cleanFontFaces(resolveRemoteFontSources(extractFontFaceData(css), cssUrl), options.formats)
 
     for (const face of faces) {
       const isItalic = face.style === 'italic'

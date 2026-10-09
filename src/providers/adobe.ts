@@ -2,7 +2,7 @@ import type { FontStyles, ProviderContext, ResolveFontOptions } from '../types'
 
 import { extractFontFaceData } from '../css/parse'
 import { hash } from '../hash'
-import { defineFontProvider, prepareWeights } from '../utils'
+import { defineFontProvider, prepareWeights, resolveRemoteFontSources } from '../utils'
 
 export interface AdobeProviderOptions {
   id: string[] | string
@@ -95,12 +95,13 @@ export default defineFontProvider('adobe', async (options: AdobeProviderOptions,
       if (styles.length === 0) {
         continue
       }
-      const css = await ctx.fetch(`https://use.typekit.net/${kit.id}.css`).then(res => res.text())
+      const cssUrl = `https://use.typekit.net/${kit.id}.css`
+      const css = await ctx.fetch(cssUrl).then(res => res.text())
 
       // TODO: Not sure whether this css_names array always has a single element. Still need to investigate.
       const cssName = font.css_names[0] ?? family.toLowerCase().split(' ').join('-')
 
-      return extractFontFaceData(css, cssName).filter((font) => {
+      return resolveRemoteFontSources(extractFontFaceData(css, cssName), cssUrl).filter((font) => {
         const [lowerWeight, upperWeight] = Array.isArray(font.weight) ? font.weight : [0, 0]
 
         return (

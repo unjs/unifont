@@ -233,6 +233,36 @@ describe('adobe', () => {
     }
   })
 
+  it('drops font sources that are not http, https or data URLs', async () => {
+    const restoreFetch = mockFetchReturn(/typekit/, (url) => {
+      if (String(url).includes('typekit.com/api/v1/json/kits/filesrc/published')) {
+        return new Response(JSON.stringify({
+          kit: {
+            id: 'filesrc',
+            families: [{ id: 'filesrc', name: 'FileSrc', slug: 'filesrc', css_names: ['filesrc'], css_stack: 'filesrc, serif', variations: ['n4'] }],
+          },
+        }), { headers: { 'content-type': 'application/json' } })
+      }
+      return new Response(`
+        @font-face {
+          font-family: "filesrc";
+          src: url("file:///etc/passwd") format("woff2"), url("https://use.typekit.net/filesrc.woff2") format("woff2");
+          font-weight: 400;
+          font-style: normal;
+        }
+      `, { headers: { 'content-type': 'text/css' } })
+    })
+
+    try {
+      const unifont = await createUnifont([providers.adobe({ id: 'filesrc' })])
+      const { fonts } = await unifont.resolveFont('FileSrc')
+      expect(fonts.flatMap(font => font.src)).toEqual([{ url: 'https://use.typekit.net/filesrc.woff2', format: 'woff2' }])
+    }
+    finally {
+      restoreFetch()
+    }
+  })
+
   it('works', async () => {
     const unifont = await createUnifont([providers.adobe({ id: ['sij5ufr', 'grx7wdj'] })])
     expect(await unifont.resolveFont('NonExistent Font').then(r => r.fonts)).toMatchInlineSnapshot(`[]`)

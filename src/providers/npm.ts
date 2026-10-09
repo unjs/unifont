@@ -1,11 +1,11 @@
 import type { FontFaceData, ResolveFontOptions } from '../types'
 
-import { dirname, relative, resolve } from 'node:path'
+import { dirname, isAbsolute, relative } from 'node:path'
 import { fileURLToPath, pathToFileURL } from 'node:url'
 import { extractFontFaceData, extractFontFaceFamilies, extractImports } from '../css/parse'
 
 import { hash } from '../hash'
-import { cleanFontFaces, defineFontProvider, filterKnownStyles } from '../utils'
+import { cleanFontFaces, defineFontProvider, filterKnownStyles, isRemoteSourceUrl, resolveRemoteFontSources } from '../utils'
 
 export interface NpmProviderOptions {
   /**
@@ -251,15 +251,7 @@ function normaliseCssFile(file: string): string {
   return file.replace(LEADING_RELATIVE_RE, '')
 }
 
-const URL_SUFFIX_RE = /[?#].*$/
-
-/**
- * Remove any query string or fragment from a CSS `url()` value. Both are
- * meaningless for a `file://` URL, so they are dropped rather than preserved.
- */
-function stripUrlSuffix(url: string): string {
-  return url.replace(URL_SUFFIX_RE, '')
-}
+const PACKAGE_STYLESHEET_RE = /^(?:\.\/)?(?:[\w-][\w.-]*\/)*[\w-][\w.-]*\.css$/
 
 function stripTrailingSlashes(path: string): string {
   let end = path.length
@@ -281,7 +273,43 @@ function packageDirFor(path: string, cssFile: string): string {
   return dirname(path)
 }
 
-const EXTERNAL_URL_RE = /^(?:[a-z][\w+.-]*:|\/\/)/i
+const PARENT_DIR_RE = /^\.\.(?:[/\\]|$)/
+
+function isWithinDir(dir: string, path: string): boolean {
+  const rel = relative(dir, path)
+  return !PARENT_DIR_RE.test(rel) && !isAbsolute(rel)
+}
+
+/** The path of a `file:` URL, provided it is inside `pkgDir`. */
+function packageFilePath(url: URL | null, pkgDir: string): string | null {
+  if (url?.protocol !== 'file:') {
+    return null
+  }
+  try {
+    const path = fileURLToPath(url)
+    return isWithinDir(pkgDir, path) ? path : null
+  }
+  catch {
+    return null
+  }
+}
+
+const PROTOCOL_RELATIVE_BASE = 'https://localhost/'
+
+/**
+ * Resolve a `url()` reference from the stylesheet at `cssUrl`. References that carry
+ * their own host, such as protocol-relative ones, resolve to `https:` rather than to
+ * a `file:` URL on that host.
+ */
+function resolveLocalReference(reference: string, cssUrl: URL): URL | null {
+  const url = URL.parse(reference, cssUrl)
+  return url && url.host !== cssUrl.host ? URL.parse(reference, PROTOCOL_RELATIVE_BASE) : url
+}
+
+function isWithinUrl(base: URL, url: URL): boolean {
+  return url.origin === base.origin && url.pathname.startsWith(base.pathname)
+}
+
 const MAX_IMPORT_DEPTH = 3
 
 interface Stylesheet {
@@ -291,7 +319,7 @@ interface Stylesheet {
 }
 
 /** Load the given stylesheets, and recursively the package-relative stylesheets they `@import`. */
-async function collectStylesheets(locations: string[], load: (location: string) => Promise<string | null>, join: (from: string, specifier: string) => string): Promise<Stylesheet[]> {
+async function collectStylesheets(locations: string[], load: (location: string) => Promise<string | null>, join: (from: string, specifier: string) => string | null): Promise<Stylesheet[]> {
   const stylesheets: Stylesheet[] = []
   const seen = new Set<string>()
 
@@ -312,8 +340,9 @@ async function collectStylesheets(locations: string[], load: (location: string) 
       stylesheets.push({ css, location })
       if (depth < MAX_IMPORT_DEPTH) {
         for (const specifier of extractImports(css)) {
-          if (!EXTERNAL_URL_RE.test(specifier)) {
-            next.push(join(location, specifier))
+          const joined = join(location, specifier)
+          if (joined) {
+            next.push(joined)
           }
         }
       }
@@ -452,30 +481,14 @@ export default defineFontProvider('npm', (providerOptions: NpmProviderOptions, c
     return detectedFonts
   }
 
-  function resolveUrlsToAbsolute(fontFaces: FontFaceData[], baseUrl: string): void {
-    for (const face of fontFaces) {
-      face.src = face.src.map((src) => {
-        if ('url' in src) {
-          const url = src.url
-          if (url.startsWith('http') || url.startsWith('data:') || url.startsWith('//')) {
-            return src
-          }
-          return {
-            ...src,
-            url: new URL(url, baseUrl).href,
-          }
-        }
-        return src
-      })
-    }
-  }
-
   /**
    * Rewrite relative URLs to `file://` URLs pointing at the installed package.
-   * Sources whose files are missing on disk are dropped rather than silently
-   * falling back to the CDN, which `remote: false` promises not to use.
+   * Sources whose files are missing on disk, or resolve outside `pkgDir`, are
+   * dropped rather than silently falling back to the CDN, which `remote: false`
+   * promises not to use.
    */
-  async function resolveUrlsToLocalFiles(fontFaces: FontFaceData[], pkgDir: string): Promise<FontFaceData[]> {
+  async function resolveUrlsToLocalFiles(fontFaces: FontFaceData[], cssPath: string, pkgDir: string): Promise<FontFaceData[]> {
+    const cssUrl = pathToFileURL(cssPath)
     const resolved: FontFaceData[] = []
 
     for (const face of fontFaces) {
@@ -486,13 +499,18 @@ export default defineFontProvider('npm', (providerOptions: NpmProviderOptions, c
           continue
         }
 
-        const url = source.url
-        if (url.startsWith('http') || url.startsWith('data:') || url.startsWith('//')) {
-          src.push(source)
+        const url = resolveLocalReference(source.url, cssUrl)
+        if (url && isRemoteSourceUrl(url)) {
+          src.push({ ...source, url: url.href })
           continue
         }
 
-        const filePath = resolve(pkgDir, stripUrlSuffix(url))
+        const filePath = packageFilePath(url, pkgDir)
+        if (!filePath) {
+          console.warn(`\`${source.url}\` in \`${cssPath}\` does not resolve to a file inside \`${pkgDir}\`. \`unifont\` will not include this font source.`)
+          continue
+        }
+
         const fileExists = await exists(filePath).catch(() => false)
         if (!fileExists) {
           console.warn(`Could not find \`${filePath}\` when resolving fonts locally. \`unifont\` will not include this font source.`)
@@ -525,10 +543,12 @@ export default defineFontProvider('npm', (providerOptions: NpmProviderOptions, c
       return null
     }
 
+    const pkgDir = packageDirFor(roots[0]!.path, roots[0]!.cssFile)
+
     const stylesheets = await collectStylesheets(
       roots.map(root => root.path),
       path => readFile(path).catch(() => null),
-      (from, specifier) => resolve(dirname(from), stripUrlSuffix(specifier)),
+      (from, specifier) => packageFilePath(URL.parse(specifier, pathToFileURL(from)), pkgDir),
     )
 
     if (stylesheets.length === 0) {
@@ -543,12 +563,10 @@ export default defineFontProvider('npm', (providerOptions: NpmProviderOptions, c
     if (!remote) {
       const localFaces: FontFaceData[] = []
       for (const group of groups) {
-        localFaces.push(...await resolveUrlsToLocalFiles(group.faces, dirname(group.location)))
+        localFaces.push(...await resolveUrlsToLocalFiles(group.faces, group.location, pkgDir))
       }
       return localFaces.length > 0 ? cleanFontFaces(localFaces, formats) : null
     }
-
-    const pkgDir = packageDirFor(roots[0]!.path, roots[0]!.cssFile)
 
     // Resolve relative URLs to absolute CDN URLs using the installed version
     let version = 'latest'
@@ -568,26 +586,29 @@ export default defineFontProvider('npm', (providerOptions: NpmProviderOptions, c
     const fontFaces: FontFaceData[] = []
     for (const group of groups) {
       const cssPath = relative(pkgDir, group.location).replaceAll('\\', '/')
-      resolveUrlsToAbsolute(group.faces, `${cdn}/${pkgName}@${version}/${cssPath}`)
-      fontFaces.push(...group.faces)
+      fontFaces.push(...resolveRemoteFontSources(group.faces, `${cdn}/${pkgName}@${version}/${cssPath}`))
     }
 
     return cleanFontFaces(fontFaces, formats)
   }
 
   async function resolveFromCdn(pkgName: string, pkgVersion: string, cssFiles: string[], family: string, formats: ResolveFontOptions['formats'], allowAnyFamily: boolean): Promise<FontFaceData[] | null> {
+    const pkgUrl = `${cdn}/${pkgName}@${pkgVersion}/`
+
     const stylesheets = await collectStylesheets(
-      cssFiles.map(cssFile => `${cdn}/${pkgName}@${pkgVersion}/${cssFile}`),
+      cssFiles.map(cssFile => `${pkgUrl}${cssFile}`),
       url => ctx.fetch(url).then(res => res.text()).catch(() => null),
-      (from, specifier) => new URL(specifier, from).href,
+      (from, specifier) => {
+        const url = URL.parse(specifier, from)
+        return url && isWithinUrl(new URL(pkgUrl), url) ? url.href : null
+      },
     )
 
     const groups = groupFontFaces(stylesheets, family, allowAnyFamily)
 
     const fontFaces: FontFaceData[] = []
     for (const group of groups) {
-      resolveUrlsToAbsolute(group.faces, group.location)
-      fontFaces.push(...group.faces)
+      fontFaces.push(...resolveRemoteFontSources(group.faces, group.location))
     }
 
     if (fontFaces.length === 0) {
@@ -622,7 +643,7 @@ export default defineFontProvider('npm', (providerOptions: NpmProviderOptions, c
     try {
       const parsed = JSON.parse(contents) as { style?: string, main?: string }
       for (const field of [parsed.style, parsed.main]) {
-        if (typeof field === 'string' && field.endsWith('.css')) {
+        if (typeof field === 'string' && PACKAGE_STYLESHEET_RE.test(field)) {
           const file = normaliseCssFile(field)
           if (!files.includes(file)) {
             files.push(file)
