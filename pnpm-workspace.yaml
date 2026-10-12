@@ -10,7 +10,7 @@ packages:
   - proxy
 
 overrides:
-  '@nuxt/cli': 'npm:@nuxt/cli-nightly@4.0.0-20261005-072115-f140924f'
+  '@nuxt/cli': 'npm:@nuxt/cli-nightly@4.0.0-2610090719-f2e6cde'
   ofetch: ^2.0.0-alpha.3
   unifont: 'link:.'
 
