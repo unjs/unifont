@@ -33,7 +33,7 @@
     "nuxt": "npm:nuxt-nightly@5x",
     "subset-font": "^2.5.0",
     "unifont": "link:..",
-    "vue": "3.5.43"
+    "vue": "3.5.44"
   },
   "devDependencies": {
     "@nuxt/test-utils": "4.3.3",
