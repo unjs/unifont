@@ -47,7 +47,7 @@
     "nitro": "3.0.260903-beta",
     "playwright": "1.64.1",
     "typescript": "6.0.3",
-    "vitest": "5.0.3",
+    "vitest": "5.0.5",
     "vue-tsc": "3.3.13"
   }
 }
