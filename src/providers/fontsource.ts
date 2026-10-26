@@ -61,7 +61,6 @@ export default defineFontProvider('fontsource', async (_options, ctx) => {
     const variableFiles = (subset: string) => fontDetail.unicodeRange[subset] || shards.length === 0
       ? [{ file: subset, range: subset }]
       : shards.map(range => ({ file: range.slice(1, -1), range }))
-    const listed = new Set<string>()
 
     for (const subset of subsets) {
       for (const style of styles) {
@@ -72,10 +71,6 @@ export default defineFontProvider('fontsource', async (_options, ctx) => {
               if (variableAxes?.axes.wght) {
                 const axisSlug = pickFontsourceAxisSlug(Object.keys(variableAxes.axes))
                 for (const { file, range } of variableFiles(subset)) {
-                  // Every CJK subset of a family shares its shards, so each is listed once.
-                  if (listed.has(`${range}-${style}`))
-                    continue
-                  listed.add(`${range}-${style}`)
                   fontFaceData.push({
                     style,
                     weight: [Number(variableAxes.axes.wght.min), Number(variableAxes.axes.wght.max)],
