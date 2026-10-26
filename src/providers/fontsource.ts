@@ -55,6 +55,13 @@ export default defineFontProvider('fontsource', async (_options, ctx) => {
     const detailUrl = `${BASE_URL}/fonts/${font.id}`
     const fontDetail = await ctx.fetch(detailUrl).then(res => res.json() as Promise<FontsourceFontDetail>)
     const fontFaceData: FontFaceData[] = []
+    // The variable files of a CJK subset such as `japanese` have no file of their own: Fontsource
+    // serves them as numbered shards (`0-wght-normal.woff2`, ...), each with its own unicode-range.
+    const shards = Object.keys(fontDetail.unicodeRange).filter(key => /^\[\d+\]$/.test(key))
+    const variableFiles = (subset: string) => fontDetail.unicodeRange[subset] || shards.length === 0
+      ? [{ file: subset, range: subset }]
+      : shards.map(range => ({ file: range.slice(1, -1), range }))
+    const listed = new Set<string>()
 
     for (const subset of subsets) {
       for (const style of styles) {
@@ -64,15 +71,21 @@ export default defineFontProvider('fontsource', async (_options, ctx) => {
               const variableAxes = await getVariableAxes(ctx, font)
               if (variableAxes?.axes.wght) {
                 const axisSlug = pickFontsourceAxisSlug(Object.keys(variableAxes.axes))
-                fontFaceData.push({
-                  style,
-                  weight: [Number(variableAxes.axes.wght.min), Number(variableAxes.axes.wght.max)],
-                  src: [
-                    { url: `https://cdn.jsdelivr.net/fontsource/fonts/${font.id}:vf@latest/${subset}-${axisSlug}-${style}.woff2`, format: 'woff2' },
-                  ],
-                  unicodeRange: fontDetail.unicodeRange[subset]?.split(','),
-                  meta: { subset },
-                })
+                for (const { file, range } of variableFiles(subset)) {
+                  // Every CJK subset of a family shares its shards, so each is listed once.
+                  if (listed.has(`${range}-${style}`))
+                    continue
+                  listed.add(`${range}-${style}`)
+                  fontFaceData.push({
+                    style,
+                    weight: [Number(variableAxes.axes.wght.min), Number(variableAxes.axes.wght.max)],
+                    src: [
+                      { url: `https://cdn.jsdelivr.net/fontsource/fonts/${font.id}:vf@latest/${file}-${axisSlug}-${style}.woff2`, format: 'woff2' },
+                    ],
+                    unicodeRange: fontDetail.unicodeRange[range]?.split(','),
+                    meta: { subset },
+                  })
+                }
               }
             }
             catch {
