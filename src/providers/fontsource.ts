@@ -24,6 +24,15 @@ async function getVariableAxes(ctx: ProviderContext, font: FontsourceFontMeta) {
   return await ctx.storage.getItem(`fontsource:${font.family}-axes.json`, () => ctx.fetch(`${BASE_URL}/variable/${font.id}`).then(res => res.json() as Promise<FontsourceVariableFontDetail>))
 }
 
+// the variable files of a CJK subset such as `japanese` are served as numbered shards
+// (`0-wght-normal.woff2`, ...), each with its own unicode-range under `[0]`, `[1]`, ...
+function getVariableFiles(fontDetail: FontsourceFontDetail, subset: string): { file: string, range: string }[] {
+  const shards = Object.keys(fontDetail.unicodeRange).filter(key => /^\[\d+\]$/.test(key))
+  if (fontDetail.unicodeRange[subset] || shards.length === 0)
+    return [{ file: subset, range: subset }]
+  return shards.map(range => ({ file: range.slice(1, -1), range }))
+}
+
 // There are others like display and handwriting but these are not valid
 const VALID_FALLBACKS = ['sans-serif', 'serif', 'monospace']
 
@@ -64,15 +73,17 @@ export default defineFontProvider('fontsource', async (_options, ctx) => {
               const variableAxes = await getVariableAxes(ctx, font)
               if (variableAxes?.axes.wght) {
                 const axisSlug = pickFontsourceAxisSlug(Object.keys(variableAxes.axes))
-                fontFaceData.push({
-                  style,
-                  weight: [Number(variableAxes.axes.wght.min), Number(variableAxes.axes.wght.max)],
-                  src: [
-                    { url: `https://cdn.jsdelivr.net/fontsource/fonts/${font.id}:vf@latest/${subset}-${axisSlug}-${style}.woff2`, format: 'woff2' },
-                  ],
-                  unicodeRange: fontDetail.unicodeRange[subset]?.split(','),
-                  meta: { subset },
-                })
+                for (const { file, range } of getVariableFiles(fontDetail, subset)) {
+                  fontFaceData.push({
+                    style,
+                    weight: [Number(variableAxes.axes.wght.min), Number(variableAxes.axes.wght.max)],
+                    src: [
+                      { url: `https://cdn.jsdelivr.net/fontsource/fonts/${font.id}:vf@latest/${file}-${axisSlug}-${style}.woff2`, format: 'woff2' },
+                    ],
+                    unicodeRange: fontDetail.unicodeRange[range]?.split(','),
+                    meta: { subset },
+                  })
+                }
               }
             }
             catch {

@@ -388,6 +388,16 @@ describe('fontsource', () => {
     expect(variable.src[0]).toMatchObject({ url: 'https://cdn.jsdelivr.net/fontsource/fonts/fraunces:vf@latest/latin-full-normal.woff2' })
   })
 
+  it('lists the numbered shards of a variable CJK subset', async () => {
+    const unifont = await createUnifont([providers.fontsource()])
+    const { fonts } = await unifont.resolveFont('Noto Sans JP', { weights: ['100 900'], subsets: ['japanese', 'latin'], styles: ['normal'] })
+    const urls = fonts.flatMap(fnt => fnt.src.flatMap(src => 'url' in src ? src.url : []))
+    expect(urls).toContain('https://cdn.jsdelivr.net/fontsource/fonts/noto-sans-jp:vf@latest/119-wght-normal.woff2')
+    expect(urls).toContain('https://cdn.jsdelivr.net/fontsource/fonts/noto-sans-jp:vf@latest/latin-wght-normal.woff2')
+    const shard = fonts.find(fnt => fnt.src.some(src => 'url' in src && src.url.endsWith('/119-wght-normal.woff2')))
+    expect(shard?.unicodeRange).toContain('U+3041-307f')
+  })
+
   it('handles default subsets', async () => {
     const unifont = await createUnifont([providers.fontsource()])
     const { fonts } = await unifont.resolveFont('Roboto Mono', { subsets: undefined })
