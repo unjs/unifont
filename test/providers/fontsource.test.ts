@@ -25,7 +25,7 @@ describe('fontsource', () => {
           "src": [
             {
               "format": "woff2",
-              "url": "https://cdn.jsdelivr.net/fontsource/fonts/roboto-mono@latest/cyrillic-ext-400-normal.woff2",
+              "url": "https://cdn.jsdelivr.net/fontsource/fonts/roboto-mono@5.3.0/cyrillic-ext-400-normal.woff2",
             },
           ],
           "style": "normal",
@@ -46,7 +46,7 @@ describe('fontsource', () => {
           "src": [
             {
               "format": "woff2",
-              "url": "https://cdn.jsdelivr.net/fontsource/fonts/roboto-mono@latest/cyrillic-ext-400-italic.woff2",
+              "url": "https://cdn.jsdelivr.net/fontsource/fonts/roboto-mono@5.3.0/cyrillic-ext-400-italic.woff2",
             },
           ],
           "style": "italic",
@@ -67,7 +67,7 @@ describe('fontsource', () => {
           "src": [
             {
               "format": "woff2",
-              "url": "https://cdn.jsdelivr.net/fontsource/fonts/roboto-mono@latest/cyrillic-400-normal.woff2",
+              "url": "https://cdn.jsdelivr.net/fontsource/fonts/roboto-mono@5.3.0/cyrillic-400-normal.woff2",
             },
           ],
           "style": "normal",
@@ -87,7 +87,7 @@ describe('fontsource', () => {
           "src": [
             {
               "format": "woff2",
-              "url": "https://cdn.jsdelivr.net/fontsource/fonts/roboto-mono@latest/cyrillic-400-italic.woff2",
+              "url": "https://cdn.jsdelivr.net/fontsource/fonts/roboto-mono@5.3.0/cyrillic-400-italic.woff2",
             },
           ],
           "style": "italic",
@@ -107,7 +107,7 @@ describe('fontsource', () => {
           "src": [
             {
               "format": "woff2",
-              "url": "https://cdn.jsdelivr.net/fontsource/fonts/roboto-mono@latest/greek-400-normal.woff2",
+              "url": "https://cdn.jsdelivr.net/fontsource/fonts/roboto-mono@5.3.0/greek-400-normal.woff2",
             },
           ],
           "style": "normal",
@@ -128,7 +128,7 @@ describe('fontsource', () => {
           "src": [
             {
               "format": "woff2",
-              "url": "https://cdn.jsdelivr.net/fontsource/fonts/roboto-mono@latest/greek-400-italic.woff2",
+              "url": "https://cdn.jsdelivr.net/fontsource/fonts/roboto-mono@5.3.0/greek-400-italic.woff2",
             },
           ],
           "style": "italic",
@@ -149,7 +149,7 @@ describe('fontsource', () => {
           "src": [
             {
               "format": "woff2",
-              "url": "https://cdn.jsdelivr.net/fontsource/fonts/roboto-mono@latest/vietnamese-400-normal.woff2",
+              "url": "https://cdn.jsdelivr.net/fontsource/fonts/roboto-mono@5.3.0/vietnamese-400-normal.woff2",
             },
           ],
           "style": "normal",
@@ -177,7 +177,7 @@ describe('fontsource', () => {
           "src": [
             {
               "format": "woff2",
-              "url": "https://cdn.jsdelivr.net/fontsource/fonts/roboto-mono@latest/vietnamese-400-italic.woff2",
+              "url": "https://cdn.jsdelivr.net/fontsource/fonts/roboto-mono@5.3.0/vietnamese-400-italic.woff2",
             },
           ],
           "style": "italic",
@@ -205,7 +205,7 @@ describe('fontsource', () => {
           "src": [
             {
               "format": "woff2",
-              "url": "https://cdn.jsdelivr.net/fontsource/fonts/roboto-mono@latest/latin-ext-400-normal.woff2",
+              "url": "https://cdn.jsdelivr.net/fontsource/fonts/roboto-mono@5.3.0/latin-ext-400-normal.woff2",
             },
           ],
           "style": "normal",
@@ -237,7 +237,7 @@ describe('fontsource', () => {
           "src": [
             {
               "format": "woff2",
-              "url": "https://cdn.jsdelivr.net/fontsource/fonts/roboto-mono@latest/latin-ext-400-italic.woff2",
+              "url": "https://cdn.jsdelivr.net/fontsource/fonts/roboto-mono@5.3.0/latin-ext-400-italic.woff2",
             },
           ],
           "style": "italic",
@@ -269,7 +269,7 @@ describe('fontsource', () => {
           "src": [
             {
               "format": "woff2",
-              "url": "https://cdn.jsdelivr.net/fontsource/fonts/roboto-mono@latest/latin-400-normal.woff2",
+              "url": "https://cdn.jsdelivr.net/fontsource/fonts/roboto-mono@5.3.0/latin-400-normal.woff2",
             },
           ],
           "style": "normal",
@@ -303,7 +303,7 @@ describe('fontsource', () => {
           "src": [
             {
               "format": "woff2",
-              "url": "https://cdn.jsdelivr.net/fontsource/fonts/roboto-mono@latest/latin-400-italic.woff2",
+              "url": "https://cdn.jsdelivr.net/fontsource/fonts/roboto-mono@5.3.0/latin-400-italic.woff2",
             },
           ],
           "style": "italic",
@@ -371,21 +371,47 @@ describe('fontsource', () => {
     const unifont = await createUnifont([providers.fontsource()])
     const { fonts } = await unifont.resolveFont('Roboto Mono', { weights: ['400 700'], subsets: ['latin'], styles: ['normal'] })
     const variable = fonts.find(fnt => Array.isArray(fnt.weight))!
-    expect(variable.src[0]).toMatchObject({ url: 'https://cdn.jsdelivr.net/fontsource/fonts/roboto-mono:vf@latest/latin-wght-normal.woff2' })
+    expect(variable.src[0]).toMatchObject({ url: expect.stringMatching(/^https:\/\/cdn\.jsdelivr\.net\/fontsource\/fonts\/roboto-mono:vf@\d+\.\d+\.\d+\/latin-wght-normal\.woff2$/) })
+  })
+
+  it('pins variable font urls to the package version used for static fonts', async () => {
+    const unifont = await createUnifont([providers.fontsource()])
+    const { fonts } = await unifont.resolveFont('Roboto Mono', { weights: ['400', '400 700'], subsets: ['latin'], styles: ['normal'] })
+    const staticUrl = fonts.find(fnt => !Array.isArray(fnt.weight))!.src[0] as { url: string }
+    const variableUrl = fonts.find(fnt => Array.isArray(fnt.weight))!.src[0] as { url: string }
+    const version = staticUrl.url.match(/roboto-mono@([^/]+)\//)?.[1]
+    expect(version).toMatch(/^\d+\.\d+\.\d+$/)
+    expect(variableUrl.url).toBe(`https://cdn.jsdelivr.net/fontsource/fonts/roboto-mono:vf@${version}/latin-wght-normal.woff2`)
+  })
+
+  it('falls back to @latest for variable fonts when the api has no package version', async () => {
+    const restoreFetch = mockFetchReturn(/api\.fontsource\.org\/v1\/fonts\/roboto-mono$/, () => new Response(JSON.stringify({
+      unicodeRange: { latin: 'U+0000-00FF' },
+      variants: {},
+    })))
+
+    try {
+      const unifont = await createUnifont([providers.fontsource()])
+      const { fonts } = await unifont.resolveFont('Roboto Mono', { weights: ['400 700'], subsets: ['latin'], styles: ['normal'] })
+      expect(fonts[0]!.src[0]).toMatchObject({ url: 'https://cdn.jsdelivr.net/fontsource/fonts/roboto-mono:vf@latest/latin-wght-normal.woff2' })
+    }
+    finally {
+      restoreFetch()
+    }
   })
 
   it('uses the standard variant when extra registered axes are present', async () => {
     const unifont = await createUnifont([providers.fontsource()])
     const { fonts } = await unifont.resolveFont('Inter', { weights: ['100 900'], subsets: ['latin'], styles: ['normal'] })
     const variable = fonts.find(fnt => Array.isArray(fnt.weight))!
-    expect(variable.src[0]).toMatchObject({ url: 'https://cdn.jsdelivr.net/fontsource/fonts/inter:vf@latest/latin-standard-normal.woff2' })
+    expect(variable.src[0]).toMatchObject({ url: expect.stringMatching(/^https:\/\/cdn\.jsdelivr\.net\/fontsource\/fonts\/inter:vf@\d+\.\d+\.\d+\/latin-standard-normal\.woff2$/) })
   })
 
   it('uses the full variant when custom axes are present', async () => {
     const unifont = await createUnifont([providers.fontsource()])
     const { fonts } = await unifont.resolveFont('Fraunces', { weights: ['100 900'], subsets: ['latin'], styles: ['normal'] })
     const variable = fonts.find(fnt => Array.isArray(fnt.weight))!
-    expect(variable.src[0]).toMatchObject({ url: 'https://cdn.jsdelivr.net/fontsource/fonts/fraunces:vf@latest/latin-full-normal.woff2' })
+    expect(variable.src[0]).toMatchObject({ url: expect.stringMatching(/^https:\/\/cdn\.jsdelivr\.net\/fontsource\/fonts\/fraunces:vf@\d+\.\d+\.\d+\/latin-full-normal\.woff2$/) })
   })
 
   it('handles default subsets', async () => {
@@ -400,7 +426,7 @@ describe('fontsource', () => {
           "src": [
             {
               "format": "woff2",
-              "url": "https://cdn.jsdelivr.net/fontsource/fonts/roboto-mono@latest/latin-400-normal.woff2",
+              "url": "https://cdn.jsdelivr.net/fontsource/fonts/roboto-mono@5.3.0/latin-400-normal.woff2",
             },
           ],
           "style": "normal",
@@ -434,7 +460,7 @@ describe('fontsource', () => {
           "src": [
             {
               "format": "woff2",
-              "url": "https://cdn.jsdelivr.net/fontsource/fonts/roboto-mono@latest/latin-400-italic.woff2",
+              "url": "https://cdn.jsdelivr.net/fontsource/fonts/roboto-mono@5.3.0/latin-400-italic.woff2",
             },
           ],
           "style": "italic",
