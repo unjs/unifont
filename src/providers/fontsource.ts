@@ -54,6 +54,8 @@ export default defineFontProvider('fontsource', async (_options, ctx) => {
 
     const detailUrl = `${BASE_URL}/fonts/${font.id}`
     const fontDetail = await ctx.fetch(detailUrl).then(res => res.json() as Promise<FontsourceFontDetail>)
+    // Pin variable font URLs to the same package version the API uses for static fonts
+    const variableVersion = fontDetail.npmVersion || 'latest'
     const fontFaceData: FontFaceData[] = []
 
     for (const subset of subsets) {
@@ -68,7 +70,7 @@ export default defineFontProvider('fontsource', async (_options, ctx) => {
                   style,
                   weight: [Number(variableAxes.axes.wght.min), Number(variableAxes.axes.wght.max)],
                   src: [
-                    { url: `https://cdn.jsdelivr.net/fontsource/fonts/${font.id}:vf@latest/${subset}-${axisSlug}-${style}.woff2`, format: 'woff2' },
+                    { url: `https://cdn.jsdelivr.net/fontsource/fonts/${font.id}:vf@${variableVersion}/${subset}-${axisSlug}-${style}.woff2`, format: 'woff2' },
                   ],
                   unicodeRange: fontDetail.unicodeRange[subset]?.split(','),
                   meta: { subset },
@@ -183,6 +185,7 @@ interface FontsourceFontDetail {
   lastModified: string
   category: string
   version: string
+  npmVersion?: string
   type: string
   variants: FontsourceFontVariant
 }
