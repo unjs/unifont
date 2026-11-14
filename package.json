@@ -48,7 +48,7 @@
     "css-tree": "^3.1.0",
     "fnv1a-64": "^0.1.2",
     "std-env": "^4.2.0",
-    "undici": "^8.0.0"
+    "undici": "^8.12.4"
   },
   "devDependencies": {
     "@antfu/eslint-config": "9.5.1",
